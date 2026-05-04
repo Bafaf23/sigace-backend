@@ -3,31 +3,36 @@
 -- date: 2026-04-30
 -- version: 1.0.0
 -- description: This script creates the SIGACE database and tables for the project.
-CREATE DATABASE IF NOT EXISTS sigace_db;
+
+CREATE DATABASE sigace_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE sigace_db;
+
+--------------------------------------------------------
+-- 1. Tablas maetras
+--------------------------------------------------------
 
 -- tabla de usuarios
 CREATE TABLE IF NOT EXISTS users (
+  -- datos generales del usuario
   id INT AUTO_INCREMENT PRIMARY KEY,
   dni VARCHAR(10) UNIQUE NOT NULL,
-  frist_name VARCHAR(50) NOT NULL,
+  first_name VARCHAR(50) NOT NULL,
   last_name VARCHAR(50) NOT NULL,
   email VARCHAR(100) UNIQUE NOT NULL,
   phone VARCHAR(10) NOT NULL,
   birthdate DATE NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  role ENUM('admin', 'teacher', 'student') NOT NULL DEFAULT 'student',
+  pass VARCHAR(255) NOT NULL,
+  `role` ENUM('admin', 'teacher', 'student') NOT NULL DEFAULT 'student',
+  -- metadatos
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  lastLogin TIMESTAMP NULL
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- tabla de escuelas
 CREATE TABLE IF NOT EXISTS schools (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  code_sig VARCHAR(7) UNIQUE NOT NULL PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
   address VARCHAR(100) NOT NULL,
-  code_sig VARCHAR(10) UNIQUE NOT NULL,
   code_school VARCHAR(10) UNIQUE NOT NULL,
   type ENUM('publica', 'privada') NOT NULL,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -43,6 +48,7 @@ CREATE TABLE IF NOT EXISTS sections (
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- tabla de cargos
 CREATE TABLE IF NOT EXISTS loads (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
@@ -73,57 +79,88 @@ CREATE TABLE IF NOT EXISTS evaluation_plans (
 CREATE TABLE IF NOT EXISTS teachers (
   id INT AUTO_INCREMENT PRIMARY KEY,
   id_user INT UNIQUE NOT NULL,
-  id_school INT NOT NULL,
-  id_section INT NOT NULL,
-  id_load INT NOT NULL,
+  id_school VARCHAR(7) NOT NULL,
   id_subject INT NOT NULL,
-  id_evaluation_plan INT NOT NULL,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT fk_teacher_user FOREIGN KEY (id_user) REFERENCES users(id),
-  CONSTRAINT fk_teacher_school FOREIGN KEY (id_school) REFERENCES schools(id),
-  CONSTRAINT fk_teacher_section FOREIGN KEY (id_section) REFERENCES sections(id),
-  CONSTRAINT fk_teacher_load FOREIGN KEY (id_load) REFERENCES loads(id),
   CONSTRAINT fk_teacher_subject FOREIGN KEY (id_subject) REFERENCES subjects(id),
-  CONSTRAINT fk_teacher_evaluation FOREIGN KEY (id_evaluation_plan) REFERENCES evaluation_plans(id)
+  CONSTRAINT fk_teacher_user FOREIGN KEY (id_user) REFERENCES users(id),
+  CONSTRAINT fk_teacher_school FOREIGN KEY (id_school) REFERENCES schools(code_sig)
+);
+
+
+-- tabla de representantes legales (antes de students por FK)
+CREATE TABLE IF NOT EXISTS legal_representatives(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  dni VARCHAR(10) NOT NULL,
+  frist_name VARCHAR(50) NOT NULL,
+  last_name VARCHAR(50) NOT NULL,
+  phone VARCHAR(10) NOT NULL,
+  email VARCHAR(100) NOT NULL,
+  relationship ENUM('mamá', 'papá', 'tutor', 'institucional') NOT NULL,
+  -- certificado de parentesco
+  code_certificate VARCHAR(10) UNIQUE NOT NULL,
+  -- metadatos
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- tabla de estudiantes
 CREATE TABLE IF NOT EXISTS students (
+  -- datos generales del usuario
   id INT AUTO_INCREMENT PRIMARY KEY,
   id_user INT UNIQUE NOT NULL,
-  id_parent INT NOT NULL,
-  id_representative INT NOT NULL,
-  birthdate DATE NOT NULL,
   gender ENUM('masculino', 'femenino') NOT NULL,
+  -- datos del representante legal
+  id_legal_representative INT NOT NULL,
+  -- datos del estudiante lugar de nacimiento
   birth_country VARCHAR(50) NOT NULL,
   birth_state VARCHAR(50) NOT NULL,
+  birth_municipality VARCHAR(50) NOT NULL,
+  -- datos del estudiante direccion
+  state VARCHAR(50) NOT NULL,
+  municipality VARCHAR(50) NOT NULL,
+  address VARCHAR(100) NOT NULL,
+  -- datos del estudiante salud
   blood_type VARCHAR(5) NOT NULL,
   allergies VARCHAR(255) NOT NULL,
-  weight DECIMAL(5,2) NOT NULL,
-  height DECIMAL(5,2) NOT NULL,
+  `weight` DECIMAL(5,2) NOT NULL,
+  `height` DECIMAL(5,2) NOT NULL,
   shirt_size VARCHAR(10) NOT NULL,
   shoe_size VARCHAR(10) NOT NULL,
   pant_size VARCHAR(10) NOT NULL,
   medical_condition VARCHAR(255) NOT NULL,
+  -- datos del representante
   rep_dni VARCHAR(10) NOT NULL,
   rep_name VARCHAR(50) NOT NULL,
   rep_last_name VARCHAR(50) NOT NULL,
   rep_phone VARCHAR(10) NOT NULL,
   rep_email VARCHAR(100) NOT NULL,
   rep_relationship VARCHAR(50) NOT NULL,
-  id_school INT NOT NULL,
+  -- datos del estudiante para control de estudios
+  `condition` ENUM('regular', 'new_entry') NOT NULL,
+  condition_description VARCHAR(255) NOT NULL,
+  -- datos del estudiante relacionados a la escuela e la que se inscribe
+  id_school VARCHAR(7) NOT NULL,
   id_section INT NOT NULL,
-  id_load INT NOT NULL,
-  id_subject INT NOT NULL,
-  id_evaluation_plan INT NOT NULL,
+  id_year INT NOT NULL,
+  -- metadatos
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  -- restricciones
   CONSTRAINT fk_student_user FOREIGN KEY (id_user) REFERENCES users(id),
-  CONSTRAINT fk_student_school FOREIGN KEY (id_school) REFERENCES schools(id),
-  CONSTRAINT fk_student_section FOREIGN KEY (id_section) REFERENCES sections(id),
-  CONSTRAINT fk_student_load FOREIGN KEY (id_load) REFERENCES loads(id),
-  CONSTRAINT fk_student_subject FOREIGN KEY (id_subject) REFERENCES subjects(id),
-  CONSTRAINT fk_student_evaluation FOREIGN KEY (id_evaluation_plan) REFERENCES evaluation_plans(id)
+  CONSTRAINT fk_student_school FOREIGN KEY (id_school) REFERENCES schools(code_sig),
+  CONSTRAINT fk_student_legal_representative FOREIGN KEY (id_legal_representative) REFERENCES legal_representatives(id)
 );
 
+CREATE TABLE IF NOT EXISTS logs_actions(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  id_user INT NOT NULL,
+  action VARCHAR(255) NOT NULL,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_logs_actions_user FOREIGN KEY (id_user) REFERENCES users(id)
+);
+
+
+INSERT INTO schools (code_sig, name, address, code_school, type) VALUES ("SIG4465", "U.E.N Juan de Escalona", "Av. El arroyo, el hatillo", "OD19641509", "publica");
