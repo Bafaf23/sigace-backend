@@ -23,10 +23,13 @@ CREATE TABLE IF NOT EXISTS users (
   birthdate DATE NOT NULL,
   pass VARCHAR(255) NOT NULL,
   `role` ENUM('admin', 'teacher', 'student') NOT NULL DEFAULT 'student',
+  status boolean DEFAULT TRUE,
+  age INT AS (TIMESTAMPDIFF(YEAR, birthdate, CURDATE())) VIRTUAL,
   -- metadatos
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
 
 -- tabla de escuelas
 CREATE TABLE IF NOT EXISTS schools (
@@ -84,8 +87,8 @@ CREATE TABLE IF NOT EXISTS teachers (
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_teacher_subject FOREIGN KEY (id_subject) REFERENCES subjects(id),
-  CONSTRAINT fk_teacher_user FOREIGN KEY (id_user) REFERENCES users(id),
-  CONSTRAINT fk_teacher_school FOREIGN KEY (id_school) REFERENCES schools(code_sig)
+  CONSTRAINT fk_teacher_user FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_teacher_school FOREIGN KEY (id_school) REFERENCES schools(code_sig) ON DELETE CASCADE
 );
 
 
@@ -164,3 +167,4 @@ CREATE TABLE IF NOT EXISTS logs_actions(
 
 
 INSERT INTO schools (code_sig, name, address, code_school, type) VALUES ("SIG4465", "U.E.N Juan de Escalona", "Av. El arroyo, el hatillo", "OD19641509", "publica");
+
