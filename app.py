@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 from app.routers.auth.auth_register import auth_bp
 from app.routers.auth.auth_login import auth_login_bp
 from app.routers.logout.logout import logout_bp
-
+from app.routers.load_evaluations.load_avaluation import load_evaluations_bp
+from app.routers.subject.subject import subject_bp
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
@@ -29,6 +30,8 @@ mysql.init_app(app)
 app.register_blueprint(auth_bp)
 app.register_blueprint(auth_login_bp)
 app.register_blueprint(logout_bp)
+app.register_blueprint(load_evaluations_bp)
+app.register_blueprint(subject_bp)
 
 
 @app.route("/")

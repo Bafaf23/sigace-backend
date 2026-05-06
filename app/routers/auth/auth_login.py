@@ -51,6 +51,7 @@ def login_user() -> tuple[dict, int]:
                     "email": user["email"],
                     "role": user["role"],
                     "name": user["first_name"],
+                    "lastName": user["last_name"],
                 },
             }
         ),
