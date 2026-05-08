@@ -62,14 +62,16 @@ CREATE TABLE IF NOT EXISTS loads (
 -- tabla de asignaturas
 CREATE TABLE IF NOT EXISTS subjects (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  school_id VARCHAR(7) NOT NULL,
   name VARCHAR(50) NOT NULL,
   year_subject VARCHAR(10) NOT NULL,
   code_subject VARCHAR(10) UNIQUE NOT NULL,
-  training_area VARCHAR(10) NOT NULL,
+  training_area VARCHAR(50) NOT NULL,
+  -- restricciones
+  FOREIGN KEY (school_id) REFERENCES schools(code_sig) ON DELETE CASCADE,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
 
 -- tabla de planes de evaluacion
 CREATE TABLE IF NOT EXISTS evaluation_plans (
@@ -220,5 +222,4 @@ CREATE TABLE IF NOT EXISTS evaluations(
 
 INSERT INTO schools (code_sig, name, address, code_school, type) VALUES ("SIG4465", "U.E.N Juan de Escalona", "Av. El arroyo, el hatillo", "OD19641509", "publica");
 
-insert into subjects (name, year_subject, code_subject, training_area) VALUES ("Matemáticas", "1to", "MAT01", "Formacion General");
-insert into subjects (name, year_subject, code_subject, training_area) VALUES ("Matemáticas", "2do", "MAT02", "Formacion General");
+INSERT INTO subjects (school_id, name, year_subject, code_subject, training_area) VALUES ("SIG4465", "Matemáticas", "1to", "MAT01", "Formacion General");

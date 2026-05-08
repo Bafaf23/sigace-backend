@@ -5,11 +5,12 @@ import os
 from dotenv import load_dotenv
 
 # Blueprints
-from app.routers.auth.auth_register import auth_bp
 from app.routers.auth.auth_login import auth_login_bp
-from app.routers.logout.logout import logout_bp
 from app.routers.load_evaluations.load_avaluation import load_evaluations_bp
-from app.routers.subject.subject import subject_bp
+from app.controllers.subject_controll import subject_controller
+from app.controllers.logut_controll import logout_controller
+from app.controllers.user_controll import user_controller
+from app.controllers.school_controll import school_controller
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
@@ -27,11 +28,12 @@ app.secret_key = os.getenv("SECRET_KEY")
 mysql.init_app(app)
 
 # Registrar Blueprints
-app.register_blueprint(auth_bp)
 app.register_blueprint(auth_login_bp)
-app.register_blueprint(logout_bp)
+app.register_blueprint(user_controller)
 app.register_blueprint(load_evaluations_bp)
-app.register_blueprint(subject_bp)
+app.register_blueprint(subject_controller)
+app.register_blueprint(logout_controller)
+app.register_blueprint(school_controller)
 
 
 @app.route("/")
@@ -45,6 +47,12 @@ def home():
             },
             "routes": {
                 "register": "/register/",
+                "subjects": "/subject/get/",
+                "create_subject": "/subject/create/",
+                "delete_subject": "/subject/delete/<int:id>/",
+                "logout": "/logout/",
+                "get_user_by_dni": "/user/get_user_by_dni/<dni>/",
+                "get_schools": "/school/get/",
             },
         }
     )

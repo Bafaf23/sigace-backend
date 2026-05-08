@@ -19,7 +19,14 @@ def login_user() -> tuple[dict, int]:
 
     try:
         cursor = get_db_cursor()
-        cursor.execute("SELECT * FROM users WHERE email = %s AND status = 1", (email,))
+        sql = """
+            SELECT u.*, t.id_school, s.name AS school_name, s.code_sig 
+            FROM users u
+            LEFT JOIN teachers t ON u.id = t.id_user
+            LEFT JOIN schools s ON t.id_school = s.code_sig
+            WHERE u.email = %s AND u.status = 1
+        """
+        cursor.execute(sql, (email,))
         user = cursor.fetchone()
         if not user:
             return jsonify({"error": "Usuario no encontrado o inactivo"}), 404
@@ -37,6 +44,7 @@ def login_user() -> tuple[dict, int]:
     session["dni"] = user["dni"]
     session["email"] = user["email"]
     session["role"] = user["role"]
+    session["school_id"] = user["id_school"]
     session["name"] = user["first_name"]
     session["lastName"] = user["last_name"]
 
@@ -50,6 +58,7 @@ def login_user() -> tuple[dict, int]:
                     "id": user["id"],
                     "email": user["email"],
                     "role": user["role"],
+                    "school_id": user["id_school"],
                     "name": user["first_name"],
                     "lastName": user["last_name"],
                 },
