@@ -28,13 +28,21 @@ def create_subject() -> tuple[dict, int]:
     """Crear una asignatura"""
     try:
         data = request.json
-        name = data.get("name")
-        school_id = data.get("schoolId")
-        year_subject = data.get("grade")
-        code_subject = data.get("code")
-        training_area = data.get("area")
-        subject = Subject(name, school_id, year_subject, code_subject, training_area)
-        subject.create_subject()
+
+        name: str = data.get("name")
+        school_id: str = data.get("schoolId")
+        year_subject: str = data.get("grade")
+        code_subject: str = data.get("code")
+        training_area: str = data.get("area")
+
+        new_subject = Subject(
+            name=name,
+            school_id=school_id,
+            year_subject=year_subject,
+            code_subject=code_subject,
+            training_area=training_area,
+        )
+        new_subject.create_subject()
 
         return jsonify({"message": "Asignatura creada correctamente"}), 200
 
@@ -43,8 +51,9 @@ def create_subject() -> tuple[dict, int]:
 
 
 @subject_controller.route("/subject/delete/<int:id>/", methods=["DELETE"])
-def delete_subject(id: int) -> tuple[dict, int]:
+def delete_subject() -> tuple[dict, int]:
     """Eliminar una asignatura"""
+    id = request.json
     try:
         subject = Subject(id)
         if subject.delete_subject():

@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
+from app.controllers import section_controll
 from db import mysql
 import os
 from dotenv import load_dotenv
@@ -11,6 +12,7 @@ from app.controllers.subject_controll import subject_controller
 from app.controllers.logut_controll import logout_controller
 from app.controllers.user_controll import user_controller
 from app.controllers.school_controll import school_controller
+from app.controllers.section_controll import section_controll
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
@@ -34,6 +36,7 @@ app.register_blueprint(load_evaluations_bp)
 app.register_blueprint(subject_controller)
 app.register_blueprint(logout_controller)
 app.register_blueprint(school_controller)
+app.register_blueprint(section_controll)
 
 
 @app.route("/")

@@ -6,14 +6,12 @@ class Subject:
 
     def __init__(
         self,
-        id=None,
-        name=None,
-        school_id=None,
-        year_subject=None,
-        code_subject=None,
-        training_area=None,
+        name: str,
+        school_id: str,
+        year_subject: str,
+        code_subject: str,
+        training_area: str,
     ):
-        self.id = id
         self.name = name
         self.school_id = school_id
         self.year_subject = year_subject
@@ -39,6 +37,7 @@ class Subject:
         try:
             cursor = get_db_cursor()
             conn = mysql.get_db()
+
             cursor.execute(
                 "INSERT INTO subjects (name, school_id, year_subject, code_subject, training_area) VALUES (%s, %s, %s, %s, %s)",
                 (
@@ -49,16 +48,19 @@ class Subject:
                     self.training_area,
                 ),
             )
+
             conn.commit()
+            cursor.close()
             return cursor.rowcount > 0
         except Exception as e:
             print(e)
             return False
 
-    def delete_subject(self) -> bool:
+    def delete_subject(id) -> bool:
         """Eliminar una asignatura"""
         cursor = get_db_cursor()
         conn = mysql.get_db()
-        cursor.execute("DELETE FROM subjects WHERE id = %s", (self.id,))
+        cursor.execute("DELETE FROM subjects WHERE id = %s", (id))
         conn.commit()
+        cursor.close()
         return cursor.rowcount > 0

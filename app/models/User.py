@@ -1,3 +1,4 @@
+from asyncio import streams
 from db import get_db_cursor, mysql
 from werkzeug.security import generate_password_hash
 
@@ -121,3 +122,12 @@ class User:
                 False,
                 f"Error al registrar el usuario: {e}",
             )
+
+    @classmethod
+    def get_teachers_all(cls, school_id: str):
+        cursor = get_db_cursor()
+
+        sql = "SELECT teachers.* FROM teachers LEFT JOIN users ON teachers.id = users.id WHERE id_school = %s"
+        cursor.execute(sql, (school_id,))
+        cursor.close()
+        return cursor.fetchone()

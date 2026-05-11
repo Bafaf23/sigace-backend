@@ -46,9 +46,17 @@ CREATE TABLE IF NOT EXISTS sections (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
   code_section VARCHAR(10) UNIQUE NOT NULL,
+  teachers_id INT NOT NULL,
+  max_cup INT NOT NULL,
+  school_id VARCHAR(7) NOT NULL,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  Foreign Key (teachers_id) REFERENCES teachers(id),
+  Foreign Key (school_id) REFERENCES schools(code_sig)
 );
+
+DROP TABLE sections
 
 -- tabla de cargos
 CREATE TABLE IF NOT EXISTS loads (
