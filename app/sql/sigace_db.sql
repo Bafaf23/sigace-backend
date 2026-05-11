@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
   birthdate DATE NOT NULL,
   pass VARCHAR(255) NOT NULL,
   `role` ENUM('administrator', 'teacher', 'student') NOT NULL DEFAULT 'student',
-  status boolean DEFAULT TRUE,
+  status boolean DEFAULT FALSE,
   age INT AS (TIMESTAMPDIFF(YEAR, birthdate, CURDATE())) VIRTUAL,
   -- metadatos
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -55,8 +55,6 @@ CREATE TABLE IF NOT EXISTS sections (
   Foreign Key (teachers_id) REFERENCES teachers(id),
   Foreign Key (school_id) REFERENCES schools(code_sig)
 );
-
-DROP TABLE sections
 
 -- tabla de cargos
 CREATE TABLE IF NOT EXISTS loads (
