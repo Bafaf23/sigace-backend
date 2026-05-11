@@ -1,4 +1,6 @@
 from asyncio import streams
+
+from werkzeug.datastructures.headers import T
 from db import get_db_cursor, mysql
 from werkzeug.security import generate_password_hash
 
@@ -124,10 +126,14 @@ class User:
             )
 
     @classmethod
-    def get_teachers_all(cls, school_id: str):
-        cursor = get_db_cursor()
+    def get_teachers_all(cls, school_id: str) -> tuple[list]:
+        try:
+            cursor = get_db_cursor()
 
-        sql = "SELECT teachers.* FROM teachers LEFT JOIN users ON teachers.id = users.id WHERE id_school = %s"
-        cursor.execute(sql, (school_id,))
-        cursor.close()
-        return cursor.fetchone()
+            sql = "SELECT teachers.* FROM teachers LEFT JOIN users ON teachers.id = users.id WHERE id_school = %s"
+
+            cursor.execute(sql, (school_id,))
+            cursor.close()
+            return cursor.fetchone()
+        except Exception as e:
+            print(f"Error en el modelo User al traer a los profesores: {e}")

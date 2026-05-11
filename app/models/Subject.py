@@ -19,7 +19,7 @@ class Subject:
         self.training_area = training_area
 
     @classmethod
-    def get_all_subjects(cls, school_id: int) -> list[tuple] | None:
+    def get_all_subjects(cls, school_id: str) -> list[tuple] | None:
         """Obtener todas las asignaturas"""
         try:
             cursor = get_db_cursor()
@@ -56,11 +56,16 @@ class Subject:
             print(e)
             return False
 
-    def delete_subject(id) -> bool:
+    @classmethod
+    def delete_subject(cls, id) -> bool:
         """Eliminar una asignatura"""
-        cursor = get_db_cursor()
-        conn = mysql.get_db()
-        cursor.execute("DELETE FROM subjects WHERE id = %s", (id))
-        conn.commit()
-        cursor.close()
-        return cursor.rowcount > 0
+        try:
+            cursor = get_db_cursor()
+            conn = mysql.get_db()
+            cursor.execute("DELETE FROM subjects WHERE id = %s", (id))
+            conn.commit()
+            cursor.close()
+            return cursor.rowcount > 0
+        except Exception as e:
+            print(f"Error en delete_subject: {e}")
+            return False

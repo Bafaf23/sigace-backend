@@ -5,11 +5,12 @@ from flask import jsonify, request, Blueprint
 subject_controller = Blueprint("subject_controller", __name__)
 
 
-@subject_controller.route("/subject/get/", methods=["GET"])
-def get_subject() -> tuple[dict, int]:
+@subject_controller.route("/subject/get/<sig>", methods=["GET"])
+def get_subject(sig) -> tuple[dict, int]:
     """Obtener todas las asignaturas"""
     try:
-        school_id = "SIG4465"
+        school_id = sig
+
         if not school_id:
             return jsonify({"error": "school_id is required"}), 400
 
@@ -50,15 +51,14 @@ def create_subject() -> tuple[dict, int]:
         return jsonify({"error": str(e)}), 500
 
 
-@subject_controller.route("/subject/delete/<int:id>/", methods=["DELETE"])
-def delete_subject() -> tuple[dict, int]:
+@subject_controller.route("/subject/delete/<int:id>", methods=["DELETE"])
+def delete_subject(id) -> tuple[dict, int]:
     """Eliminar una asignatura"""
-    id = request.json
     try:
-        subject = Subject(id)
-        if subject.delete_subject():
+        deleted = Subject.delete_subject(id)
+        if deleted:
             return jsonify({"message": "Asignatura eliminada correctamente"}), 200
-        else:
-            return jsonify({"error": "Error al eliminar la asignatura"}), 500
+        return jsonify({"error": "No se encontró la asignatura"}), 404
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500

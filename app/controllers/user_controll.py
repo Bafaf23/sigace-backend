@@ -78,18 +78,18 @@ def get_user_by_dni() -> tuple[dict, int]:
         return jsonify({"success": False, "error": "Usuario no encontrado"}), 404
 
 
-@user_controller.route("/get_user_teachers/", methods=["GET"])
-def get_user_teachers():
+@user_controller.route("/get_user_teachers/<sig>", methods=["GET"])
+def get_user_teachers(sig):
     try:
-        sig = request.args.get("SIG", "SIG4465")
-
+        print(sig)
         if not sig:
             return jsonify({"error": "Es necesariol el SIG"}), 400
 
         teachers = User.get_teachers_all(sig)
 
         if teachers:
-            return jsonify({"success": True, "Teachers": teachers}), 200
+            return jsonify({"success": True, "Teachers": [teachers]}), 200
+
     except Exception as e:
         print(f"Ocurrio un error {e}")
         return []
