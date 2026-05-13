@@ -24,7 +24,7 @@ def register_user() -> tuple[dict, int]:
     role = data.get("role")
     school_id = data.get("sig")
 
-    type_document = data.get("type_document")
+    type_document = data.get("typeDocuement")
     document = data.get("document")
 
     dni = f"{type_document} {document}"
