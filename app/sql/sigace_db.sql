@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS users (
   pass VARCHAR(255) NOT NULL,
   `role` ENUM('administrator', 'teacher', 'student') NOT NULL DEFAULT 'student',
   status boolean DEFAULT FALSE,
-  age INT AS (TIMESTAMPDIFF(YEAR, birthdate, CURDATE())) VIRTUAL,
   -- metadatos
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -39,6 +38,17 @@ CREATE TABLE IF NOT EXISTS schools (
   type ENUM('publica', 'privada') NOT NULL,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- tabla de profesores
+CREATE TABLE IF NOT EXISTS teachers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  id_user INT UNIQUE NOT NULL,
+  id_school VARCHAR(7) NOT NULL,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_teacher_user FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_teacher_school FOREIGN KEY (id_school) REFERENCES schools(code_sig) ON DELETE CASCADE
 );
 
 -- tabla de secciones
@@ -88,16 +98,6 @@ CREATE TABLE IF NOT EXISTS evaluation_plans (
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- tabla de profesores
-CREATE TABLE IF NOT EXISTS teachers (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  id_user INT UNIQUE NOT NULL,
-  id_school VARCHAR(7) NOT NULL,
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT fk_teacher_user FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE,
-  CONSTRAINT fk_teacher_school FOREIGN KEY (id_school) REFERENCES schools(code_sig) ON DELETE CASCADE
-);
 
 
 -- tabla de representantes legales (antes de students por FK)
@@ -174,15 +174,6 @@ CREATE TABLE IF NOT EXISTS logs_actions(
   CONSTRAINT fk_logs_actions_user FOREIGN KEY (id_user) REFERENCES users(id)
 );
 
--- tabla de secciones
-CREATE TABLE sections (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    grado VARCHAR(20) NOT NULL, 
-    letra CHAR(1) NOT NULL,     
-    periodo_id INT,             
-    guia_id INT,                
-    FOREIGN KEY (guia_id) REFERENCES teachers(id)
-);
 
 -- tabla de inscripciones
 CREATE TABLE IF NOT EXISTS enrollments(
@@ -192,8 +183,8 @@ CREATE TABLE IF NOT EXISTS enrollments(
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (student_id) REFERENCES students(id),
-  FOREIGN KEY (section_id) REFERENCES secciones(id)
-)
+  FOREIGN KEY (section_id) REFERENCES sections(id)
+);
 
 -- tabla de cargos academicos
 CREATE TABLE IF NOT EXISTS loads_academics(
@@ -205,7 +196,7 @@ CREATE TABLE IF NOT EXISTS loads_academics(
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   -- restricciones
   FOREIGN KEY (subject_id) REFERENCES subjects(id),
-  FOREIGN KEY (section_id) REFERENCES secciones(id),
+  FOREIGN KEY (section_id) REFERENCES sections(id),
   FOREIGN KEY (teacher_id) REFERENCES teachers(id)
 );
 
@@ -227,3 +218,6 @@ CREATE TABLE IF NOT EXISTS evaluations(
 INSERT INTO schools (code_sig, name, address, code_school, type) VALUES ("SIG4465", "U.E.N Juan de Escalona", "Av. El arroyo, el hatillo", "OD19641509", "publica");
 
 INSERT INTO subjects (school_id, name, year_subject, code_subject, training_area) VALUES ("SIG4465", "Matemáticas", "1to", "MAT01", "Formacion General");
+
+INSERT INTO users (dni, first_name, last_name, email, phone, birthdate, pass, `role`, status) VALUES
+  ('V-30021867', 'Bryant', 'Facenda', 'bryatffacen@gmail.com', '4241736193', '2003-09-23', 'scrypt:32768:8:1$uIrMQv9dqj6iZqlx$104aa9e26d3af35fd18a5da35a6018c1dc766b209f2da9ed55f8f2eb1b98ec88dbe0893f45d95b65a7b3f9e9c1db379677c3514f2d8449b373d3da0c230ae9c6', 'teacher', TRUE);
