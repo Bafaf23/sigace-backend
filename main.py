@@ -15,7 +15,7 @@ from app.controllers.school_controll import school_controller
 from app.controllers.section_controll import section_controll
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "https://sigace.vercel.app/"}})
+CORS(app, resources={r"/*": {"origins": "https://sigace.vercel.app"}})
 
 load_dotenv()
 
