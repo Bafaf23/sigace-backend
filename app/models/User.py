@@ -59,7 +59,6 @@ class User:
     def register_user(self) -> tuple[bool, str]:
         """Crear un usuario"""
         cursor = None
-        conn = None
         try:
             cursor = get_db_cursor()
             conn = mysql.get_db()
@@ -123,8 +122,6 @@ class User:
         finally:
             if cursor:
                 cursor.close()
-            if conn:
-                conn.close()
 
     @classmethod
     def get_teachers_all(cls, school_id: str) -> tuple[list]:
