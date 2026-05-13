@@ -56,17 +56,19 @@ class User:
             print(f"Error en get_user_by_dni: {e}")
             return []
 
-    def register_user(self) -> tuple[bool, str]:
+    def register_user(self) -> tuple[bool, str] | None:
         """Crear un usuario"""
         cursor = None
         try:
             cursor = get_db_cursor()
             conn = mysql.get_db()
 
+            # Verificar si la institucion existe
             cursor.execute(
                 "SELECT code_sig FROM schools WHERE code_sig = %s", (self.school_id,)
             )
             school = cursor.fetchone()
+
             if not school:
                 return (
                     False,
@@ -74,11 +76,19 @@ class User:
                 )
 
             cursor.execute("SELECT email FROM users  WHERE email = %s", (self.email,))
+
             user = cursor.fetchone()
+
             if user:
                 return (
                     False,
                     f"El email {self.email} ya esta registrado",
+                )
+
+            if self.password != self.confirm_password:
+                return (
+                    False,
+                    "Las contraseñas no coinciden",
                 )
 
             sql = "INSERT INTO users (dni, first_name, last_name, email, phone, birthdate, pass, role) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
@@ -100,25 +110,22 @@ class User:
             if self.role == "teacher":
                 """Crear un profesor por defecto para la institucion"""
 
-                sql_teacher = "INSERT INTO teachers (id_user, id_school) VALUES (%s, %s)"
+                sql_teacher = (
+                    "INSERT INTO teachers (id_user, id_school) VALUES (%s, %s)"
+                )
                 values_teacher = (user_id, self.school_id)
+
                 cursor.execute(sql_teacher, values_teacher)
 
             conn.commit()
             cursor.close()
             conn.close()
-            if self.role == "teacher":
-                return (
-                    True,
-                    "Profesor registrado correctamente",
-                )
-            else:
-                return True
+            return (True, "Usuario registrado correctamente")
         except Exception as e:
             print(f"Error en create_user: {e}")
             cursor.close()
             conn.close()
-            return False
+            return (False, f"Error al registrar el usuario: {e}")
         finally:
             if cursor:
                 cursor.close()
