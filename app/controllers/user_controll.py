@@ -27,7 +27,7 @@ def register_user() -> tuple[dict, int]:
     type_document = data.get("typeDocuement")
     document = data.get("document")
 
-    dni = f"{type_document} {document}"
+    dni = f"{type_document}{document}"
 
     # Validacion de datos
     if not re.match(
