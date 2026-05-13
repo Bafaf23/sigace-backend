@@ -100,8 +100,8 @@ class User:
             if self.role == "teacher":
                 """Crear un profesor por defecto para la institucion"""
 
-                sql_teacher = "INSERT INTO teachers (id_user, id_school, id_subject) VALUES (%s, %s, %s)"
-                values_teacher = (user_id, self.school_id, 1)
+                sql_teacher = "INSERT INTO teachers (id_user, id_school,) VALUES (%s, %s)"
+                values_teacher = (user_id, self.school_id)
                 cursor.execute(sql_teacher, values_teacher)
 
             conn.commit()
