@@ -20,7 +20,7 @@ def register_user() -> tuple[dict, int]:
     phone = data.get("phone")
     birthdate = data.get("birthdate")
     password = data.get("password")
-    confirm_password = data.get("confirm_password")
+    confirm_password = data.get("passwordConfir")
     role = data.get("role")
     school_id = data.get("sig")
 
