@@ -58,6 +58,8 @@ class User:
 
     def register_user(self) -> tuple[bool, str]:
         """Crear un usuario"""
+        cursor = None
+        conn = None
         try:
             cursor = get_db_cursor()
             conn = mysql.get_db()
@@ -112,18 +114,17 @@ class User:
                     "Profesor registrado correctamente",
                 )
             else:
-                return (
-                    True,
-                    "Estudiante registrado correctamente",
-                )
+                return True
         except Exception as e:
             print(f"Error en create_user: {e}")
             cursor.close()
             conn.close()
-            return (
-                False,
-                f"Error al registrar el usuario: {e}",
-            )
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
     @classmethod
     def get_teachers_all(cls, school_id: str) -> tuple[list]:
