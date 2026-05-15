@@ -80,13 +80,13 @@ class User:
 
             cursor = get_db_cursor()
             cursor.execute(
-                "SELECT users.id, users.dni, users.first_name, users.last_name, users.email, users.phone, users.birthdate, users.role, users.age, users.pass, teachers.id_school FROM users LEFT JOIN teachers ON users.id = teachers.id_user WHERE users.email = %s AND users.status = 1",
+                "SELECT users.id, users.dni, users.first_name, users.last_name, users.email, users.phone, users.birthdate, users.role, users.pass, teachers.id_school FROM users LEFT JOIN teachers ON users.id = teachers.id_user WHERE users.email = %s AND users.status = 1",
                 (email,),
             )
             user = cursor.fetchone()
             if not user:
                 return (False, "Credenciales incorrectas")
-                
+
             if not check_password_hash(user["pass"], password):
                 return (False, "Credenciales incorrectas")
 
