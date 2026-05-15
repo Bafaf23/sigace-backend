@@ -17,6 +17,7 @@ def login_user() -> tuple[dict, int]:
     if not email or not password:
         return jsonify({"error": "Email y contraseña son requeridos"}), 400
 
+    cursor = None
     try:
         cursor = get_db_cursor()
         sql = """
@@ -36,7 +37,8 @@ def login_user() -> tuple[dict, int]:
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        cursor.close()
+        if cursor is not None:
+            cursor.close()
 
     # Establecer la sesión del usuario
     session["loggedin"] = True

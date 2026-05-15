@@ -63,15 +63,16 @@ def login_user() -> tuple[dict, int]:
     if not data:
         return jsonify({"error": "No se enviaron datos"}), 400
 
-    dni = data.get("dni")
+    email = data.get("email")
     password = data.get("password")
-    result = User.authenticate(dni, password)
+    result = User.authenticate(email, password)
 
     if not result[0]:
         code = 401 if result[1] == "Credenciales incorrectas" else 400
         return jsonify({"success": False, "error": result[1]}), code
 
     user = result[2]
+
     session["loggedin"] = True
     session["id"] = user["id"]
     session["dni"] = user["dni"]
@@ -79,7 +80,7 @@ def login_user() -> tuple[dict, int]:
     session["role"] = user["role"]
     session["name"] = user["first_name"]
     session["lastName"] = user["last_name"]
-
+    session["sig"] = user["id_school"]
     return (
         jsonify(
             {
@@ -92,6 +93,7 @@ def login_user() -> tuple[dict, int]:
                     "role": user["role"],
                     "name": user["first_name"],
                     "lastName": user["last_name"],
+                    "sig": user["id_school"],
                 },
             }
         ),

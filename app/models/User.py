@@ -69,26 +69,28 @@ class User:
                 cursor.close()
 
     @classmethod
-    def authenticate(cls, dni: str, password: str) -> tuple[bool, str] | tuple[bool, str, dict]:
+    def authenticate(
+        cls, email: str, password: str
+    ) -> tuple[bool, str] | tuple[bool, str, dict]:
         """Validar DNI y contraseña; devuelve datos públicos del usuario (sin hash)."""
         cursor = None
         try:
-            if not dni or not password:
-                return (False, "DNI y contraseña son requeridos")
+            if not email or not password:
+                return (False, "Email y contraseña son requeridos")
 
             cursor = get_db_cursor()
             cursor.execute(
-                "SELECT id, dni, first_name, last_name, email, phone, birthdate, role, age, pass "
-                "FROM users WHERE dni = %s AND status = 1",
-                (dni,),
+                "SELECT users.id, users.dni, users.first_name, users.last_name, users.email, users.phone, users.birthdate, users.role, users.age, users.pass, teachers.id_school FROM users LEFT JOIN teachers ON users.id = teachers.id_user WHERE users.email = %s AND users.status = 1",
+                (email,),
             )
-            row = cursor.fetchone()
-            if not row:
+            user = cursor.fetchone()
+            if not user:
                 return (False, "Credenciales incorrectas")
-            if not check_password_hash(row["pass"], password):
+                
+            if not check_password_hash(user["pass"], password):
                 return (False, "Credenciales incorrectas")
 
-            public = {k: v for k, v in row.items() if k != "pass"}
+            public = {k: v for k, v in user.items() if k != "pass"}
             return (True, "Inicio de sesion exitoso", public)
         except Exception as e:
             print(f"Error en authenticate: {e}")
@@ -125,7 +127,7 @@ class User:
             if user:
                 cursor.close()
                 conn.close()
-                return (False, f"El email {self.email} ya esta registrado")
+                return (False, f"El usuario ya esta registrado")
 
             if self.password != self.confirm_password:
                 cursor.close()
@@ -170,7 +172,9 @@ class User:
                 cursor.close()
 
     @classmethod
-    def get_teachers_all(cls, school_id: str) -> tuple[bool, str] | tuple[bool, str, list]:
+    def get_teachers_all(
+        cls, school_id: str
+    ) -> tuple[bool, str] | tuple[bool, str, list]:
         cursor = None
         try:
             cursor = get_db_cursor()
