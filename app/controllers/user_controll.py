@@ -75,7 +75,9 @@ def login_user() -> tuple[dict, int]:
 
     user = result[2]
 
-    print(f"user:{user['id']} {user['name']}, se inicio sesion correctamente")
+    print(
+        f"user:{user['id']} {user['first_name']} {user['last_name']}, se inicio sesion correctamente"
+    )
 
     session["loggedin"] = True
     session["id"] = user["id"]
