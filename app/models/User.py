@@ -1,5 +1,8 @@
 from db import get_db_cursor, mysql
 from werkzeug.security import check_password_hash, generate_password_hash
+from datetime import datetime, timedelta
+import secrets
+import os
 
 
 class User:
@@ -99,7 +102,7 @@ class User:
             if cursor:
                 cursor.close()
 
-    def register_user(self) -> tuple[bool, str] | None:
+    def register_user(self) -> tuple[bool, str] | tuple[bool, str, int]:
         """Crear un usuario"""
         cursor = None
         try:
@@ -160,7 +163,7 @@ class User:
                 cursor.execute(sql_teacher, values_teacher)
 
             conn.commit()
-            return (True, "Usuario registrado correctamente")
+            return (True, "Usuario registrado correctamente", user_id)
         except Exception as e:
             if cursor:
                 cursor.close()
@@ -194,3 +197,38 @@ class User:
         finally:
             if cursor:
                 cursor.close()
+
+    @classmethod
+    def forgot_password(cls, email: str) -> tuple[bool, str]:
+        """Generar un codigo de recuperacion de contraseña y enviarlo al correo del usuario"""
+        try:
+            cursor = get_db_cursor()
+            conn = mysql.get_db()
+
+            cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+
+            user = cursor.fetchone()
+            if not user:
+                cursor.close()
+                conn.close()
+                return (False, "El usuario no existe")
+
+            user_id = user["id"]
+
+            """Generar un codigo de recuperacion de contraseña"""
+            code_secret = "".join(secrets.choice("0123456789") for _ in range(6))
+            expires_at = datetime.now() + timedelta(seconds=100)
+
+            sql = "INSERT INTO codes_scret (id_user, code_secret, expires_at) VALUES (%s, %s, %s)"
+            values = (user_id, code_secret, expires_at)
+            cursor.execute(sql, values)
+            conn.commit()
+            return (True, "Codigo de recuperacion enviado correctamente")
+        except Exception as e:
+            print(f"Error en forgot_password: {e}")
+            return (False, f"Error al enviar el codigo de recuperacion: {e}")
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()

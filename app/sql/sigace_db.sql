@@ -149,7 +149,7 @@ CREATE TABLE IF NOT EXISTS students (
   rep_email VARCHAR(100) NOT NULL,
   rep_relationship VARCHAR(50) NOT NULL,
   -- datos del estudiante para control de estudios
-  `condition` ENUM('regular', 'new_entry') NOT NULL,
+  `condition` ENUM('regular', 'nuevo_ingreso', 'reingreso') NOT NULL,
   condition_description VARCHAR(255) NOT NULL,
   -- datos del estudiante relacionados a la escuela e la que se inscribe
   id_school VARCHAR(7) NOT NULL,
@@ -186,6 +186,11 @@ CREATE TABLE IF NOT EXISTS enrollments(
   FOREIGN KEY (section_id) REFERENCES sections(id)
 );
 
+-- Si enrollments apunta a la tabla antigua `secciones`, corregir con:
+-- ALTER TABLE enrollments DROP FOREIGN KEY enrollments_ibfk_2;
+-- ALTER TABLE enrollments ADD CONSTRAINT enrollments_ibfk_2
+--   FOREIGN KEY (section_id) REFERENCES sections(id);
+
 -- tabla de cargos academicos
 CREATE TABLE IF NOT EXISTS loads_academics(
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -213,6 +218,18 @@ CREATE TABLE IF NOT EXISTS evaluations(
   -- restricciones
   FOREIGN KEY (load_academic_id) REFERENCES loads_academics(id)
   );
+
+
+  -- tabla de codigos de inscripcion
+  CREATE TABLE IF NOT EXISTS codes_secret(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_user INT NOT NULL,
+    code_secret VARCHAR(6) UNIQUE NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- restricciones
+    FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE
+  )
 
 
 INSERT INTO schools (code_sig, name, address, code_school, type) VALUES ("SIG4465", "U.E.N Juan de Escalona", "Av. El arroyo, el hatillo", "OD19641509", "publica");
