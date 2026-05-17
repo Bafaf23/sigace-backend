@@ -51,8 +51,10 @@ def register_user() -> tuple[dict, int]:
     ).register_user()
 
     if user[0]:
+        print(f"user: {user[2]}, se registro correctamente")
         return jsonify({"success": True, "message": user[1]}), 200
     else:
+        print(f"user: {user[2]}, no se registro correctamente")
         return jsonify({"success": False, "error": user[1]}), 400
 
 
@@ -72,6 +74,8 @@ def login_user() -> tuple[dict, int]:
         return jsonify({"success": False, "error": result[1]}), code
 
     user = result[2]
+
+    print(f"user:{user['id']} {user['name']}, se inicio sesion correctamente")
 
     session["loggedin"] = True
     session["id"] = user["id"]
@@ -131,3 +135,24 @@ def get_user_teachers(sig):
     except Exception as e:
         print(f"Ocurrio un error {e}")
         return jsonify({"error": str(e)}), 500
+
+
+@user_controller.route("/forgot_password/", methods=["POST"])
+def forgot_password() -> tuple[dict, int]:
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        print("No se enviaron datos")
+        return jsonify({"error": "No se enviaron datos"}), 400
+
+    result = User.forgot_password(email)
+    if not result[0]:
+        return jsonify({"success": False, "error": result[1]}), 400
+
+    return (
+        jsonify(
+            {"success": True, "message": "Codigo de recuperacion enviado correctamente"}
+        ),
+        200,
+    )

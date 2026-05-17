@@ -13,6 +13,7 @@ from app.controllers.logut_controll import logout_controller
 from app.controllers.user_controll import user_controller
 from app.controllers.school_controll import school_controller
 from app.controllers.section_controll import section_controll
+from app.controllers.enrollment_controll import enrollment_controller
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "https://sigace.vercel.app"}})
@@ -37,6 +38,7 @@ app.register_blueprint(subject_controller)
 app.register_blueprint(logout_controller)
 app.register_blueprint(school_controller)
 app.register_blueprint(section_controll)
+app.register_blueprint(enrollment_controller)
 
 
 @app.route("/")
@@ -53,6 +55,15 @@ def home():
                 "subjects": "/subject/get/",
                 "create_subject": "/subject/create/",
                 "delete_subject": "/subject/delete/<int:id>/",
+                "create_enrollment": "/enrollment/create/",
+                "get_enrollment": "/enrollment/get/<int:id>/",
+                "delete_enrollment": "/enrollment/delete/<int:id>/",
+                "get_enrollment_by_user": "/enrollment/get_by_user/<int:id>/",
+                "get_enrollment_by_school": "/enrollment/get_by_school/<int:id>/",
+                "get_enrollment_by_section": "/enrollment/get_by_section/<int:id>/",
+                "get_enrollment_by_year": "/enrollment/get_by_year/<int:id>/",
+                "get_enrollment_by_all": "/enrollment/get_by_all/<int:id>/",
+                "get_enrollment_by_all": "/enrollment/get_by_all/<int:id>/",
                 "logout": "/logout/",
                 "get_user_by_dni": "/user/get_user_by_dni/<dni>/",
                 "get_schools": "/school/get/",
