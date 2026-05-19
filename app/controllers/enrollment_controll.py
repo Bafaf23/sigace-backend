@@ -22,18 +22,14 @@ def create_enrollment() -> tuple[dict, int]:
 
     dni = f"{type_document}{document}"
 
-    # Mapeo correcto de variables para el __init__ de tu clase User
     first_name = data.get("name")
     last_name = data.get("lastName")
     email = data.get("email")
     phone = data.get("phone")
     birthdate = data.get("birthDate")
-    school_id = data.get(
-        "sig"
-    )  # Tu modelo busca self.school_id a través del código SIG
+    school_id = data.get("sig")
     password = data.get("pass")
 
-    # Instanciamos el usuario con los nombres exactos que espera tu modelo
     user_instance = User(
         dni=dni,
         first_name=first_name,
@@ -43,11 +39,10 @@ def create_enrollment() -> tuple[dict, int]:
         birthdate=birthdate,
         school_id=school_id,
         password=password,
-        confirm_password=password,  # El JSON actual solo envía 'pass'
-        role="student",  # Rol por defecto para esta ruta de inscripción
+        confirm_password=password,
+        role="student",
     )
 
-    # Llamada síncrona limpia (sin await)
     user = user_instance.register_user()
 
     if not user or not user[0]:
@@ -56,7 +51,6 @@ def create_enrollment() -> tuple[dict, int]:
 
     user_id = user[2]
 
-    # Instanciar y crear Inscripción de forma síncrona
     enrollment_instance = Enrollment(
         id_user=user_id,
         id_school=data.get("sig"),
@@ -83,10 +77,7 @@ def create_enrollment() -> tuple[dict, int]:
         rep_email=data.get("repEmail"),
         rep_phone=data.get("repPhone"),
         rep_relationship=data.get("relationship"),
-        # 8 ARGUMENTOS FALTANTES REINCORPORADOS:
-        legal_representative_dni=data.get(
-            "legalRepresentativeDni"
-        ),  # Cambiará a None de forma segura si no viene
+        legal_representative_dni=data.get("legalRepresentativeDni"),
         legal_representative_name=data.get("legalRepresentativeName"),
         legal_representative_last_name=data.get("legalRepresentativeLastName"),
         legal_representative_phone=data.get("legalRepresentativePhone"),
@@ -101,9 +92,16 @@ def create_enrollment() -> tuple[dict, int]:
 
     if not enrollment or not enrollment[0]:
         error_msg = enrollment[1] if enrollment else "Error al crear la inscripción"
-        return jsonify({"error": error_msg}), 400
+        return jsonify({"error": error_msg, "student_id": enrollment[2]}), 400
 
     return (
-        jsonify({"success": True, "message": "Inscripción creada correctamente"}),
+        jsonify(
+            {
+                "success": True,
+                "message": "Inscripción creada correctamente",
+                "user_id": user_id,
+                "student_id": enrollment[2],
+            }
+        ),
         200,
     )

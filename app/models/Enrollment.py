@@ -82,15 +82,13 @@ class Enrollment:
         self.condition_description = condition_description
         self.code_certificate = code_certificate
 
-    def _execute_step(
-        self, cursor, step: str, sql: str, params: tuple
-    ) -> None:
+    def _execute_step(self, cursor, step: str, sql: str, params: tuple) -> None:
         try:
             cursor.execute(sql, params)
         except Exception as e:
             raise RuntimeError(f"{step}: {e}") from e
 
-    def create_enrollment(self) -> tuple[bool, str]:
+    def create_enrollment(self) -> tuple[bool, str, int]:
         """Crea el estudiante y su inscripción en una sección."""
         cursor = None
         conn = None
@@ -179,13 +177,13 @@ class Enrollment:
             )
 
             conn.commit()
-            return (True, "Inscripción creada correctamente")
+            return (True, "Inscripción creada correctamente", student_id)
 
         except Exception as e:
             if conn:
                 conn.rollback()
             print(f"Error en create_enrollment: {e}")
-            return (False, f"Error al crear la inscripción: {e}")
+            return (False, f"Error al crear la inscripción: {e}", None)
 
         finally:
             if cursor:
