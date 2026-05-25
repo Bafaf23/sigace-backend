@@ -3,6 +3,7 @@ import {
   getAllSchools,
   getSchoolBySIG,
   createSchool,
+  deleteSchool,
 } from "../controllers/school.controller.js";
 
 const router = Router();
@@ -13,4 +14,5 @@ router.get("/", (req, res) => {
 router.get("/getAllSchools", getAllSchools);
 router.get("/getSchoolBySIG/:SIG", getSchoolBySIG);
 router.post("/createSchool", createSchool);
+router.delete("/deleteSchool/:SIG", deleteSchool);
 export default router;

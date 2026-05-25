@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import { School } from "../models/School.model.js";
-import { errorMonitor } from "node:events";
 
 export const getAllSchools = async (
   _req: Request,
@@ -69,7 +68,7 @@ export const createSchool = async (
     console.log("--------------------------------");
     console.log("Escuela creada correctamente");
     console.log("--------------------------------");
-    
+
     return new Promise((resolve) => {
       resolve(
         res
@@ -80,6 +79,45 @@ export const createSchool = async (
   } catch (error) {
     return new Promise((resolve) => {
       resolve(res.status(500).json({ error: "Error al crear la escuela" }));
+    });
+  }
+};
+
+export const deleteSchool = async (
+  req: Request,
+  res: Response,
+): Promise<void | Response> => {
+  try {
+    console.log("--------------------------------");
+    console.log("deleteSchool... eliminando escuela...");
+    console.log("--------------------------------");
+    const SIG = req.params.SIG as string;
+    if (!SIG) {
+      return new Promise((resolve) => {
+        resolve(res.status(500).json({ error: "El SIG es requerido" }));
+      });
+    }
+    const deletedSchool = await School.deleteSchool(SIG);
+    if (!deletedSchool) {
+      return new Promise((resolve) => {
+        resolve(
+          res.status(500).json({ error: "Error al eliminar la escuela" }),
+        );
+      });
+    }
+    console.log("--------------------------------");
+    console.log("Escuela eliminada correctamente");
+    console.log("--------------------------------");
+    return new Promise((resolve) => {
+      resolve(
+        res
+          .status(200)
+          .json({ success: true, message: "Escuela eliminada correctamente" }),
+      );
+    });
+  } catch (error) {
+    return new Promise((resolve) => {
+      resolve(res.status(500).json({ error: "Error al eliminar la escuela" }));
     });
   }
 };

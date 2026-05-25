@@ -1,5 +1,5 @@
 import type { RowDataPacket } from "mysql2";
-import { connectToDatabase } from "../db.js";
+import { connectToDatabase, closeDatabaseConnection } from "../db.js";
 import bcrypt from "bcryptjs";
 
 export interface UserListItem {
@@ -68,6 +68,8 @@ export class User {
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
       throw error;
+    } finally {
+      await closeDatabaseConnection();
     }
   }
 
@@ -87,24 +89,32 @@ export class User {
           await bcrypt.hash(user.password, 10),
         ],
       );
+      await closeDatabaseConnection();
       return true;
     } catch (error) {
       console.error("Error al crear usuario:", error);
+      await closeDatabaseConnection();
       return false;
     }
   }
 
-  public static async getUserByEmail(email: string): Promise<AuthUserRow | null> {
+  public static async getUserByEmail(
+    email: string,
+  ): Promise<AuthUserRow | null> {
     try {
       const db = await connectToDatabase();
       const [result] = await db.query<AuthUserRow[]>(
         "SELECT u.id, u.cedula, u.nombre, u.apellido, u.email, u.numero_de_telefono AS numeroDeTelefono, u.contraseña, r.nombre AS rol, u.SIG FROM usuarios u INNER JOIN roles r ON u.rol_id = r.id WHERE u.email = ?",
         [email],
       );
+      await closeDatabaseConnection();
       return result[0] || null;
     } catch (error) {
       console.error("Error al obtener usuario por email:", error);
+      await closeDatabaseConnection();
       return null;
+    } finally {
+      await closeDatabaseConnection();
     }
   }
 }

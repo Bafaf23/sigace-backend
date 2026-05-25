@@ -38,6 +38,24 @@ app.use("/users", userRouter);
 app.use("/auth", authRouter);
 app.use("/schools", schoolRouter);
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    name: "SIGACE API",
+    description:
+      "Sistema Inteligente de Control de Estudios. Backend para la gestión de matrículas, notas y reportes académicos.",
+    version: "1.0.0",
+    environment: "production",
+    status: "operational",
+    timestamp: "2026-05-24T13:00:00Z",
+    documentation: "https://api.sigace.com/docs",
+    links: {
+      users: `${process.env.API_URL}/users`,
+      auth: `${process.env.API_URL}/auth`,
+      schools: `${process.env.API_URL}/schools`,
+    },
+  });
+});
+
 const port = process.env.PORT || 3004;
 
 app.listen(port, () => {
