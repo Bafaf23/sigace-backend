@@ -1,10 +1,9 @@
 import { Router } from "express";
 import { login, logout } from "../controllers/auth.controller.js";
-import type { Request, Response } from "express";
 
 const router = Router();
 
-router.get("/", (_req: Request, res: Response) => {
+router.get("/", (_req, res) => {
   res.status(200).json({
     name: "SIGACE API - Auth",
     description: "API para la autenticación del sistema SIGACE.",
@@ -19,6 +18,6 @@ router.get("/", (_req: Request, res: Response) => {
 });
 
 router.post("/login", login);
-
 router.post("/logout", logout);
+
 export default router;

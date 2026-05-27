@@ -1,8 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
 import userRouter from "./routers/user.route.js";
-import session from "express-session";
 import cors from "cors";
+import session from "express-session";
 import authRouter from "./routers/auth.route.js";
 import schoolRouter from "./routers/school.route.js";
 
@@ -19,7 +19,6 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
-
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "secret", // Clave para firmar la cookie de sesión

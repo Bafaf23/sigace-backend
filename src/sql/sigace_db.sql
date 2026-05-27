@@ -1,42 +1,54 @@
 CREATE DATABASE IF NOT EXISTS sigace_db;
-use sigace_db;
+
+USE sigace_db;
 
 CREATE TABLE IF NOT EXISTS roles (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  nombre VARCHAR(50) NOT NULL UNIQUE,
+  name VARCHAR(50) NOT NULL UNIQUE,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS liceos (
+CREATE TABLE IF NOT EXISTS schools (
   SIG VARCHAR(10) PRIMARY KEY,
-  razon_social VARCHAR(50) NULL,
-  nombre VARCHAR(50) NOT NULL,
-  direccion VARCHAR(50) NOT NULL,
-  telefono VARCHAR(50) NOT NULL,
+  company_name VARCHAR(50) NULL,
+  name VARCHAR(50) NOT NULL,
+  address TEXT NOT NULL,
+  phone VARCHAR(50) NOT NULL,
   email VARCHAR(50) NOT NULL UNIQUE,
-  tipo ENUM('pública', 'privada') NOT NULL,
-  codigo_DEA VARCHAR(10) UNIQUE,
-  rif VARCHAR(20) UNIQUE,
+  type ENUM('Pública', 'Privada','Municipal') NOT NULL,
+  DEA_CODE VARCHAR(10) UNIQUE,
+  RIF VARCHAR(20) UNIQUE,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_only_one CHECK (
+    (type = 'Pública' AND DEA_CODE IS NOT NULL AND RIF IS NULL AND company_name IS NULL) OR
+    (type IN ('Privada', 'Municipal') AND RIF IS NOT NULL AND DEA_CODE IS NULL AND company_name IS NOT NULL)
+  )
 );
 
-ALTER TABLE liceos ADD CONSTRAINT chk_solo_uno CHECK(
-  (codigo_DEA IS NULL AND rif IS NOT NULL) OR (codigo_DEA IS NOT NULL AND rif IS NULL) OR (tipo = 'pública' AND razon_social IS NOT NULL) OR (tipo = 'privada' AND razon_social IS NOT NULL)
-);
-
-CREATE TABLE IF NOT EXISTS usuarios (
+CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  cedula VARCHAR(10) NOT NULL UNIQUE,
-  nombre VARCHAR(50) NOT NULL,
-  apellido VARCHAR(50) NOT NULL,
+  document VARCHAR(10) NOT NULL UNIQUE,
+  name VARCHAR(50) NOT NULL,
+  last_name VARCHAR(50) NOT NULL,
   email VARCHAR(50) NOT NULL UNIQUE,
-  numero_de_telefono VARCHAR(50) NOT NULL UNIQUE,
-  contraseña VARCHAR(255) NOT NULL,
-  rol_id INT NOT NULL,
+  phone VARCHAR(50) NOT NULL UNIQUE,
+  pass VARCHAR(255) NOT NULL,
+  role_id INT NOT NULL,
   SIG VARCHAR(10) NOT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_first_login BOOLEAN DEFAULT TRUE,
+  is_active BOOLEAN DEFAULT TRUE,
 
-  FOREIGN KEY (rol_id) REFERENCES roles(id),
-  FOREIGN KEY (SIG) REFERENCES liceos(SIG)
+  FOREIGN KEY (role_id) REFERENCES roles(id),
+  FOREIGN KEY (SIG) REFERENCES schools(SIG)
 );
+
+INSERT INTO roles (name) VALUES ('SuperAdmin'), ('Estudiante'), ('Profesor'), ('Director');
+INSERT INTO schools (SIG, name, address, phone, email, type, DEA_CODE)
+VALUES ('SIG1234', 'Escuela 1', 'Direccion 1', '1234567890', 'escuela1@gmail.com', 'Pública', 'DEA001');
+
+INSERT INTO users (document, name, last_name, email, phone, pass, role_id, SIG)
+VALUES ('V-30021867', 'Bryant', 'Facenda', 'bryantffacen@gmail.com', '1234567890', '$2b$10$bRnuv6.gvFqGmd.E2rvx4uI.E0Wta9yvSdtqH2AwAMO478qCTYHk.', 1, "SIG3120")

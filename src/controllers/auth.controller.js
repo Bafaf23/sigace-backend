@@ -1,11 +1,10 @@
 import { User } from "../models/User.model.js";
-import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jsonwebtoken from "jsonwebtoken";
-import type { Session } from "express-session";
+
 const { sign } = jsonwebtoken;
 
-export const login = async (req: Request, res: Response): Promise<Response> => {
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -21,31 +20,65 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
       return res.status(401).json({ error: "Usuario no encontrado" });
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.contraseña);
+    const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
       return res.status(401).json({ error: "Contraseña incorrecta" });
     }
 
+    const mustChangePassword =
+      user.is_first_login === true || user.is_first_login === 1;
+
     const token = sign(
-      { email: user.email, id: user.id },
+      { email: user.email, id: user.id, role: user.role, mustChangePassword },
       process.env.JWT_SECRET || "secret",
       {
-        expiresIn: "1h",
+        expiresIn: mustChangePassword ? "15m" : "1h",
       },
     );
 
     req.session.user = {
       token: token,
       id: user.id,
-      dni: user.cedula,
+      dni: user.document,
       email: user.email,
-      name: user.nombre,
-      lastName: user.apellido,
-      phone: user.numeroDeTelefono,
-      role: user.rol,
+      name: user.name,
+      lastName: user.last_name,
+      phone: user.phone,
+      role: user.role,
       SIG: user.SIG,
     };
+
+    if (mustChangePassword) {
+      const userSession = {
+        token: token,
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        mustChangePassword: true,
+      };
+
+      return new Promise((resolve) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error("Error al guardar la sesión:", err);
+            return resolve(
+              res.status(500).json({ error: "Error al establecer la sesión" }),
+            );
+          }
+
+          console.log(
+            `⚠️ Primer login detectado. Redireccionando cambio de clave: ${user.email}`,
+          );
+          return resolve(
+            res.status(200).json({
+              mustChangePassword: true,
+              user: userSession,
+            }),
+          );
+        });
+      });
+    }
 
     return new Promise((resolve) => {
       req.session.save((err) => {
@@ -57,7 +90,12 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
         }
 
         console.log(`✅ Sesión iniciada correctamente para: ${user.email}`);
-        return resolve(res.status(200).json({ user: req.session.user }));
+        return resolve(
+          res.status(200).json({
+            mustChangePassword: false,
+            user: req.session.user,
+          }),
+        );
       });
     });
   } catch (error) {
@@ -68,10 +106,7 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
   }
 };
 
-export const logout = async (
-  req: Request,
-  res: Response,
-): Promise<Response> => {
+export const logout = async (req, res) => {
   try {
     /* if (!req.session || !req.session.user) {
       console.error("No hay ninguna sesión activa");

@@ -20,15 +20,10 @@ export const connectToDatabase = async () => {
   }
 };
 
-export const closeDatabaseConnection = async () => {
+export const closeDatabaseConnection = async (connection) => {
   try {
-    const connection = await connectToDatabase();
-    if (connection) {
-      await connection.end();
-      console.log("Conexión a la base de datos cerrada");
-    } else {
-      console.log("No hay conexión a la base de datos para cerrar");
-    }
+    await connection.end();
+    console.log("Conexión a la base de datos cerrada");
   } catch (error) {
     console.error("Error al cerrar la conexión a la base de datos:", error);
     throw error;

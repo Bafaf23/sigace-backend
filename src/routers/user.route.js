@@ -1,5 +1,9 @@
 import express from "express";
-import { createUser, getUsers } from "../controllers/user.controller.js";
+import {
+  createUser,
+  getUsers,
+  changePassword,
+} from "../controllers/user.controller.js";
 
 const router = express.Router();
 
@@ -13,10 +17,12 @@ router.get("/", (_req, res) => {
     links: {
       getUsers: `/getUser`,
       createUser: `/createUser`,
+      changePassword: `/changePassword`,
     },
   });
 });
 router.get("/getUser", getUsers);
 router.post("/createUser", createUser);
+router.post("/changePassword", changePassword);
 
 export default router;
