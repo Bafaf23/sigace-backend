@@ -3,6 +3,8 @@ import {
   createUser,
   getUsers,
   changePassword,
+  deleteUser,
+  updateUser,
 } from "../controllers/user.controller.js";
 
 const router = express.Router();
@@ -18,11 +20,15 @@ router.get("/", (_req, res) => {
       getUsers: `/getUser`,
       createUser: `/createUser`,
       changePassword: `/changePassword`,
+      deleteUser: `/deleteUser/:id`,
+      updateUser: `/updateUser`,
     },
   });
 });
 router.get("/getUser", getUsers);
 router.post("/createUser", createUser);
 router.post("/changePassword", changePassword);
+router.delete("/deleteUser/:id", deleteUser);
+router.put("/updateUser", updateUser);
 
 export default router;

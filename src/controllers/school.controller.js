@@ -161,6 +161,7 @@ export const updateSchool = async (req, res) => {
     console.log("--------------------------------");
     console.log("✅ updateSchool... School updated successfully");
     console.log("--------------------------------");
+    
     return res.status(200).json({
       success: true,
       message: "Escuela actualizada correctamente",

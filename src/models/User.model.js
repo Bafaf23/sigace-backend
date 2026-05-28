@@ -38,7 +38,7 @@ export class User {
       db = await connectToDatabase();
 
       const [users] = await db.query(
-        "SELECT u.id, u.document, u.name, u.last_name, u.email, u.phone, u.role_id, u.SIG, u.is_first_login, u.is_active, r.name AS role FROM users u INNER JOIN roles r ON u.role_id = r.id",
+        "SELECT u.id, u.document, u.name, u.last_name, u.email, u.phone, u.role_id, u.SIG, u.is_first_login, u.is_active, r.name AS role, s.name AS school FROM users u INNER JOIN roles r ON u.role_id = r.id INNER JOIN schools s ON u.SIG = s.SIG",
       );
       return users.map(
         ({
@@ -50,6 +50,7 @@ export class User {
           phone,
           role,
           SIG,
+          school,
           is_first_login,
           is_active,
         }) => ({
@@ -60,6 +61,7 @@ export class User {
           email,
           phone,
           role,
+          school,
           is_first_login,
           is_active,
           SIG,
@@ -139,6 +141,49 @@ export class User {
         : false;
     } catch (error) {
       console.error("Error al cambiar la contraseña:", error);
+      return false;
+    } finally {
+      if (db) {
+        await closeDatabaseConnection(db);
+      }
+    }
+  }
+
+  static async deleteUser(id) {
+    let db;
+    try {
+      db = await connectToDatabase();
+      const [result] = await db.query("DELETE FROM users WHERE id = ?", [id]);
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error("Error al eliminar usuario:", error);
+      return false;
+    } finally {
+      if (db) {
+        await closeDatabaseConnection(db);
+      }
+    }
+  }
+
+  static async updateUser(user) {
+    let db;
+    try {
+      db = await connectToDatabase();
+      const [result] = await db.query(
+        "UPDATE users SET name = ?, last_name = ?, email = ?, phone = ?, role_id = ?, SIG = ? WHERE id = ?",
+        [
+          user.name,
+          user.last_name,
+          user.email,
+          user.phone,
+          user.role_id,
+          user.SIG,
+          user.id,
+        ],
+      );
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error("Error al actualizar usuario:", error);
       return false;
     } finally {
       if (db) {

@@ -5,6 +5,9 @@ import cors from "cors";
 import session from "express-session";
 import authRouter from "./routers/auth.route.js";
 import schoolRouter from "./routers/school.route.js";
+import studentRouter from "./routers/student.route.js";
+import sessionRouter from "./routers/session.route.js";
+import subjectRouter from "./routers/subject.route.js";
 
 dotenv.config();
 
@@ -34,10 +37,13 @@ app.use(
 
 // Routes
 app.use("/users", userRouter);
+app.use("/students", studentRouter);
 app.use("/auth", authRouter);
 app.use("/schools", schoolRouter);
+app.use("/sessions", sessionRouter);
+app.use("/subjects", subjectRouter);
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.status(200).json({
     name: "SIGACE API",
     description:
@@ -51,6 +57,7 @@ app.get("/", (req, res) => {
       users: `${process.env.API_URL}/users`,
       auth: `${process.env.API_URL}/auth`,
       schools: `${process.env.API_URL}/schools`,
+      students: `${process.env.API_URL}/students`,
     },
   });
 });

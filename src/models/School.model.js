@@ -17,7 +17,46 @@ export class School {
     this.RIF = RIF;
     this.DEA_CODE = DEA_CODE;
   }
-
+  static async createTableSchools() {
+    let db;
+    try {
+      db = await connectToDatabase();
+      const [result] = await db.query(
+        `CREATE TABLE IF NOT EXISTS schools (
+  SIG VARCHAR(10) PRIMARY KEY,
+  company_name VARCHAR(50) NULL,
+  name VARCHAR(50) NOT NULL,
+  address TEXT NOT NULL,
+  phone VARCHAR(50) NOT NULL,
+  email VARCHAR(50) NOT NULL UNIQUE,
+  type ENUM('Pública', 'Privada','Municipal') NOT NULL,
+  DEA_CODE VARCHAR(10) UNIQUE,
+  RIF VARCHAR(20) UNIQUE,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_only_one CHECK (
+    (type = 'Pública' AND DEA_CODE IS NOT NULL AND RIF IS NULL AND company_name IS NULL) OR
+    (type IN ('Privada', 'Municipal') AND RIF IS NOT NULL AND DEA_CODE IS NULL AND company_name IS NOT NULL)
+  )
+);`,
+      );
+      console.log("✅ Table Schools created successfully");
+      return true;
+    } catch (error) {
+      console.error("Error al crear la tabla de escuelas:", error);
+      return false;
+    } finally {
+      if (db) {
+        await closeDatabaseConnection(db);
+      }
+    }
+  }
+  /**
+   * @function getAllSchools
+   * @description Obtiene todas las escuelas
+   * @param {object} - SIG de la escuela
+   * @returns
+   */
   static async getAllSchools() {
     let db;
     try {

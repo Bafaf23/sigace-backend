@@ -18,6 +18,8 @@ export const createUser = async (req, res) => {
     /* Generar una contraseña generica para el usuario esta debe ser cambiada por el usuario en el primer login  document(4)@2026*/
     const passgeneric = req.body.document.substring(0, 4) + "@2026";
 
+    console.log("passgeneric", passgeneric);
+    
     const user = await User.createUser({
       document: document,
       name: req.body.name,
@@ -130,5 +132,83 @@ export const changePassword = async (req, res) => {
   } catch (error) {
     console.error("❌ Error al cambiar la contraseña:", error);
     throw error;
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    console.log("--------------------------------");
+    console.log("⚠️ deleteUser... warning deleting user...");
+    console.log("--------------------------------");
+
+    const authHeader = req.headers.authorization;
+    const idUser = req.params.id;
+
+    if (!authHeader) {
+      console.log(" ❌ deleteUser denied... no authorization header...");
+      return res.status(401).json({ error: "No autorizado" });
+    }
+
+    if (!idUser) {
+      console.log(" ❌ deleteUser denied... no id provided...");
+      return res
+        .status(400)
+        .json({ error: "No se proporcionó el ID del usuario" });
+    }
+
+    const deletedUser = await User.deleteUser(idUser);
+    if (!deletedUser) {
+      console.log(" ❌ deleteUser denied... error deleting user...");
+      return res.status(500).json({ error: "Error al eliminar usuario" });
+    }
+
+    console.log("--------------------------------");
+    console.log("✅ deleteUser... user deleted successfully...");
+    console.log("--------------------------------");
+    return res
+      .status(200)
+      .json({ success: true, message: "Usuario eliminado correctamente" });
+  } catch (error) {
+    console.log("--------------------------------");
+    console.log(" ❌ deleteUser denied... error deleting user...");
+    console.log("--------------------------------");
+    console.error("❌ Error al eliminar usuario:", error);
+    return res.status(500).json({ error: "Error al eliminar usuario" });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    console.log("--------------------------------");
+    console.log("⚠️ updateUser... warning updating user...");
+    console.log("--------------------------------");
+    const user = { ...req.body, id: req.body.id };
+    if (!user.id) {
+      console.log(" ❌ updateUser denied... no id provided...");
+      return res
+        .status(400)
+        .json({ error: "No se proporcionó el ID del usuario" });
+    }
+    if (!user) {
+      console.log(" ❌ updateUser denied... no user provided...");
+      return res.status(400).json({ error: "No se proporcionó el usuario" });
+    }
+    const updatedUser = await User.updateUser(user);
+    if (!updatedUser) {
+      console.log(" ❌ updateUser denied... error updating user...");
+      return res.status(500).json({ error: "Error al actualizar usuario" });
+    }
+    console.log("--------------------------------");
+    console.log("✅ updateUser... user updated successfully...");
+    console.log("--------------------------------");
+    return res
+      .status(200)
+      .json({ success: true, message: "Usuario actualizado correctamente" });
+  } catch (error) {
+    console.log("--------------------------------");
+    console.log(" ❌ updateUser denied... error updating user...");
+    console.log("--------------------------------");
+    console.error("❌ Error al actualizar usuario:", error);
+    return res.status(500).json({ error: "Error al actualizar usuario" });
   }
 };

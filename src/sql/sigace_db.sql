@@ -1,6 +1,6 @@
 CREATE DATABASE IF NOT EXISTS sigace_db;
-
 USE sigace_db;
+
 
 CREATE TABLE IF NOT EXISTS roles (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -27,6 +27,49 @@ CREATE TABLE IF NOT EXISTS schools (
   )
 );
 
+CREATE TABLE IF NOT EXISTS years(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  SIG VARCHAR(10) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (SIG) REFERENCES schools(SIG)
+);
+
+CREATE TABLE IF NOT EXISTS teachers(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  id_user INT NOT NULL,
+  SIG VARCHAR(10) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  subject_id VARCHAR(255) NOT NULL,
+  FOREIGN KEY (SIG) REFERENCES schools(SIG),
+  FOREIGN KEY (id_user) REFERENCES users(id),
+  FOREIGN KEY (subject_id) REFERENCES subjects(id)
+);
+
+CREATE TABLE IF NOT EXISTS sessions(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  SIG VARCHAR(10) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  capacity INT NOT NULL,
+  guide_id INT NOT NULL,
+  FOREIGN KEY (SIG) REFERENCES schools(SIG),
+  FOREIGN KEY (guide_id) REFERENCES teachers(id)
+);
+
+CREATE TABLE IF NOT EXISTS subjects(
+  code_subject varchar(10) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  year_academic varchar(5) not null,
+  SIG VARCHAR(10) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (SIG) REFERENCES schools(SIG)
+);
+
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   document VARCHAR(10) NOT NULL UNIQUE,
@@ -46,9 +89,37 @@ CREATE TABLE IF NOT EXISTS users (
   FOREIGN KEY (SIG) REFERENCES schools(SIG)
 );
 
+CREATE TABLE IF NOT EXISTS students (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  id_user INT NOT NULL,
+  SIG VARCHAR(10) NOT NULL,
+  representative_id INT NOT NULL,
+  tuition_number VARCHAR(255) NOT NULL,
+  year_id INT NOT NULL,
+  session_id INT NOT NULL,
+  allergies TEXT NOT NULL,
+  medical_condition TEXT NOT NULL,
+  weight INT NOT NULL,
+  height INT NOT NULL,
+  shirt_size VARCHAR(255) NOT NULL,
+  pants_size VARCHAR(255) NOT NULL,
+  shoe_size VARCHAR(255) NOT NULL,
+  status VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (year_id) REFERENCES years(id),
+  FOREIGN KEY (id_user) REFERENCES users(id),
+  FOREIGN KEY (SIG) REFERENCES schools(SIG),
+  FOREIGN KEY (session_id) REFERENCES sessions(id)
+);
+
+
+
+
 INSERT INTO roles (name) VALUES ('SuperAdmin'), ('Estudiante'), ('Profesor'), ('Director');
 INSERT INTO schools (SIG, name, address, phone, email, type, DEA_CODE)
 VALUES ('SIG1234', 'Escuela 1', 'Direccion 1', '1234567890', 'escuela1@gmail.com', 'Pública', 'DEA001');
 
 INSERT INTO users (document, name, last_name, email, phone, pass, role_id, SIG)
-VALUES ('V-30021867', 'Bryant', 'Facenda', 'bryantffacen@gmail.com', '1234567890', '$2b$10$bRnuv6.gvFqGmd.E2rvx4uI.E0Wta9yvSdtqH2AwAMO478qCTYHk.', 1, "SIG3120")
+VALUES ('V-30021867', 'Bryant', 'Facenda', 'bryantffacen@gmail.com', '1234567890', '$2b$10$bRnuv6.gvFqGmd.E2rvx4uI.E0Wta9yvSdtqH2AwAMO478qCTYHk.', 1, "SIG1234")
