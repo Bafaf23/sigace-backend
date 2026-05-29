@@ -9,24 +9,6 @@ CREATE TABLE IF NOT EXISTS roles (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS schools (
-  SIG VARCHAR(10) PRIMARY KEY,
-  company_name VARCHAR(50) NULL,
-  name VARCHAR(50) NOT NULL,
-  address TEXT NOT NULL,
-  phone VARCHAR(50) NOT NULL,
-  email VARCHAR(50) NOT NULL UNIQUE,
-  type ENUM('Pública', 'Privada','Municipal') NOT NULL,
-  DEA_CODE VARCHAR(10) UNIQUE,
-  RIF VARCHAR(20) UNIQUE,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT chk_only_one CHECK (
-    (type = 'Pública' AND DEA_CODE IS NOT NULL AND RIF IS NULL AND company_name IS NULL) OR
-    (type IN ('Privada', 'Municipal') AND RIF IS NOT NULL AND DEA_CODE IS NULL AND company_name IS NOT NULL)
-  )
-);
-
 CREATE TABLE IF NOT EXISTS years(
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -42,11 +24,20 @@ CREATE TABLE IF NOT EXISTS teachers(
   SIG VARCHAR(10) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  subject_id VARCHAR(255) NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
   FOREIGN KEY (SIG) REFERENCES schools(SIG),
-  FOREIGN KEY (id_user) REFERENCES users(id),
-  FOREIGN KEY (subject_id) REFERENCES subjects(id)
+  FOREIGN KEY (id_user) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS administrators(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  id_user INT NOT NULL,
+  SIG VARCHAR(10) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (SIG) REFERENCES schools(SIG),
+  FOREIGN KEY (id_user) REFERENCES users(id)
+)
 
 CREATE TABLE IF NOT EXISTS sessions(
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -63,11 +54,12 @@ CREATE TABLE IF NOT EXISTS sessions(
 CREATE TABLE IF NOT EXISTS subjects(
   code_subject varchar(10) PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  year_academic varchar(5) not null,
+  year_id INT NOT NULL,
   SIG VARCHAR(10) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (SIG) REFERENCES schools(SIG)
+  FOREIGN KEY (SIG) REFERENCES schools(SIG),
+  FOREIGN KEY (year_id) REFERENCES years(id)
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -79,14 +71,12 @@ CREATE TABLE IF NOT EXISTS users (
   phone VARCHAR(50) NOT NULL UNIQUE,
   pass VARCHAR(255) NOT NULL,
   role_id INT NOT NULL,
-  SIG VARCHAR(10) NOT NULL,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   is_first_login BOOLEAN DEFAULT TRUE,
   is_active BOOLEAN DEFAULT TRUE,
 
-  FOREIGN KEY (role_id) REFERENCES roles(id),
-  FOREIGN KEY (SIG) REFERENCES schools(SIG)
+  FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS students (
@@ -121,5 +111,5 @@ INSERT INTO roles (name) VALUES ('SuperAdmin'), ('Estudiante'), ('Profesor'), ('
 INSERT INTO schools (SIG, name, address, phone, email, type, DEA_CODE)
 VALUES ('SIG1234', 'Escuela 1', 'Direccion 1', '1234567890', 'escuela1@gmail.com', 'Pública', 'DEA001');
 
-INSERT INTO users (document, name, last_name, email, phone, pass, role_id, SIG)
-VALUES ('V-30021867', 'Bryant', 'Facenda', 'bryantffacen@gmail.com', '1234567890', '$2b$10$bRnuv6.gvFqGmd.E2rvx4uI.E0Wta9yvSdtqH2AwAMO478qCTYHk.', 1, "SIG1234")
+INSERT INTO users (document, name, last_name, email, phone, pass, role_id)
+VALUES ('V-30021867', 'Bryant', 'Facenda', 'bryantffacen@gmail.com', '1234567890', '$2b$10$bRnuv6.gvFqGmd.E2rvx4uI.E0Wta9yvSdtqH2AwAMO478qCTYHk.', 1)

@@ -32,41 +32,108 @@ export class User {
     this.updated_at = updated_at;
   }
 
-  static async getUsers() {
+  /**
+   * Obtiene todos los usuarios de la base de datos o un usuario por su email
+   * @param {string} email - El email del usuario a buscar
+   * @returns {Array<object>} Los usuarios encontrados
+   * @returns {null} Null si no se encuentra el usuario
+   * @returns {boolean} False si ocurre un error al obtener los usuarios
+   */
+  static async getUsers(email) {
     let db;
     try {
       db = await connectToDatabase();
 
-      const [users] = await db.query(
-        "SELECT u.id, u.document, u.name, u.last_name, u.email, u.phone, u.role_id, u.SIG, u.is_first_login, u.is_active, r.name AS role, s.name AS school FROM users u INNER JOIN roles r ON u.role_id = r.id INNER JOIN schools s ON u.SIG = s.SIG",
-      );
-      return users.map(
-        ({
-          id,
-          document,
-          name,
-          last_name,
-          email,
-          phone,
-          role,
-          SIG,
-          school,
-          is_first_login,
-          is_active,
-        }) => ({
-          id,
-          document,
-          name,
-          last_name,
-          email,
-          phone,
-          role,
-          school,
-          is_first_login,
-          is_active,
-          SIG,
-        }),
-      );
+      let queryEmail = `SELECT 
+        u.id, u.document, u.name, u.last_name, u.email, u.phone, u.role_id,
+        u.is_first_login, u.is_active,
+        r.name AS role,
+        s.SIG AS student_sig, s.representative_id, s.tuition_number, s.year_id, 
+        s.session_id, s.allergies, s.medical_condition, s.weight, s.height, 
+        s.shirt_size, s.pants_size, s.shoe_size, s.status AS student_status,
+        t.SIG AS teacher_sig,
+        a.SIG AS admin_sig,
+        sc.SIG AS school_sig, sc.name AS school_name, sc.address AS school_address,
+        sc.phone AS school_phone, sc.email AS school_email, sc.type AS school_type,
+        sc.DEA_CODE AS school_DEA_CODE, sc.RIF AS school_RIF
+      FROM users u
+      INNER JOIN roles r ON u.role_id = r.id
+      LEFT JOIN students s ON u.id = s.id_user
+      LEFT JOIN teachers t ON u.id = t.id_user
+      LEFT JOIN administrators a ON u.id = a.id_user
+      LEFT JOIN schools sc ON sc.SIG = COALESCE(s.SIG, t.SIG, a.SIG) WHERE u.email = ?`;
+
+      let queryAll = `SELECT 
+        u.id, u.document, u.name, u.last_name, u.email, u.phone, u.role_id,
+        u.is_first_login, u.is_active,
+        r.name AS role,
+        s.SIG AS student_sig, s.representative_id, s.tuition_number, s.year_id, 
+        s.session_id, s.allergies, s.medical_condition, s.weight, s.height, 
+        s.shirt_size, s.pants_size, s.shoe_size, s.status AS student_status,
+        t.SIG AS teacher_sig,
+        a.SIG AS admin_sig,
+        sc.SIG AS school_sig, sc.name AS school_name, sc.address AS school_address,
+        sc.phone AS school_phone, sc.email AS school_email, sc.type AS school_type,
+        sc.DEA_CODE AS school_DEA_CODE, sc.RIF AS school_RIF
+      FROM users u
+      INNER JOIN roles r ON u.role_id = r.id
+      LEFT JOIN students s ON u.id = s.id_user
+      LEFT JOIN teachers t ON u.id = t.id_user
+      LEFT JOIN administrators a ON u.id = a.id_user
+      LEFT JOIN schools sc ON sc.SIG = COALESCE(s.SIG, t.SIG, a.SIG)`;
+
+      let query = email ? queryEmail : queryAll;
+
+      const [rows] = await db.query(query, email ? [email] : []);
+
+      return rows.map((row) => {
+        const user = {
+          id: row.id,
+          document: row.document,
+          name: row.name,
+          last_name: row.last_name,
+          email: row.email,
+          phone: row.phone,
+          role_id: row.role_id,
+          role: row.role,
+          is_first_login: row.is_first_login,
+          is_active: row.is_active,
+        };
+
+        if (row.student_sig) {
+          user.students = {
+            SIG: row.student_sig,
+            representative_id: row.representative_id,
+            tuition_number: row.tuition_number,
+            year_id: row.year_id,
+            session_id: row.session_id,
+          };
+        }
+
+        if (row.teacher_sig) {
+          user.teachers = {
+            SIG: row.teacher_sig,
+          };
+        }
+        if (row.admin_sig) {
+          user.administrators = { SIG: row.admin_sig };
+        }
+
+        if (row.school_sig) {
+          user.school = {
+            SIG: row.school_sig,
+            name: row.school_name,
+            address: row.school_address,
+            phone: row.school_phone,
+            email: row.school_email,
+            type: row.school_type,
+            DEA_CODE: row.school_DEA_CODE,
+            RIF: row.school_RIF,
+          };
+        }
+
+        return user;
+      });
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
       return [];
@@ -75,12 +142,23 @@ export class User {
     }
   }
 
+  /**
+   * Crea un nuevo usuario en la base de datos y relaciona el usuario con la tabla correspondiente
+   * @param {object} user
+   * @returns {number} El id del usuario creado
+   * @returns {boolean} False si ocurre un error al crear el usuario
+   */
   static async createUser(user) {
     let db;
+    let connection;
     try {
       db = await connectToDatabase();
-      const [result] = await db.query(
-        "INSERT INTO users (document, name, last_name, email, phone, role_id, SIG, pass) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      connection = await db.getConnection();
+      await connection.beginTransaction();
+
+      const hashedPassword = await bcrypt.hash(user.password, 10);
+      const [result] = await connection.query(
+        "INSERT INTO users (document, name, last_name, email, phone, role_id, pass) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
           user.document,
           user.name,
@@ -88,25 +166,90 @@ export class User {
           user.email,
           user.phone,
           user.role_id,
-          user.SIG,
-          await bcrypt.hash(user.password, 10),
+          hashedPassword,
         ],
       );
-      return result.affectedRows > 0;
+
+      const idUser = result.insertId;
+      const roleUser = Number(user.role_id);
+
+      switch (roleUser) {
+        case 2:
+          await connection.query(
+            "INSERT INTO students (id_user, SIG, representative_id, tuition_number, year_id, session_id, allergies, medical_condition, weight, height, shirt_size, pants_size, shoe_size, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [
+              idUser,
+              user.SIG,
+              user.representative_id,
+              user.tuition_number,
+              user.year_id,
+              user.session_id,
+              user.allergies,
+              user.medical_condition,
+              user.weight,
+              user.height,
+              user.shirt_size,
+              user.pants_size,
+              user.shoe_size,
+              user.status,
+            ],
+          );
+          break;
+        case 3:
+          await connection.query(
+            "INSERT INTO teachers (id_user, SIG) VALUES (?, ?)",
+            [idUser, user.SIG],
+          );
+          break;
+        case 4:
+          await connection.query(
+            "INSERT INTO administrators (id_user, SIG) VALUES (?, ?)",
+            [idUser, user.SIG],
+          );
+          break;
+        default:
+          console.error(
+            `El role ${roleUser} no requiere registro en una tabla`,
+          );
+          break;
+      }
+      await connection.commit();
+      return idUser;
     } catch (error) {
+      if (connection) {
+        await connection.rollback();
+      }
       console.error("Error al crear usuario:", error);
       return false;
     } finally {
-      await closeDatabaseConnection(db);
+      if (connection) {
+        connection.release();
+      }
     }
   }
 
+  /**
+   * Obtiene un usuario por su email
+   * @param {string} email
+   * @returns {object} El usuario encontrado
+   * @returns {null} Null si no se encuentra el usuario
+   */
   static async getUserByEmail(email) {
     let db;
     try {
       db = await connectToDatabase();
       const [result] = await db.query(
-        "SELECT u.id, u.document, u.name, u.last_name, u.email, u.phone, u.pass AS password, r.name AS role, u.SIG, u.is_first_login, u.is_active FROM users u INNER JOIN roles r ON u.role_id = r.id WHERE u.email = ?",
+        `SELECT u.id, u.document, u.name, u.last_name, u.email, u.phone, u.pass AS password, r.name AS role, u.is_first_login, u.is_active,
+        COALESCE(t.SIG, a.SIG, s.SIG) AS SIG
+        FROM users u 
+        INNER JOIN roles r ON u.role_id = r.id 
+        LEFT JOIN students s ON u.id = s.id_user
+        LEFT JOIN schools sch_est ON s.SIG = sch_est.SIG
+        LEFT JOIN teachers t ON u.id = t.id_user
+        LEFT JOIN schools sch_prof ON t.SIG = sch_prof.SIG
+        LEFT JOIN administrators a ON u.id = a.id_user
+        LEFT JOIN schools sch_adm ON a.SIG = sch_adm.SIG
+        WHERE u.email = ?`,
         [email],
       );
       return result[0] || null;
@@ -149,18 +292,53 @@ export class User {
     }
   }
 
-  static async deleteUser(id) {
+  /**
+   * Elimina un usuario de la base de datos
+   * @param {number} id
+   * @returns {boolean} True si el usuario se eliminó correctamente, false si no se pudo eliminar
+   */
+  static async deleteUser(id, role_id) {
     let db;
+    let connection;
     try {
       db = await connectToDatabase();
-      const [result] = await db.query("DELETE FROM users WHERE id = ?", [id]);
+      connection = await db.getConnection();
+      await connection.beginTransaction();
+      switch (role_id) {
+        case 2:
+          await connection.query("DELETE FROM students WHERE id_user = ?", [
+            id,
+          ]);
+          break;
+        case 3:
+          await connection.query("DELETE FROM teachers WHERE id_user = ?", [
+            id,
+          ]);
+          break;
+        case 4:
+          await connection.query(
+            "DELETE FROM administrators WHERE id_user = ?",
+            [id],
+          );
+          break;
+        default:
+          console.error(
+            `El role ${role_id} no requiere eliminación en una tabla`,
+          );
+          break;
+      }
+      const [result] = await connection.query(
+        "DELETE FROM users WHERE id = ?",
+        [id],
+      );
+      await connection.commit();
       return result.affectedRows > 0;
     } catch (error) {
       console.error("Error al eliminar usuario:", error);
       return false;
     } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
+      if (connection) {
+        connection.release();
       }
     }
   }
@@ -170,18 +348,36 @@ export class User {
     try {
       db = await connectToDatabase();
       const [result] = await db.query(
-        "UPDATE users SET name = ?, last_name = ?, email = ?, phone = ?, role_id = ?, SIG = ? WHERE id = ?",
+        "UPDATE users SET name = ?, last_name = ?, email = ?, phone = ?, role_id = ? WHERE id = ?",
         [
           user.name,
           user.last_name,
           user.email,
           user.phone,
           user.role_id,
-          user.SIG,
           user.id,
         ],
       );
-      return result.affectedRows > 0;
+
+      if (result.affectedRows === 0) {
+        return false;
+      }
+
+      if (user.SIG && user.role_id) {
+        const roleId = Number(user.role_id);
+        const sigQueries = {
+          2: "UPDATE students SET SIG = ? WHERE id_user = ?",
+          3: "UPDATE teachers SET SIG = ? WHERE id_user = ?",
+          4: "UPDATE administrators SET SIG = ? WHERE id_user = ?",
+        };
+
+        const sigQuery = sigQueries[roleId];
+        if (sigQuery) {
+          await db.query(sigQuery, [user.SIG, user.id]);
+        }
+      }
+
+      return true;
     } catch (error) {
       console.error("Error al actualizar usuario:", error);
       return false;

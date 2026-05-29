@@ -19,7 +19,7 @@ export const createUser = async (req, res) => {
     const passgeneric = req.body.document.substring(0, 4) + "@2026";
 
     console.log("passgeneric", passgeneric);
-    
+
     const user = await User.createUser({
       document: document,
       name: req.body.name,
@@ -143,6 +143,7 @@ export const deleteUser = async (req, res) => {
 
     const authHeader = req.headers.authorization;
     const idUser = req.params.id;
+    const role_id = req.body.roleId;
 
     if (!authHeader) {
       console.log(" ❌ deleteUser denied... no authorization header...");
@@ -156,7 +157,7 @@ export const deleteUser = async (req, res) => {
         .json({ error: "No se proporcionó el ID del usuario" });
     }
 
-    const deletedUser = await User.deleteUser(idUser);
+    const deletedUser = await User.deleteUser(idUser, role_id);
     if (!deletedUser) {
       console.log(" ❌ deleteUser denied... error deleting user...");
       return res.status(500).json({ error: "Error al eliminar usuario" });
