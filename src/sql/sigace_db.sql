@@ -180,7 +180,21 @@ CREATE TABLE IF NOT EXISTS enrollments (
     FOREIGN KEY (id_period) REFERENCES academic_periods(id) ON DELETE RESTRICT
 );
 
-drop table enrollments;
+CREATE TABLE IF NOT EXISTS load_academic(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_teacher INT NOT NULL,
+    id_section INT NOT NULL,
+    id_period INT NOT NULL,
+    id_subject VARCHAR(20) NOT NULL,
+    SIG VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_teacher) REFERENCES teachers(id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_section) REFERENCES sections(id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_period) REFERENCES academic_periods(id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_subject) REFERENCES subjects(code_subject) ON DELETE RESTRICT,
+    FOREIGN KEY (SIG) REFERENCES schools(SIG) ON DELETE CASCADE
+);
+
 -- =========================================================================
 -- 5. INSERCIONES DE DATOS INICIALES (Data Semilla)
 -- =========================================================================

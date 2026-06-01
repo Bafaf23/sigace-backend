@@ -266,7 +266,7 @@ export class Users {
         LEFT JOIN schools sch_prof ON t.SIG = sch_prof.SIG
         LEFT JOIN administrators a ON u.id = a.id_user
         LEFT JOIN schools sch_adm ON a.SIG = sch_adm.SIG
-        WHERE u.email = ?`,
+        WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
         [email],
       );
       if (!result[0]) {

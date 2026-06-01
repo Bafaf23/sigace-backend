@@ -3,6 +3,8 @@ import { Representative } from "../models/Representative.model.js";
 import { Users } from "../models/Users.model.js";
 import jsonwebtoken from "jsonwebtoken";
 import { generateTuitionNumber } from "../utils/tuitoinNumber.js";
+import dotenv from "dotenv";
+dotenv.config();
 const { verify } = jsonwebtoken;
 
 /* Obtener todos los estudiantes */
