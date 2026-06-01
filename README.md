@@ -1,98 +1,85 @@
 # 🎓 SIGACE Backend
 
-API REST del sistema **SIGACE**, construida con [**Flask**](https://flask.palletsprojects.org/) y conexión a **MySQL** mediante **Flask-MySQL** y cursores **PyMySQL** (resultados como diccionario).
+API REST del sistema **SIGACE** (Sistema de Gestión Académica). Backend desarrollado con **Node.js**, **Express** y **TypeScript**, conectado a **SQL Server**.
 
 ---
 
-## 📋 Requisitos
+## 🚨 En construcción 🏗️👷🚧
 
-- **Python** 3.11 o superior (recomendado)
-- **MySQL** con una base creada para la aplicación (el nombre lo defines en las variables de entorno)
+El proyecto está en migración activa desde Python hacia TypeScript. Algunos endpoints y módulos aún están en desarrollo.
 
 ---
 
-## 🚀 Instalación
+## 🛠️ Stack tecnológico
+
+| Tecnología   | Uso                          |
+| ------------ | ---------------------------- |
+| Node.js      | Runtime                      |
+| Express 5    | Framework HTTP               |
+| TypeScript   | Lenguaje                     |
+| mssql        | Cliente SQL Server           |
+| dotenv       | Variables de entorno         |
+| tsx          | Ejecución en desarrollo      |
+
+---
+
+## 📋 Requisitos previos
+
+- [Node.js](https://nodejs.org/) (v18 o superior recomendado)
+- [SQL Server](https://www.microsoft.com/sql-server) accesible desde la máquina local o red
+- npm (incluido con Node.js)
+
+---
+
+## 🚀 Instalación y ejecución
 
 ```bash
-python -m venv .venv
+# Clonar el repositorio
+git clone https://github.com/Bafaf23/sigace-backend.git
+cd sigace-backend
+
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno (ver sección siguiente)
+# Crear archivo .env en la raíz del proyecto
+
+# Modo desarrollo (recarga automática)
+npm run dev
 ```
 
-**Windows (PowerShell)**
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-**Linux o macOS**
-
-```bash
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+El servidor arranca por defecto en `http://localhost:3001`.
 
 ---
 
-## 🔐 Variables de entorno
+## ⚙️ Variables de entorno
 
-Crea un archivo `.env` en la raíz del repositorio con al menos:
+Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
 ```env
-MYSQL_DATABASE_HOST=localhost
-MYSQL_DATABASE_USER=root
-MYSQL_DATABASE_PASSWORD=tu_contraseña
-MYSQL_DATABASE_DB=nombre_de_tu_base
-SECRET_KEY=una_clave_secreta_larga_y_aleatoria
+PORT=3001
+DB_USER=tu_usuario
+DB_PASSWORD=tu_contraseña
+DB_SERVER=localhost
+DB_NAME=nombre_base_datos
 ```
 
-Opcionalmente puedes fijar el puerto con `PORT` (por defecto **5000**).
+| Variable      | Descripción                          | Requerida |
+| ------------- | ------------------------------------ | --------- |
+| `PORT`        | Puerto del servidor HTTP             | No (3001) |
+| `DB_USER`     | Usuario de SQL Server                | Sí        |
+| `DB_PASSWORD` | Contraseña de SQL Server             | Sí        |
+| `DB_SERVER`   | Host del servidor SQL                | No        |
+| `DB_NAME`     | Nombre de la base de datos           | Sí        |
 
 ---
 
-## ▶️ Ejecutar en desarrollo
+## 📜 Scripts disponibles
 
-Desde la raíz del proyecto (donde está `main.py`):
-
-```bash
-python main.py
-```
-
-O con Flask:
-
-```bash
-flask --app main run --debug
-```
-
-La raíz `GET /` devuelve información de la API y un listado orientativo de rutas.
-
----
-
-## 🌐 CORS
-
-El middleware permite el origen del frontend en producción: `https://sigace.vercel.app`. Para otro dominio, ajusta `origins` en `main.py` dentro de `CORS(...)`.
-
----
-
-## 🗺️ Endpoints principales
-
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/` | Estado de la API y metadatos |
-| `POST` | `/login/` | Inicio de sesión (auth) |
-| `POST` | `/register/` | Registro de usuario |
-| `POST` | `/logout/` | Cierre de sesión |
-| `GET` | `/get_user_by_dni/` | Consulta de usuario por DNI (query) |
-| `GET` | `/get_user_teachers/<sig>` | Docentes asociados a un colegio |
-| `GET` | `/subject/get/<sig>` | Asignaturas |
-| `POST` | `/subject/create/` | Crear asignatura |
-| `DELETE` | `/subject/delete/<id>` | Eliminar asignatura |
-| `GET` | `/school/get/` | Colegios |
-| `GET` | `/section/get_section/<sig>` | Secciones |
-| `POST` | `/section/create_section` | Crear sección |
-| `GET` | `/load_evaluations/get/` | Cargas de evaluaciones |
-| `POST` | `/load_evaluations/` | Registrar carga de evaluaciones |
-
-> 💡 **Nota:** También existe lógica de login en `app/routers/auth/auth_login.py` (`POST /login/`). Revisa qué blueprint quieres exponer como canónico si hay solapamiento con `user_controll`.
+| Comando      | Descripción                                      |
+| ------------ | ------------------------------------------------ |
+| `npm run dev`  | Inicia el servidor en modo desarrollo con tsx  |
+| `npm run tsc`  | Compila TypeScript a JavaScript en `./dist`    |
 
 ---
 
@@ -100,30 +87,34 @@ El middleware permite el origen del frontend en producción: `https://sigace.ver
 
 ```
 sigace-backend/
-├── main.py                 # App Flask, CORS, blueprints
-├── db.py                   # MySQL y helper de cursor
-├── requirements.txt
-└── app/
-    ├── controllers/        # Controladores / rutas por dominio
-    ├── routers/            # Blueprints adicionales (p. ej. auth, evaluaciones)
-    ├── models/             # Modelos de dominio
-    └── utils/              # Utilidades
+├── src/
+│   ├── app.ts              # Punto de entrada de la aplicación
+│   ├── db.ts               # Conexión a SQL Server
+│   ├── models/
+│   │   └── User.model.ts   # Modelo de usuario
+│   └── routers/
+│       └── user.router.ts  # Rutas de usuarios
+├── dist/                   # Salida de compilación (generada)
+├── .env                    # Variables de entorno (no versionado)
+├── package.json
+└── tsconfig.json
 ```
 
 ---
 
-## 📦 Dependencias destacadas
+## 🔌 Endpoints
 
-- **Flask**, **flask-cors**, **flask-mysql** — API y acceso a MySQL
-- **PyMySQL** — driver y cursores tipo diccionario
-- **python-dotenv** — carga de `.env`
-- **Werkzeug** — hashes de contraseña (`check_password_hash`, etc.)
-- **gunicorn** — despliegue en producción (junto a Flask)
+| Método | Ruta      | Descripción              |
+| ------ | --------- | ------------------------ |
+| GET    | `/users`  | Listado de usuarios      |
+| POST   | `/users`  | Crear un nuevo usuario   |
 
-El `requirements.txt` incluye también paquetes usados en otros contextos del entorno (por ejemplo **FastAPI** / **uvicorn**); la aplicación definida en `main.py` es **Flask**.
+> Los endpoints actuales son placeholders. La lógica de negocio y persistencia se implementará progresivamente.
 
 ---
 
 ## 📄 Licencia y autor
 
-Definir licencia en el repositorio si aplica. API desarrollada en el contexto del proyecto **SIGACE** (desarrollo: Bryant Facenda).
+- **Licencia:** ISC
+- **Autor:** Bryant Facenda — [bafaf23@gmail.com](mailto:bafaf23@gmail.com)
+- **Repositorio:** [github.com/Bafaf23/sigace-backend](https://github.com/Bafaf23/sigace-backend)
