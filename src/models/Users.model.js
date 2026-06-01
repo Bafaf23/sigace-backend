@@ -1,23 +1,24 @@
 import { connectToDatabase, closeDatabaseConnection } from "../db.js";
 import bcrypt from "bcryptjs";
+import { getCurrentPeriod } from "../utils/periodAc.js";
 
-export class User {
-  constructor(
-    id,
-    document,
-    name,
-    last_name,
-    email,
-    phone,
-    role_id,
-    password,
-    is_first_login,
-    is_active,
-    SIG,
-    created_at,
-    updated_at,
-  ) {
-    this.id = id;
+/**
+ * Constructor de la clase Users
+ * @param {string} document - Documento del usuario
+ * @param {string} name - Nombre del usuario
+ * @param {string} last_name - Apellido del usuario
+ * @param {string} email - Email del usuario
+ * @param {string} phone - Teléfono del usuario
+ * @param {number} role_id - ID del rol del usuario
+ * @param {string} password - Contraseña del usuario
+ * @param {boolean} is_first_login - Indica si el usuario es el primero en iniciar sesión
+ * @param {boolean} is_active - Indica si el usuario está activo
+ * @param {string} SIG - SIG de la escuela del usuario
+ * @param {string} created_at - Fecha de creación del usuario
+ * @param {string} updated_at - Fecha de actualización del usuario
+ */
+export class Users {
+  constructor(document, name, last_name, email, phone, role_id, password, SIG) {
     this.document = document;
     this.name = name;
     this.last_name = last_name;
@@ -25,11 +26,7 @@ export class User {
     this.phone = phone;
     this.role_id = role_id;
     this.password = password;
-    this.is_first_login = is_first_login;
-    this.is_active = is_active;
     this.SIG = SIG;
-    this.created_at = created_at;
-    this.updated_at = updated_at;
   }
 
   /**
@@ -48,14 +45,14 @@ export class User {
         u.id, u.document, u.name, u.last_name, u.email, u.phone, u.role_id,
         u.is_first_login, u.is_active,
         r.name AS role,
-        s.SIG AS student_sig, s.representative_id, s.tuition_number, s.year_id, 
-        s.session_id, s.allergies, s.medical_condition, s.weight, s.height, 
-        s.shirt_size, s.pants_size, s.shoe_size, s.status AS student_status,
+        s.SIG AS student_sig, s.representative_id, s.tuition_number, 
+        s.allergies, s.medical_condition, s.weight, s.height, 
+        s.shirt_size, s.pants_size, s.shoe_size,
         t.SIG AS teacher_sig,
         a.SIG AS admin_sig,
         sc.SIG AS school_sig, sc.name AS school_name, sc.address AS school_address,
         sc.phone AS school_phone, sc.email AS school_email, sc.type AS school_type,
-        sc.DEA_CODE AS school_DEA_CODE, sc.RIF AS school_RIF
+        sc.DEA_CODE AS school_DEA_CODE, sc.RIF AS school_RIF, sc.company_name AS school_company_name
       FROM users u
       INNER JOIN roles r ON u.role_id = r.id
       LEFT JOIN students s ON u.id = s.id_user
@@ -67,14 +64,14 @@ export class User {
         u.id, u.document, u.name, u.last_name, u.email, u.phone, u.role_id,
         u.is_first_login, u.is_active,
         r.name AS role,
-        s.SIG AS student_sig, s.representative_id, s.tuition_number, s.year_id, 
-        s.session_id, s.allergies, s.medical_condition, s.weight, s.height, 
-        s.shirt_size, s.pants_size, s.shoe_size, s.status AS student_status,
+        s.SIG AS student_sig, s.representative_id, s.tuition_number, 
+        s.allergies, s.medical_condition, s.weight, s.height, 
+        s.shirt_size, s.pants_size, s.shoe_size,
         t.SIG AS teacher_sig,
         a.SIG AS admin_sig,
         sc.SIG AS school_sig, sc.name AS school_name, sc.address AS school_address,
         sc.phone AS school_phone, sc.email AS school_email, sc.type AS school_type,
-        sc.DEA_CODE AS school_DEA_CODE, sc.RIF AS school_RIF
+        sc.DEA_CODE AS school_DEA_CODE, sc.RIF AS school_RIF, sc.company_name AS school_company_name
       FROM users u
       INNER JOIN roles r ON u.role_id = r.id
       LEFT JOIN students s ON u.id = s.id_user
@@ -106,7 +103,8 @@ export class User {
             representative_id: row.representative_id,
             tuition_number: row.tuition_number,
             year_id: row.year_id,
-            session_id: row.session_id,
+            id_section: row.id_section,
+            id_period: row.id_period,
           };
         }
 
@@ -129,6 +127,7 @@ export class User {
             type: row.school_type,
             DEA_CODE: row.school_DEA_CODE,
             RIF: row.school_RIF,
+            company_name: row.school_company_name,
           };
         }
 
@@ -144,7 +143,7 @@ export class User {
 
   /**
    * Crea un nuevo usuario en la base de datos y relaciona el usuario con la tabla correspondiente
-   * @param {object} user
+   * @param {Users} user - Objeto de la clase Users
    * @returns {number} El id del usuario creado
    * @returns {boolean} False si ocurre un error al crear el usuario
    */
@@ -176,22 +175,21 @@ export class User {
       switch (roleUser) {
         case 2:
           await connection.query(
-            "INSERT INTO students (id_user, SIG, representative_id, tuition_number, year_id, session_id, allergies, medical_condition, weight, height, shirt_size, pants_size, shoe_size, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO students (id_user, gender, SIG, representative_id, tuition_number, allergies, medical_condition, weight, birth_date, height, shirt_size, pants_size, shoe_size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
               idUser,
+              user.gender,
               user.SIG,
               user.representative_id,
               user.tuition_number,
-              user.year_id,
-              user.session_id,
               user.allergies,
               user.medical_condition,
               user.weight,
+              user.birth_date,
               user.height,
               user.shirt_size,
               user.pants_size,
               user.shoe_size,
-              user.status,
             ],
           );
           break;
@@ -202,6 +200,12 @@ export class User {
           );
           break;
         case 4:
+          await connection.query(
+            "INSERT INTO directors (id_user, SIG) VALUES (?, ?)",
+            [idUser, user.SIG],
+          );
+          break;
+        case 5:
           await connection.query(
             "INSERT INTO administrators (id_user, SIG) VALUES (?, ?)",
             [idUser, user.SIG],
@@ -238,6 +242,19 @@ export class User {
     let db;
     try {
       db = await connectToDatabase();
+      let [currentPeriod] = await db.query(
+        "SELECT id FROM academic_periods WHERE is_active = 1 LIMIT 1",
+      );
+      let id_period = currentPeriod[0]?.id;
+
+      if (!id_period) {
+        [currentPeriod] = await db.query(
+          "SELECT id FROM academic_periods WHERE name = ? LIMIT 1",
+          [getCurrentPeriod()],
+        );
+        id_period = currentPeriod[0]?.id ?? null;
+      }
+
       const [result] = await db.query(
         `SELECT u.id, u.document, u.name, u.last_name, u.email, u.phone, u.pass AS password, r.name AS role, u.is_first_login, u.is_active,
         COALESCE(t.SIG, a.SIG, s.SIG) AS SIG
@@ -252,7 +269,10 @@ export class User {
         WHERE u.email = ?`,
         [email],
       );
-      return result[0] || null;
+      if (!result[0]) {
+        return null;
+      }
+      return { ...result[0], id_period };
     } catch (error) {
       console.error("Error al obtener usuario por email:", error);
       return null;
@@ -261,6 +281,12 @@ export class User {
     }
   }
 
+  /**
+   * Cambia la contraseña de un usuario
+   * @param {number} id - ID del usuario
+   * @param {string} newPassword - Nueva contraseña del usuario
+   * @returns {boolean} True si la contraseña se cambió correctamente, false si no se pudo cambiar
+   */
   static async changePassword(id, newPassword) {
     let db;
     try {
@@ -294,7 +320,8 @@ export class User {
 
   /**
    * Elimina un usuario de la base de datos
-   * @param {number} id
+   * @param {number} id - ID del usuario
+   * @param {number} role_id - ID del rol del usuario
    * @returns {boolean} True si el usuario se eliminó correctamente, false si no se pudo eliminar
    */
   static async deleteUser(id, role_id) {
@@ -343,13 +370,19 @@ export class User {
     }
   }
 
+  /**
+   * Actualiza un usuario en la base de datos
+   * @param {Users} user - Objeto de la clase Users
+   * @returns {boolean} True si el usuario se actualizó correctamente, false si no se pudo actualizar
+   */
   static async updateUser(user) {
     let db;
     try {
       db = await connectToDatabase();
       const [result] = await db.query(
-        "UPDATE users SET name = ?, last_name = ?, email = ?, phone = ?, role_id = ? WHERE id = ?",
+        "UPDATE users SET document = ?, name = ?, last_name = ?, email = ?, phone = ?, role_id = ? WHERE id = ?",
         [
+          user.document,
           user.name,
           user.last_name,
           user.email,

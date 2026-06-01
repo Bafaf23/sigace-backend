@@ -1,4 +1,4 @@
-import { User } from "../models/User.model.js";
+import { Users } from "../models/Users.model.js";
 import jsonwebtoken from "jsonwebtoken";
 
 const { verify } = jsonwebtoken;
@@ -20,7 +20,7 @@ export const createUser = async (req, res) => {
 
     console.log("passgeneric", passgeneric);
 
-    const user = await User.createUser({
+    const user = await Users.createUser({
       document: document,
       name: req.body.name,
       last_name: req.body.last_name,
@@ -55,7 +55,7 @@ export const getUsers = async (_req, res) => {
     console.log("✅ getUsers... getting users...");
     console.log("--------------------------------");
 
-    const users = await User.getUsers();
+    const users = await Users.getUsers();
     res.status(200).json(users);
   } catch (error) {
     console.log("--------------------------------");
@@ -106,7 +106,7 @@ export const changePassword = async (req, res) => {
       return res.status(400).json({ error: "Las contraseñas no coinciden" });
     }
 
-    const passwordChanged = await User.changePassword(id, newPassword);
+    const passwordChanged = await Users.changePassword(id, newPassword);
 
     if (!passwordChanged) {
       console.log("--------------------------------");
@@ -157,7 +157,7 @@ export const deleteUser = async (req, res) => {
         .json({ error: "No se proporcionó el ID del usuario" });
     }
 
-    const deletedUser = await User.deleteUser(idUser, role_id);
+    const deletedUser = await Users.deleteUser(idUser, role_id);
     if (!deletedUser) {
       console.log(" ❌ deleteUser denied... error deleting user...");
       return res.status(500).json({ error: "Error al eliminar usuario" });
@@ -194,7 +194,7 @@ export const updateUser = async (req, res) => {
       console.log(" ❌ updateUser denied... no user provided...");
       return res.status(400).json({ error: "No se proporcionó el usuario" });
     }
-    const updatedUser = await User.updateUser(user);
+    const updatedUser = await Users.updateUser(user);
     if (!updatedUser) {
       console.log(" ❌ updateUser denied... error updating user...");
       return res.status(500).json({ error: "Error al actualizar usuario" });

@@ -17,40 +17,6 @@ export class School {
     this.RIF = RIF;
     this.DEA_CODE = DEA_CODE;
   }
-  static async createTableSchools() {
-    let db;
-    try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
-        `CREATE TABLE IF NOT EXISTS schools (
-  SIG VARCHAR(10) PRIMARY KEY,
-  company_name VARCHAR(50) NULL,
-  name VARCHAR(50) NOT NULL,
-  address TEXT NOT NULL,
-  phone VARCHAR(50) NOT NULL,
-  email VARCHAR(50) NOT NULL UNIQUE,
-  type ENUM('Pública', 'Privada','Municipal') NOT NULL,
-  DEA_CODE VARCHAR(10) UNIQUE,
-  RIF VARCHAR(20) UNIQUE,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT chk_only_one CHECK (
-    (type = 'Pública' AND DEA_CODE IS NOT NULL AND RIF IS NULL AND company_name IS NULL) OR
-    (type IN ('Privada', 'Municipal') AND RIF IS NOT NULL AND DEA_CODE IS NULL AND company_name IS NOT NULL)
-  )
-);`,
-      );
-      console.log("✅ Table Schools created successfully");
-      return true;
-    } catch (error) {
-      console.error("Error al crear la tabla de escuelas:", error);
-      return false;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
-    }
-  }
   /**
    * @function getAllSchools
    * @description Obtiene todas las escuelas
@@ -95,12 +61,12 @@ export class School {
     let db;
     try {
       db = await connectToDatabase();
-      const SIG = await createSIG();
+      const SIG = createSIG();
       const rif = emptyToNull(school.RIF);
       const DEA_CODE = emptyToNull(school.DEA_CODE);
       const company_name = emptyToNull(school.company_name);
       const [result] = await db.query(
-        "INSERT INTO schools (SIG, name, company_name, address, phone, email, type, RIF, DEA_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO schools (SIG, name, company_name, address, phone, email, type, RIF, DEA_CODE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           SIG,
           school.name,
@@ -157,7 +123,7 @@ export class School {
       const company_name = emptyToNull(school.company_name);
 
       const [result] = await db.query(
-        "UPDATE schools SET name = ?, company_name = ?, address = ?, phone = ?, email = ?, type = ?, RIF = ?, DEA_code = ? WHERE SIG = ?",
+        "UPDATE schools SET name = ?, company_name = ?, address = ?, phone = ?, email = ?, type = ?, RIF = ?, DEA_CODE = ? WHERE SIG = ?",
         [
           school.name,
           company_name,

@@ -1,4 +1,4 @@
-import { User } from "../models/User.model.js";
+import { Users } from "../models/Users.model.js";
 import bcrypt from "bcryptjs";
 import jsonwebtoken from "jsonwebtoken";
 
@@ -14,7 +14,7 @@ export const login = async (req, res) => {
         .json({ error: "El email y la contraseña son obligatorios" });
     }
 
-    const user = await User.getUserByEmail(email);
+    const user = await Users.getUserByEmail(email);
 
     if (!user) {
       return res.status(401).json({ error: "Usuario no encontrado" });
@@ -31,7 +31,7 @@ export const login = async (req, res) => {
 
     const token = sign(
       { email: user.email, id: user.id, role: user.role, mustChangePassword },
-      process.env.JWT_SECRET || "secret",
+      process.env.JWT_SECRET,
       {
         expiresIn: mustChangePassword ? "15m" : "1h",
       },
@@ -44,6 +44,7 @@ export const login = async (req, res) => {
       email: user.email,
       name: user.name,
       lastName: user.last_name,
+      id_period: user.id_period,
       phone: user.phone,
       role: user.role,
       SIG: user.SIG,
@@ -112,8 +113,6 @@ export const logout = async (req, res) => {
       console.error("No hay ninguna sesión activa");
       return res.status(400).json({ error: "No hay ninguna sesión activa" });
     } */
-    console.log("Session ID:", req.sessionID);
-    console.log("Session user:", req.session.user);
     const emailUsuario = req.session?.user?.email;
 
     return new Promise((resolve) => {

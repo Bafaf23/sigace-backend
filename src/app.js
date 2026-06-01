@@ -6,8 +6,10 @@ import session from "express-session";
 import authRouter from "./routers/auth.route.js";
 import schoolRouter from "./routers/school.route.js";
 import studentRouter from "./routers/student.route.js";
-import sessionRouter from "./routers/session.route.js";
+import sectionRouter from "./routers/section.route.js";
 import subjectRouter from "./routers/subject.route.js";
+import teachersRouter from "./routers/teachers.route.js";
+import enrollmentRouter from "./routers/enrollment.route.js";
 
 dotenv.config();
 
@@ -40,8 +42,10 @@ app.use("/users", userRouter);
 app.use("/students", studentRouter);
 app.use("/auth", authRouter);
 app.use("/schools", schoolRouter);
-app.use("/sessions", sessionRouter);
+app.use("/sections", sectionRouter);
 app.use("/subjects", subjectRouter);
+app.use("/enrollments", enrollmentRouter);
+app.use("/teachers", teachersRouter);
 
 app.get("/", (_req, res) => {
   res.status(200).json({
