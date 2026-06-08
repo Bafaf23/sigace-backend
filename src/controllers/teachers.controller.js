@@ -27,3 +27,15 @@ export const getTeachers = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getLoadAcademicTeacher = async (req, res) => {
+  try {
+    console.log("🔍 getLoadAcademicTeacher");
+    const id = req.params.id;
+    const loadAcademicTeacher = await Teachers.getLoadAcademicTeacher(id);
+    console.log("✅ loadAcademicTeacher");
+    res.json(loadAcademicTeacher);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -4,6 +4,7 @@ import {
   createStudent,
   updateStudent,
   getStudentNotEnrolled,
+  getStudentsBySection,
 } from "../controllers/student.controller.js";
 
 const router = Router();
@@ -23,4 +24,5 @@ router.get("/getStudents/:SIG", getStudents);
 router.post("/createStudent", createStudent);
 router.put("/updateStudent", updateStudent);
 router.get("/getStudentNotEnrolled/:id_period/:SIG", getStudentNotEnrolled);
+router.get("/getStudentsBySection/:id_section/:SIG", getStudentsBySection);
 export default router;

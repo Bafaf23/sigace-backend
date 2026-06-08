@@ -64,6 +64,7 @@ export class Users {
         u.id, u.document, u.name, u.last_name, u.email, u.phone, u.role_id,
         u.is_first_login, u.is_active,
         r.name AS role,
+        s.id AS id_student,
         s.SIG AS student_sig, s.representative_id, s.tuition_number, 
         s.allergies, s.medical_condition, s.weight, s.height, 
         s.shirt_size, s.pants_size, s.shoe_size,
@@ -72,6 +73,7 @@ export class Users {
         sc.SIG AS school_sig, sc.name AS school_name, sc.address AS school_address,
         sc.phone AS school_phone, sc.email AS school_email, sc.type AS school_type,
         sc.DEA_CODE AS school_DEA_CODE, sc.RIF AS school_RIF, sc.company_name AS school_company_name
+
       FROM users u
       INNER JOIN roles r ON u.role_id = r.id
       LEFT JOIN students s ON u.id = s.id_user
@@ -99,6 +101,7 @@ export class Users {
 
         if (row.student_sig) {
           user.students = {
+            id_student: row.id_student,
             SIG: row.student_sig,
             representative_id: row.representative_id,
             tuition_number: row.tuition_number,
@@ -243,16 +246,17 @@ export class Users {
     try {
       db = await connectToDatabase();
       let [currentPeriod] = await db.query(
-        "SELECT id FROM academic_periods WHERE is_active = 1 LIMIT 1",
+        "SELECT id, name FROM academic_periods WHERE is_active = 1 LIMIT 1",
       );
       let id_period = currentPeriod[0]?.id;
-
+      let period = currentPeriod[0]?.name;
       if (!id_period) {
         [currentPeriod] = await db.query(
           "SELECT id FROM academic_periods WHERE name = ? LIMIT 1",
           [getCurrentPeriod()],
         );
         id_period = currentPeriod[0]?.id ?? null;
+        period = currentPeriod[0]?.name ?? null;
       }
 
       const [result] = await db.query(
@@ -272,7 +276,7 @@ export class Users {
       if (!result[0]) {
         return null;
       }
-      return { ...result[0], id_period };
+      return { ...result[0], id_period, period };
     } catch (error) {
       console.error("Error al obtener usuario por email:", error);
       return null;

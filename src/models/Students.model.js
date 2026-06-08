@@ -70,7 +70,14 @@ export class Students {
     try {
       db = await connectToDatabase();
       const [rows] = await db.query(
-        "SELECT students.id, students.id_user, students.gender, students.SIG, students.representative_id, students.tuition_number, students.birth_date, students.allergies, students.medical_condition, students.weight, students.height, students.shirt_size, students.pants_size, students.shoe_size, users.name, users.last_name, users.email, users.phone, users.document, users.role_id, representatives.name as representative_name, representatives.last_name as representative_last_name, representatives.phone as representative_phone, representatives.relationship as representative_relationship FROM students INNER JOIN users ON students.id_user = users.id INNER JOIN representatives ON students.representative_id = representatives.id WHERE students.SIG = ?",
+        `SELECT students.id, students.id_user, students.gender, students.SIG, students.representative_id, students.tuition_number, students.birth_date, students.allergies, students.medical_condition, students.weight, students.height, students.shirt_size, students.pants_size, students.shoe_size, users.name, users.last_name, users.email, users.phone, users.document, users.role_id, representatives.name as representative_name, representatives.last_name as representative_last_name, representatives.phone as representative_phone, representatives.relationship as representative_relationship, en.id_section, sec.name as section, yer.id as id_year, yer.name as year FROM students 
+        INNER JOIN users ON students.id_user = users.id 
+        INNER JOIN representatives ON students.representative_id = representatives.id
+        INNER JOIN enrollments en ON students.id = id_student
+        INNER JOIN sections sec ON en.id_section = sec.id
+        INNER JOIN years yer ON sec.id_year = yer.id
+        WHERE students.SIG = ?
+        ORDER BY en.id DESC`,
         [SIG],
       );
       return rows;
@@ -171,6 +178,43 @@ export class Students {
       return rows;
     } catch (error) {
       console.error("Error al obtener los estudiantes no matriculados:", error);
+      throw error;
+    } finally {
+      if (db) {
+        await closeDatabaseConnection(db);
+      }
+    }
+  }
+
+  /**
+   * Obtiene a los estudiates de una sección
+   * @param {object} params - Objecto con los parámetros
+   * @param {number} params.id_section - ID de la sección
+   * @param {string} params.SIG - SIG de la escuela
+   * @returns {Array<object>} - Array de estudiantes
+   */
+  static async getStudentsBySection({ id_section, SIG }) {
+    let db;
+    try {
+      db = await connectToDatabase();
+      const [rows] = await db.query(
+        `SELECT 
+    s.id, 
+    s.id_user, 
+    s.SIG, 
+    s.tuition_number, 
+    u.name, 
+    u.last_name, 
+    u.document 
+FROM students s 
+INNER JOIN users u ON s.id_user = u.id  
+INNER JOIN enrollments e ON s.id = e.id_student
+WHERE e.id_section = ? AND s.SIG = ?`,
+        [id_section, SIG],
+      );
+      return rows;
+    } catch (error) {
+      console.error("Error al obtener los estudiantes de la sección:", error);
       throw error;
     } finally {
       if (db) {

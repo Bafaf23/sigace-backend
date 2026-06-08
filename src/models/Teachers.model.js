@@ -37,4 +37,38 @@ export class Teachers {
       }
     }
   }
+
+  /**
+   * Obtiene un profesor por su ID
+   * @param {string} id - Id usuario
+   * @returns {Promise<Teachers>}
+   */
+  static async getLoadAcademicTeacher(id) {
+    let db;
+    try {
+      db = await connectToDatabase();
+
+      const [teacher] = await db.query(
+        `SELECT id FROM teachers WHERE id_user = ?`,
+        [id],
+      );
+
+      const [loadAcademic] = await db.query(
+        `SELECT s.name, s.code_subject, sec.name as section_name, y.name as year_name, ld.id as id_load_academic, sec.id as id_section FROM subjects s 
+        INNER JOIN load_academic ld ON s.code_subject = ld.id_subject
+        INNER JOIN sections sec ON ld.id_section = sec.id
+        INNER JOIN years y ON sec.id_year = y.id
+        WHERE ld.id_teacher = ?`,
+        [teacher[0].id],
+      );
+      return loadAcademic;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    } finally {
+      if (db) {
+        await closeDatabaseConnection(db);
+      }
+    }
+  }
 }

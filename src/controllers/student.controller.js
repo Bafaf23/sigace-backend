@@ -283,3 +283,32 @@ export const getStudentNotEnrolled = async (req, res) => {
     res.status(500).json({ error: true, message: error.message });
   }
 };
+
+/* Obtener los estudiantes de una sección */
+export const getStudentsBySection = async (req, res) => {
+  try {
+    console.log("⚠️ getStudentsBySection");
+    const { id_section, SIG } = req.params;
+    if (!id_section) {
+      console.log("❌ to the getStudentsBySection... id_section is required");
+      return res.status(400).json({ message: "ID de la sección es requerido" });
+    }
+    if (!SIG) {
+      console.log("❌ to the getStudentsBySection... SIG is required");
+      return res.status(400).json({ message: "SIG es requerido" });
+    }
+    const students = await Students.getStudentsBySection({ id_section, SIG });
+    if (students.length === 0) {
+      console.log("❌ to the getStudentsBySection... no students found");
+      return res
+        .status(404)
+        .json({ message: "No hay estudiantes en esta sección" });
+    }
+    console.log("✅ to the getStudentsBySection... students found");
+    console.log("🔄 to the getStudentsBySection... students", students);
+    res.status(200).json(students);
+  } catch (error) {
+    console.log("❌ to the getStudentsBySection... error", error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};

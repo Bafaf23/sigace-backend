@@ -11,6 +11,19 @@ CREATE TABLE IF NOT EXISTS roles (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS lapses(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(20) NOT NULL UNIQUE,
+  is_active BOOLEAN DEFAULT TRUE,
+  id_period INT NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (id_period) REFERENCES academic_periods(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS representatives (
   id INT AUTO_INCREMENT PRIMARY KEY,
   document VARCHAR(15) NOT NULL UNIQUE,
@@ -30,8 +43,11 @@ CREATE TABLE IF NOT EXISTS academic_periods (
     name VARCHAR(20) NOT NULL UNIQUE,          -- Ej: "2025-2026"
     start_date DATE NOT NULL,                   -- Ej: "2025-09-15"
     end_date DATE NOT NULL,                     -- Ej: "2026-07-31"
-    is_active BOOLEAN DEFAULT FALSE             -- Período en curso (solo uno en TRUE)
+    is_active BOOLEAN DEFAULT FALSE,             -- Período en curso (solo uno en TRUE)
+    SIG VARCHAR(10) NOT NULL,
+    FOREIGN KEY (SIG) REFERENCES schools(SIG) ON DELETE CASCADE
 );
+
 
 CREATE TABLE IF NOT EXISTS schools (
     SIG VARCHAR(10) PRIMARY KEY,
@@ -195,6 +211,47 @@ CREATE TABLE IF NOT EXISTS load_academic(
     FOREIGN KEY (SIG) REFERENCES schools(SIG) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS evaluation_plans(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  id_load_academic INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  id_lapse INT NOT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  UNIQUE (id_load_academic, id_lapse),
+
+  FOREIGN KEY (id_load_academic) REFERENCES load_academic(id) ON DELETE RESTRICT,
+  FOREIGN KEY (id_lapse) REFERENCES lapses(id) ON DELETE RESTRICT
+);
+
+
+
+CREATE TABLE IF NOT EXISTS evaluation_plan_details(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  id_evaluation_plan INT NOT NULL,
+  date DATE NOT NULL,
+  referent_teorical TEXT NOT NULL, 
+  activity TEXT NOT NULL,
+  technical TEXT NOT NULL,
+  instrument TEXT NOT NULL,
+  porcentage INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (id_evaluation_plan) REFERENCES evaluation_plans(id) ON DELETE RESTRICT
+); 
+
+CREATE TABLE IF NOT EXISTS grades (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  id_evaluation INT NOT NULL,
+  id_student INT NOT NULL, 
+  grade DECIMAL(4,2) NOT NULL, -- Mayor precisión para notas/promedios
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (id_evaluation) REFERENCES evaluation_plan_details (id) ON DELETE RESTRICT,
+  FOREIGN KEY (id_student) REFERENCES students (id) ON DELETE RESTRICT,
+  CONSTRAINT unique_student_evaluation UNIQUE (id_student, id_evaluation)
+);
 -- =========================================================================
 -- 5. INSERCIONES DE DATOS INICIALES (Data Semilla)
 -- =========================================================================
