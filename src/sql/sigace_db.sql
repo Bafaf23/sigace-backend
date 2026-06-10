@@ -2,7 +2,7 @@ CREATE DATABASE IF NOT EXISTS sigace_db;
 USE sigace_db;
 
 -- =========================================================================
--- 1. TABLAS MAESTRAS (Independientes, van primero)
+-- 1. TABLAS MAESTRAS (Reordenadas por dependencias estrictas)
 -- =========================================================================
 
 CREATE TABLE IF NOT EXISTS roles (
@@ -10,18 +10,6 @@ CREATE TABLE IF NOT EXISTS roles (
   name VARCHAR(50) NOT NULL UNIQUE,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS lapses(
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(20) NOT NULL UNIQUE,
-  is_active BOOLEAN DEFAULT TRUE,
-  id_period INT NOT NULL,
-  start_date DATE NOT NULL,
-  end_date DATE NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (id_period) REFERENCES academic_periods(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS representatives (
@@ -35,20 +23,9 @@ CREATE TABLE IF NOT EXISTS representatives (
   birthCertificate VARCHAR(255) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-
-  );
-
-CREATE TABLE IF NOT EXISTS academic_periods (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(20) NOT NULL UNIQUE,          -- Ej: "2025-2026"
-    start_date DATE NOT NULL,                   -- Ej: "2025-09-15"
-    end_date DATE NOT NULL,                     -- Ej: "2026-07-31"
-    is_active BOOLEAN DEFAULT FALSE,             -- Período en curso (solo uno en TRUE)
-    SIG VARCHAR(10) NOT NULL,
-    FOREIGN KEY (SIG) REFERENCES schools(SIG) ON DELETE CASCADE
 );
 
-
+-- 🌟 Movida arriba: Las escuelas no dependen de nadie
 CREATE TABLE IF NOT EXISTS schools (
     SIG VARCHAR(10) PRIMARY KEY,
     company_name VARCHAR(50) NULL,
@@ -67,13 +44,37 @@ CREATE TABLE IF NOT EXISTS schools (
     )
 );
 
+-- 🌟 Movida aquí: Ya existe la tabla schools
+CREATE TABLE IF NOT EXISTS academic_periods (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(20) NOT NULL UNIQUE,          -- Ej: "2025-2026"
+    start_date DATE NOT NULL,                   -- Ej: "2025-09-15"
+    end_date DATE NOT NULL,                     -- Ej: "2026-07-31"
+    is_active BOOLEAN DEFAULT FALSE,            -- Período en curso (solo uno en TRUE)
+    SIG VARCHAR(10) NOT NULL,
+    FOREIGN KEY (SIG) REFERENCES schools(SIG) ON DELETE CASCADE
+);
+
+-- 🌟 Movida aquí: Ya existen los periodos académicos
+CREATE TABLE IF NOT EXISTS lapses(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(20) NOT NULL UNIQUE,
+  is_active BOOLEAN DEFAULT TRUE,
+  id_period INT NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (id_period) REFERENCES academic_periods(id) ON DELETE CASCADE
+);
+
 -- =========================================================================
 -- 2. TABLAS DE USUARIOS Y DEPENDIENTES DIRECTOS
 -- =========================================================================
 
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  document VARCHAR(15) NOT NULL UNIQUE,         -- V-30021867 ocupa más caracteres a veces
+  document VARCHAR(15) NOT NULL UNIQUE, 
   name VARCHAR(50) NOT NULL,
   last_name VARCHAR(50) NOT NULL,
   email VARCHAR(100) NOT NULL UNIQUE,
@@ -84,7 +85,6 @@ CREATE TABLE IF NOT EXISTS users (
   is_active BOOLEAN DEFAULT TRUE,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
   FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS administrators (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (SIG) REFERENCES schools(SIG) ON DELETE CASCADE,
   FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE
-); -- 👈 Corregido: Faltaba punto y coma
+);
 
 -- =========================================================================
 -- 4. CONTROL DE ESTUDIOS (Secciones, Materias e Inscripciones)
@@ -159,8 +159,7 @@ CREATE TABLE IF NOT EXISTS students (
   id_user INT NOT NULL,
   SIG VARCHAR(10) NOT NULL,
   representative_id INT NOT NULL,               -- Enlace a la tabla de representantes
-  tuition_number VARCHAR(255) NOT NULL UNIQUE,  -- Número de matrícula único (Histórico del alumno)
-  -- 🩺 Ficha Médica y Antropométrica (Datos del estudiante)
+  tuition_number VARCHAR(255) NOT NULL UNIQUE,  -- Número de matrícula único
   allergies TEXT NULL,
   medical_condition TEXT NULL,
   weight INT NOT NULL,                          -- Peso en kg
@@ -168,24 +167,20 @@ CREATE TABLE IF NOT EXISTS students (
   shirt_size VARCHAR(50) NOT NULL,
   pants_size VARCHAR(50) NOT NULL,
   shoe_size VARCHAR(50) NOT NULL,
-  -- 👤 Datos Personales Base
   gender ENUM('Masculino', 'Femenino') NOT NULL DEFAULT 'Masculino',
   birth_date DATE NOT NULL,
-  -- ⏱️ Auditoría
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  -- 🔗 Llaves Foráneas Estrictas
   FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (SIG) REFERENCES schools(SIG) ON DELETE CASCADE,
   FOREIGN KEY (representative_id) REFERENCES representatives(id) ON DELETE RESTRICT
 );
 
--- 🚀 TABLA PUENTE: MATRÍCULA / INSCRIPCIÓN (Aquí metes al alumno en la sección)
 CREATE TABLE IF NOT EXISTS enrollments (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    id_student INT NOT NULL,                    -- El alumno que se inscribe
-    id_section INT NOT NULL,                    -- En qué aula física cae (Ej: 1er Año A)
-    id_period INT NOT NULL,                     -- Período calculado automáticamente
+    id_student INT NOT NULL,                    
+    id_section INT NOT NULL,                    
+    id_period INT NOT NULL,                    
     status ENUM('Activo', 'Retirado', 'Egresado') DEFAULT 'Activo', 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -224,8 +219,6 @@ CREATE TABLE IF NOT EXISTS evaluation_plans(
   FOREIGN KEY (id_lapse) REFERENCES lapses(id) ON DELETE RESTRICT
 );
 
-
-
 CREATE TABLE IF NOT EXISTS evaluation_plan_details(
   id INT AUTO_INCREMENT PRIMARY KEY,
   id_evaluation_plan INT NOT NULL,
@@ -245,47 +238,38 @@ CREATE TABLE IF NOT EXISTS grades (
   id INT AUTO_INCREMENT PRIMARY KEY,
   id_evaluation INT NOT NULL,
   id_student INT NOT NULL, 
-  grade DECIMAL(4,2) NOT NULL, -- Mayor precisión para notas/promedios
+  grade DECIMAL(4,2) NOT NULL, 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (id_evaluation) REFERENCES evaluation_plan_details (id) ON DELETE RESTRICT,
   FOREIGN KEY (id_student) REFERENCES students (id) ON DELETE RESTRICT,
   CONSTRAINT unique_student_evaluation UNIQUE (id_student, id_evaluation)
 );
--- =========================================================================
--- 5. INSERCIONES DE DATOS INICIALES (Data Semilla)
--- =========================================================================
 
+-- =========================================================================
+-- 5. INSERCIONES DE DATOS INICIALES (Data Semilla Corregida)
+-- =========================================================================
 
 -- Inserción de Roles
-
 INSERT INTO roles (name) VALUES ('SuperAdmin'), ('Estudiante'), ('Profesor'), ('Director'), ('Administrador');
 
--- Período académico activo (requerido para login y secciones)
-INSERT INTO academic_periods (name, start_date, end_date, is_active)
-VALUES ('2025-2026', '2025-09-15', '2026-07-31', TRUE);
+-- 🌟 Inserción de Escuela Maestra (Primero, para que su SIG exista)
+INSERT INTO schools (SIG, company_name, name, address, phone, email, type, DEA_CODE)
+VALUES ('SIG1234', NULL, 'Escuela 1', 'Direccion 1', '1234567890', 'escuela1@gmail.com', 'Pública', 'DEA001');
 
--- Inserción de Escuela Maestra (Debe ir ANTES de relacionar su SIG)
-INSERT INTO schools (SIG, name, address, phone, email, type, DEA_CODE)
-VALUES ('SIG1234', 'Escuela 1', 'Direccion 1', '1234567890', 'escuela1@gmail.com', 'Pública', 'DEA001');
+-- 🌟 Inserción de Período académico (Corregido: incluyendo su respectiva FK a la escuela 'SIG1234')
+INSERT INTO academic_periods (name, start_date, end_date, is_active, SIG)
+VALUES ('2025-2026', '2025-09-15', '2026-07-31', TRUE, 'SIG1234');
 
--- Inserción de Usuario Administrador Inicial (Bryant)
+-- Inserción de Usuario Administrador Inicial
 INSERT INTO users (document, name, last_name, email, phone, pass, role_id)
 VALUES ('V-30021867', 'Bryant', 'Facenda', 'bryantffacen@gmail.com', '1234567890', '$2b$10$bRnuv6.gvFqGmd.E2rvx4uI.E0Wta9yvSdtqH2AwAMO478qCTYHk.', 1);
 
-INSERT INTO years (name, SIG) VALUES ('1er Año', 'SIG4709');
-INSERT INTO years (name, SIG) VALUES ('2er Año', 'SIG4709');
-INSERT INTO years (name, SIG) VALUES ('3er Año', 'SIG4709');
-INSERT INTO years (name, SIG) VALUES ('4er Año', 'SIG4709');
-INSERT INTO years (name, SIG) VALUES ('5er Año', 'SIG4709');
-INSERT INTO years (name, SIG) VALUES ('6er Año', 'SIG4709');
-INSERT INTO years (name, SIG) VALUES ('7er Año', 'SIG4709');
-INSERT INTO years (name, SIG) VALUES ('8er Año', 'SIG4709');
--- =========================================================================
--- Migración: schools (ejecutar solo si la tabla ya existe sin estas columnas)
--- =========================================================================
--- ALTER TABLE schools
---   ADD COLUMN company_name VARCHAR(50) NULL AFTER name,
---   ADD COLUMN RIF VARCHAR(20) NULL UNIQUE,
---   MODIFY COLUMN DEA_CODE VARCHAR(50) NULL,
---   MODIFY COLUMN type ENUM('Pública', 'Privada', 'Municipal') NOT NULL;
+-- 🌟 Inserción de años académicos (Sincronizados con el SIG real 'SIG1234' y corregidos ortográficamente)
+INSERT INTO years (name, SIG) VALUES 
+('1er Año', 'SIG1234'),
+('2do Año', 'SIG1234'),
+('3er Año', 'SIG1234'),
+('4to Año', 'SIG1234'),
+('5to Año', 'SIG1234'),
+('6to Año', 'SIG1234');

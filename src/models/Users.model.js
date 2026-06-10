@@ -117,7 +117,10 @@ export class Users {
           };
         }
         if (row.admin_sig) {
-          user.administrators = { SIG: row.admin_sig };
+          user.administrators = {
+            SIG: row.admin_sig,
+            id_administrators: row.id,
+          };
         }
 
         if (row.school_sig) {
@@ -260,17 +263,28 @@ export class Users {
       }
 
       const [result] = await db.query(
-        `SELECT u.id, u.document, u.name, u.last_name, u.email, u.phone, u.pass AS password, r.name AS role, u.is_first_login, u.is_active,
-        COALESCE(t.SIG, a.SIG, s.SIG) AS SIG
-        FROM users u 
-        INNER JOIN roles r ON u.role_id = r.id 
-        LEFT JOIN students s ON u.id = s.id_user
-        LEFT JOIN schools sch_est ON s.SIG = sch_est.SIG
-        LEFT JOIN teachers t ON u.id = t.id_user
-        LEFT JOIN schools sch_prof ON t.SIG = sch_prof.SIG
-        LEFT JOIN administrators a ON u.id = a.id_user
-        LEFT JOIN schools sch_adm ON a.SIG = sch_adm.SIG
-        WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
+        `SELECT 
+    u.id AS id_user,                       
+    COALESCE(s.id, t.id, a.id) AS id,      -- 🌟 Esto se queda intacto porque es el que necesitamos
+    u.document, 
+    u.name, 
+    u.last_name, 
+    u.email, 
+    u.phone, 
+    u.pass AS password, 
+    r.name AS role, 
+    u.is_first_login, 
+    u.is_active,
+    COALESCE(t.SIG, a.SIG, s.SIG) AS SIG
+FROM users u 
+INNER JOIN roles r ON u.role_id = r.id 
+LEFT JOIN students s ON u.id = s.id_user
+LEFT JOIN schools sch_est ON s.SIG = sch_est.SIG
+LEFT JOIN teachers t ON u.id = t.id_user
+LEFT JOIN schools sch_prof ON t.SIG = sch_prof.SIG
+LEFT JOIN administrators a ON u.id = a.id_user
+LEFT JOIN schools sch_adm ON a.SIG = sch_adm.SIG
+WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
         [email],
       );
       if (!result[0]) {

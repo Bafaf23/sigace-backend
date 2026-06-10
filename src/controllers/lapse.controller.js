@@ -16,7 +16,25 @@ export const getLapses = async (req, res) => {
     res.status(200).json(lapses);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error al obtener los lapses" });
+    res.status(500).json({ message: "Error al obtener los lapsos" });
+  }
+};
+
+export const getLapseActive = async (req, res) => {
+  try {
+    console.log(`⚠️ Getting Lapse Acive`);
+    const { SIG } = req.params;
+    if (!SIG) {
+      return res.status(400).json({ message: "SIG es requerido" });
+    }
+    console.log(`🔃 Obteniando el lapso...`);
+    const lapses = await LapseModel.getLapses(SIG);
+    console.log(`🔃 Obteniando el lapso.......`);
+    const lapseActive = lapses.find((lapse) => lapse.is_active === 1);
+    return res.status(200).json(lapseActive);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al obtener el lapso activo" });
   }
 };
 

@@ -6,7 +6,7 @@ const { sign } = jsonwebtoken;
 
 export const login = async (req, res) => {
   try {
-    console.log("⚠️ login...");
+    console.log("⚠️ Iniciando proceso de login...");
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -40,16 +40,16 @@ export const login = async (req, res) => {
 
     req.session.user = {
       token: token,
-      id: user.id,
+      id: user.id, 
+      id_user: user.id_user,
       dni: user.document,
       email: user.email,
       name: user.name,
       lastName: user.last_name,
-      id_period: user.id_period,
-      period: user.period,
       phone: user.phone,
       role: user.role,
       SIG: user.SIG,
+      period: user.period,
     };
 
     if (mustChangePassword) {
@@ -108,7 +108,6 @@ export const login = async (req, res) => {
       .json({ error: "Error al iniciar sesión : " + error });
   }
 };
-
 export const logout = async (req, res) => {
   try {
     /* if (!req.session || !req.session.user) {
