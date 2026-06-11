@@ -64,6 +64,7 @@ export class Users {
         u.id, u.document, u.name, u.last_name, u.email, u.phone, u.role_id,
         u.is_first_login, u.is_active,
         r.name AS role,
+        s.id AS id_student,
         s.SIG AS student_sig, s.representative_id, s.tuition_number, 
         s.allergies, s.medical_condition, s.weight, s.height, 
         s.shirt_size, s.pants_size, s.shoe_size,
@@ -72,6 +73,7 @@ export class Users {
         sc.SIG AS school_sig, sc.name AS school_name, sc.address AS school_address,
         sc.phone AS school_phone, sc.email AS school_email, sc.type AS school_type,
         sc.DEA_CODE AS school_DEA_CODE, sc.RIF AS school_RIF, sc.company_name AS school_company_name
+
       FROM users u
       INNER JOIN roles r ON u.role_id = r.id
       LEFT JOIN students s ON u.id = s.id_user
@@ -99,6 +101,7 @@ export class Users {
 
         if (row.student_sig) {
           user.students = {
+            id_student: row.id_student,
             SIG: row.student_sig,
             representative_id: row.representative_id,
             tuition_number: row.tuition_number,
@@ -114,7 +117,10 @@ export class Users {
           };
         }
         if (row.admin_sig) {
-          user.administrators = { SIG: row.admin_sig };
+          user.administrators = {
+            SIG: row.admin_sig,
+            id_administrators: row.id,
+          };
         }
 
         if (row.school_sig) {
@@ -243,36 +249,48 @@ export class Users {
     try {
       db = await connectToDatabase();
       let [currentPeriod] = await db.query(
-        "SELECT id FROM academic_periods WHERE is_active = 1 LIMIT 1",
+        "SELECT id, name FROM academic_periods WHERE is_active = 1 LIMIT 1",
       );
       let id_period = currentPeriod[0]?.id;
-
+      let period = currentPeriod[0]?.name;
       if (!id_period) {
         [currentPeriod] = await db.query(
           "SELECT id FROM academic_periods WHERE name = ? LIMIT 1",
           [getCurrentPeriod()],
         );
         id_period = currentPeriod[0]?.id ?? null;
+        period = currentPeriod[0]?.name ?? null;
       }
 
       const [result] = await db.query(
-        `SELECT u.id, u.document, u.name, u.last_name, u.email, u.phone, u.pass AS password, r.name AS role, u.is_first_login, u.is_active,
-        COALESCE(t.SIG, a.SIG, s.SIG) AS SIG
-        FROM users u 
-        INNER JOIN roles r ON u.role_id = r.id 
-        LEFT JOIN students s ON u.id = s.id_user
-        LEFT JOIN schools sch_est ON s.SIG = sch_est.SIG
-        LEFT JOIN teachers t ON u.id = t.id_user
-        LEFT JOIN schools sch_prof ON t.SIG = sch_prof.SIG
-        LEFT JOIN administrators a ON u.id = a.id_user
-        LEFT JOIN schools sch_adm ON a.SIG = sch_adm.SIG
-        WHERE u.email = ?`,
+        `SELECT 
+    u.id AS id_user,                       
+    COALESCE(s.id, t.id, a.id) AS id,      -- 🌟 Esto se queda intacto porque es el que necesitamos
+    u.document, 
+    u.name, 
+    u.last_name, 
+    u.email, 
+    u.phone, 
+    u.pass AS password, 
+    r.name AS role, 
+    u.is_first_login, 
+    u.is_active,
+    COALESCE(t.SIG, a.SIG, s.SIG) AS SIG
+FROM users u 
+INNER JOIN roles r ON u.role_id = r.id 
+LEFT JOIN students s ON u.id = s.id_user
+LEFT JOIN schools sch_est ON s.SIG = sch_est.SIG
+LEFT JOIN teachers t ON u.id = t.id_user
+LEFT JOIN schools sch_prof ON t.SIG = sch_prof.SIG
+LEFT JOIN administrators a ON u.id = a.id_user
+LEFT JOIN schools sch_adm ON a.SIG = sch_adm.SIG
+WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
         [email],
       );
       if (!result[0]) {
         return null;
       }
-      return { ...result[0], id_period };
+      return { ...result[0], id_period, period };
     } catch (error) {
       console.error("Error al obtener usuario por email:", error);
       return null;

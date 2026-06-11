@@ -3,6 +3,8 @@ import { Representative } from "../models/Representative.model.js";
 import { Users } from "../models/Users.model.js";
 import jsonwebtoken from "jsonwebtoken";
 import { generateTuitionNumber } from "../utils/tuitoinNumber.js";
+import dotenv from "dotenv";
+dotenv.config();
 const { verify } = jsonwebtoken;
 
 /* Obtener todos los estudiantes */
@@ -27,10 +29,7 @@ export const getStudents = async (req, res) => {
     const userRole = authUser?.role;
     const allowedRoles = ["SuperAdmin", "Director", "Administrador"];
 
-    console.log("🔄 to the getStudents... userRole", userRole);
-
     if (!authUser || !allowedRoles.includes(userRole)) {
-      console.log("❌ to the getStudents... user not allowed");
       return res
         .status(403)
         .json({ error: "No tienes permisos para acceder a esta ruta" });
@@ -39,22 +38,21 @@ export const getStudents = async (req, res) => {
     const schoolSIG = SIG?.trim();
 
     if (!schoolSIG) {
-      console.log("❌ to the getStudents... schoolSIG is required");
       return res.status(400).json({ message: "SIG es requerido" });
     }
-    console.log("🔄 to the getStudents... schoolSIG", schoolSIG);
+
     const students = await Students.getAllStudents({ SIG: schoolSIG });
 
     if (students.length === 0) {
-      console.log("❌ to the getStudents... no students found");
       return res
         .status(404)
         .json({ message: "Esta escuela no tiene estudiantes" });
     }
-    console.log("✅ to the getStudents... students found");
-    res.status(200).json(students);
+
+    console.log("✅ Estudiantes obtenidos correctamente");
+    return res.status(200).json(students);
   } catch (error) {
-    console.log("❌ to the getStudents... error", error);
+    console.error("Error en getStudents:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -112,7 +110,6 @@ export const createStudent = async (req, res) => {
     if (
       Object.values(representativeObject).some((value) => value === undefined)
     ) {
-      console.log("❌ to the createStudent... some fields are required");
       return res
         .status(400)
         .json({ error: true, message: "Algunos campos son requeridos" });
@@ -121,27 +118,21 @@ export const createStudent = async (req, res) => {
     const auth = req.headers.authorization;
     const token = auth?.startsWith("Bearer ") ? auth.split(" ")[1] : null;
     let tokenUser = null;
-    console.log("🔄 to the createStudent... token", token);
     if (token) {
       try {
         tokenUser = verify(token, process.env.JWT_SECRET);
       } catch (error) {
-        console.log("❌ to the createStudent... invalid token");
         return res.status(401).json({ error: true, message: "Token inválido" });
       }
     }
     if (!tokenUser) {
-      console.log("❌ to the createStudent... invalid token");
       return res.status(401).json({ error: true, message: "Token inválido" });
     }
-    console.log("🔄 to the createStudent... creating representative");
-    // Crear el representante
+
     const representativeId =
       await Representative.createRepresentative(representativeObject);
-    console.log("🔄 to the createStudent... representativeId");
 
     if (!representativeId) {
-      console.log("❌ to the createStudent... error creating representative");
       return res
         .status(400)
         .json({ error: true, message: "Error al crear el representante" });
@@ -153,7 +144,6 @@ export const createStudent = async (req, res) => {
     /* Generar el número de matrícula único */
     const tuitionNumber = await generateTuitionNumber(studentObject.SIG);
     if (!tuitionNumber) {
-      console.log("❌ to the createStudent... error generating tuition number");
       return res.status(400).json({
         error: true,
         message: "Error al generar el número de matrícula",
@@ -169,13 +159,13 @@ export const createStudent = async (req, res) => {
     });
 
     if (!userId) {
-      console.log("❌ to the createStudent... error creating user");
       return res
         .status(400)
         .json({ error: true, message: "Error al crear el usuario" });
     }
-    console.log("✅ to the createStudent... student created successfully");
-    res.status(201).json({
+
+    console.log("✅ Estudiante creado correctamente");
+    return res.status(201).json({
       success: true,
       message: "El estudiante se ha creado correctamente",
     });
@@ -213,38 +203,31 @@ export const updateStudent = async (req, res) => {
       id: req.body.id_student,
     };
 
-    console.log("🔄 to the updateStudent... updating user");
     const userUpdated = await Users.updateUser(userUpdateObject);
 
     if (userUpdated === false) {
-      console.log("❌ to the updateStudent... error updating student");
       return res
         .status(404)
         .json({ error: true, message: "Error al actualizar el estudiante" });
     }
-    console.log("✅ to the updateStudent... user updated successfully");
 
-    console.log(
-      "🔄 to the updateStudent... updating student",
-      studentUpdateObject,
-    );
     const studentUpdated = await Students.updateStudent(
       studentUpdateObject.id,
       studentUpdateObject,
     );
 
     if (studentUpdated === false) {
-      console.log("❌ to the updateStudent... error updating student");
       return res
         .status(404)
         .json({ error: true, message: "Error al actualizar el estudiante" });
     }
-    console.log("✅ to the updateStudent... student updated successfully");
-    res
+
+    console.log("✅ Estudiante actualizado correctamente");
+    return res
       .status(200)
       .json({ success: true, message: "Estudiante actualizado correctamente" });
   } catch (error) {
-    console.log("❌ to the updateStudent... error", error);
+    console.error("Error en updateStudent:", error);
     res.status(500).json({ error: true, message: error.message });
   }
 };
@@ -254,30 +237,54 @@ export const getStudentNotEnrolled = async (req, res) => {
     console.log("⚠️ getStudentNotEnrolled");
     const { id_period, SIG } = req.params;
 
-    console.log("🔄 to the getStudentNotEnrolled... id_period");
-    console.log("🔄 to the getStudentNotEnrolled... SIG");
-
     if (!SIG) {
-      console.log("❌ to the getStudentNotEnrolled... SIG is required");
       return res.status(400).json({ message: "SIG es requerido" });
     }
 
     if (!id_period) {
-      console.log("❌ to the getStudentNotEnrolled... id_period is required");
       return res.status(400).json({ message: "ID del periodo es requerido" });
     }
-    console.log("🔄 to the getStudentNotEnrolled... id_period");
+
     const students = await Students.getStudentNotEnrolled({ id_period, SIG });
-    if (students.length === 0) {
-      console.log("❌ to the getStudentNotEnrolled... no students found");
+
+    if (!students?.length) {
       return res
         .status(404)
         .json({ message: "No hay estudiantes no matriculados" });
     }
-    console.log("✅ to the getStudentNotEnrolled... students found");
-    res.status(200).json(students);
+
+    console.log("✅ Estudiantes no matriculados obtenidos");
+    return res.status(200).json(students);
   } catch (error) {
-    console.log("❌ to the getStudentNotEnrolled... error", error);
+    console.error("Error en getStudentNotEnrolled:", error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+/* Obtener los estudiantes de una sección */
+export const getStudentsBySection = async (req, res) => {
+  try {
+    console.log("⚠️ getStudentsBySection");
+    const { id_section, SIG } = req.params;
+    if (!id_section) {
+      return res.status(400).json({ message: "ID de la sección es requerido" });
+    }
+    if (!SIG) {
+      return res.status(400).json({ message: "SIG es requerido" });
+    }
+
+    const students = await Students.getStudentsBySection({ id_section, SIG });
+
+    if (!students?.length) {
+      return res
+        .status(404)
+        .json({ message: "No hay estudiantes en esta sección" });
+    }
+
+    console.log("✅ Estudiantes de la sección obtenidos");
+    return res.status(200).json(students);
+  } catch (error) {
+    console.error("Error en getStudentsBySection:", error);
     res.status(500).json({ error: true, message: error.message });
   }
 };

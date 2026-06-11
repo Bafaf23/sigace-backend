@@ -27,3 +27,19 @@ export const getTeachers = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getLoadAcademicTeacher = async (req, res) => {
+  try {
+    console.log("🔍 getLoadAcademicTeacher");
+    const { id } = req.params;
+    if (!id) {
+      console.log(`❌ el ID es requerido`);
+      return res.status(200).json(loadAcademicTeacher);
+    }
+    const loadAcademicTeacher = await Teachers.getLoadAcademicTeacher(id);
+    console.log("✅ loadAcademicTeacher");
+    return res.status(200).json(loadAcademicTeacher);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

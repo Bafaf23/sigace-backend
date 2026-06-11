@@ -9,7 +9,11 @@ import studentRouter from "./routers/student.route.js";
 import sectionRouter from "./routers/section.route.js";
 import subjectRouter from "./routers/subject.route.js";
 import teachersRouter from "./routers/teachers.route.js";
+import loadAcademicRouter from "./routers/loadAcademic.route.js";
 import enrollmentRouter from "./routers/enrollment.route.js";
+import evaluationRouter from "./routers/evaluation.route.js";
+import lapseRouter from "./routers/lapse.route.js";
+import gredeRouter from "./routers/grade.route.js";
 
 dotenv.config();
 
@@ -46,6 +50,10 @@ app.use("/sections", sectionRouter);
 app.use("/subjects", subjectRouter);
 app.use("/enrollments", enrollmentRouter);
 app.use("/teachers", teachersRouter);
+app.use("/loadAcademic", loadAcademicRouter);
+app.use("/evaluations", evaluationRouter);
+app.use("/lapses", lapseRouter);
+app.use("/grades", gredeRouter);
 
 app.get("/", (_req, res) => {
   res.status(200).json({
