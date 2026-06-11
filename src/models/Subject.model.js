@@ -64,16 +64,17 @@ export class Subject {
     }
   }
   /**
-   * Obtiene todas las materias de una seccion
+   * Obtiene todas las materias de una sección con evaluaciones y notas del estudiante
+   * @param {number} id_lapse
    * @param {number} id_section
-   * @returns {Array<object>}
+   * @param {number} id_student
+   * @returns {Promise<Array<object>>}
    */
-  static async getSubjeBySection(id_lapse, id_section, id_student) {
-    // 🌟 1. Recibimos los 3 parámetros requeridos
+  static async getSubjectBySection(id_lapse, id_section, id_student) {
     let db;
     try {
       db = await connectToDatabase();
-      const [sujetcs] = await db.query(
+      const [subjects] = await db.query(
         `
      SELECT 
           s.code_subject AS id,
@@ -100,10 +101,14 @@ export class Subject {
         [id_lapse, id_student, id_section],
       );
 
-      return sujetcs;
+      return subjects;
     } catch (error) {
-      console.log("❌ Error en el modelo Subject:", error);
-      throw error; // Es buena práctica relanzar el error para que lo ataje el catch del controlador
+      console.error("Error al obtener las materias por sección:", error);
+      throw error;
+    } finally {
+      if (db) {
+        await closeDatabaseConnection(db);
+      }
     }
   }
 }

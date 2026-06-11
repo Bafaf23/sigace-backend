@@ -119,4 +119,46 @@ export class Sections {
       }
     }
   }
+
+  /**
+   * Busca la sección de un estudiante junto a los datos del año escolar.
+   * @param {string} SIG - Código de la institución
+   * @param {number} id_student - ID del estudiante (s.id)
+   * 
+   */
+  static async getSectionByStudent(SIG, id_student) {
+    let db;
+    try {
+      db = await connectToDatabase();
+      const query = `
+        SELECT
+          s.id AS id_student,
+          sec.id AS id_section,
+          sec.name AS section_name,
+          y.name AS year_name
+        FROM students s
+        INNER JOIN enrollments e ON s.id = e.id_student
+        INNER JOIN sections sec ON e.id_section = sec.id
+        INNER JOIN years y ON sec.id_year = y.id
+        WHERE s.id = ? AND s.SIG = ?
+          AND e.status IN ('Activo', 'Repitiente')
+        ORDER BY e.id DESC
+        LIMIT 1;
+      `;
+
+      const [rows] = await db.query(query, [id_student, SIG]);
+
+      return rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+      console.error(
+        "❌ Error en el modelo al ejecutar getSectionByStudent:",
+        error,
+      );
+      throw error;
+    } finally {
+      if (db) {
+        await closeDatabaseConnection(db);
+      }
+    }
+  }
 }

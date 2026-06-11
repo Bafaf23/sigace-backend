@@ -1,6 +1,6 @@
 import { Subject } from "../models/Subject.model.js";
 import { LapseModel } from "../models/Lapse.model.js";
-
+import { Sections } from "../models/Section.model.js";
 export const createSubject = async (req, res) => {
   try {
     console.log("⚠️ createSubject");
@@ -71,9 +71,9 @@ export const getYears = async (req, res) => {
 export const getSubjectBySection = async (req, res) => {
   try {
     console.log(`⚠️ Buscando materias de seccion...`);
-    const { id_section, id_student, SIG } = req.params;
+    const { id_student, SIG } = req.params;
 
-    if (!id_section || !id_student || !SIG) {
+    if (!id_student || !SIG) {
       console.log(`❌ Parámetros requeridos faltantes`);
       return res.status(400).json({
         error: true,
@@ -84,6 +84,9 @@ export const getSubjectBySection = async (req, res) => {
     const lapses = await LapseModel.getLapses(SIG);
     const lapseActive = lapses.find((lapse) => lapse.is_active);
 
+    const getSection = await Sections.getSectionByStudent(SIG, id_student);
+    const id_section = getSection.id_section;
+
     if (!lapseActive) {
       console.log(`❌ No hay lapso activo para el SIG: ${SIG}`);
       return res
@@ -93,27 +96,25 @@ export const getSubjectBySection = async (req, res) => {
 
     console.log(`🔃 Cargando materias para la sección ID: ${id_section}...`);
 
-    // 🌟 CORRECCIÓN CRÍTICA: Sincronizamos el orden exacto que espera tu modelo
-    // 1. id_lapse, 2. id_section, 3. id_student
-    const subjectSecctions = await Subject.getSubjeBySection(
+    const subjectSections = await Subject.getSubjectBySection(
       lapseActive.id,
       id_section,
       id_student,
     );
 
-    if (!subjectSecctions || subjectSecctions.length === 0) {
+    if (!subjectSections || subjectSections.length === 0) {
       console.log(`❌ Aun no hay materias en tu seccion`);
       return res
         .status(404)
         .json({ error: true, message: "Aun no hay materias en tu seccion" });
     }
 
-    const year = subjectSecctions[0].year_name;
-    const section = subjectSecctions[0].section_name;
+    const year = subjectSections[0].year_name;
+    const section = subjectSections[0].section_name;
 
     const subjectMap = {};
 
-    subjectSecctions.forEach((item) => {
+    subjectSections.forEach((item) => {
       // 1. Inicializar la materia si no existe en el mapa
       if (!subjectMap[item.code]) {
         subjectMap[item.code] = {
@@ -171,7 +172,7 @@ export const getSubjectBySection = async (req, res) => {
       }
     });
 
-    const claneSubject = Object.values(subjectMap).map((subject) => ({
+    const cleanSubjects = Object.values(subjectMap).map((subject) => ({
       ...subject,
       final_grade: subject.final_grade.toFixed(2),
     }));
@@ -181,7 +182,7 @@ export const getSubjectBySection = async (req, res) => {
       status: "success",
       year: year,
       section: section,
-      subjects: claneSubject,
+      subjects: cleanSubjects,
     });
   } catch (error) {
     console.log("❌ Error en getSubjectBySection:", error);

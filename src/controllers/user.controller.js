@@ -80,7 +80,7 @@ export const changePassword = async (req, res) => {
     let tokenUser = null;
     if (token) {
       try {
-        tokenUser = verify(token, process.env.JWT_SECRET || "secret");
+        tokenUser = verify(token, process.env.JWT_SECRET);
       } catch (_error) {
         console.log("--------------------------------");
         console.log("❌ changePassword... error changing password...");
@@ -89,8 +89,8 @@ export const changePassword = async (req, res) => {
       }
     }
 
-    const id = tokenUser?.id ?? req.session?.user?.id;
-
+    const id = tokenUser?.id_user ?? req.session?.user?.id_user;
+    console.log(id);
     if (!id) {
       return res.status(401).json({ error: "No autorizado" });
     }
@@ -115,7 +115,7 @@ export const changePassword = async (req, res) => {
       return res.status(500).json({ error: "Error al cambiar la contraseña" });
     }
 
-    if (req.session?.user?.id === id) {
+    if (req.session?.user?.id_user === id) {
       req.session.user.mustChangePassword = false;
     }
 
@@ -127,7 +127,7 @@ export const changePassword = async (req, res) => {
       success: true,
       mustChangePassword: false,
       message:
-        "Contraseña cambiada correctamente. Ya puedes iniciar sesión con tu nueva contraseña.",
+        "Contraseña actualizada correctamente. Ya puedes iniciar sesión con tu nueva contraseña.",
     });
   } catch (error) {
     console.error("❌ Error al cambiar la contraseña:", error);

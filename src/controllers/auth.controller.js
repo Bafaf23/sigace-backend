@@ -27,11 +27,16 @@ export const login = async (req, res) => {
       return res.status(401).json({ error: "Contraseña incorrecta" });
     }
 
-    const mustChangePassword =
-      user.is_first_login === true || user.is_first_login === 1;
+    const mustChangePassword = user.is_first_login === 1;
 
     const token = sign(
-      { email: user.email, id: user.id, role: user.role, mustChangePassword },
+      {
+        email: user.email,
+        id: user.id,
+        id_user: user.id_user,
+        role: user.role,
+        mustChangePassword,
+      },
       process.env.JWT_SECRET,
       {
         expiresIn: mustChangePassword ? "15m" : "1h",
@@ -40,7 +45,7 @@ export const login = async (req, res) => {
 
     req.session.user = {
       token: token,
-      id: user.id, 
+      id: user.id,
       id_user: user.id_user,
       dni: user.document,
       email: user.email,
@@ -56,6 +61,7 @@ export const login = async (req, res) => {
       const userSession = {
         token: token,
         id: user.id,
+        id_user: user.id_user,
         email: user.email,
         role: user.role,
         mustChangePassword: true,
