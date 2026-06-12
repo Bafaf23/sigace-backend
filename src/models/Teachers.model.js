@@ -54,11 +54,22 @@ export class Teachers {
       );
 
       const [loadAcademic] = await db.query(
-        `SELECT s.name, s.code_subject, sec.name as section_name, y.name as year_name, ld.id as id_load_academic, sec.id as id_section FROM subjects s 
-        INNER JOIN load_academic ld ON s.code_subject = ld.id_subject
-        INNER JOIN sections sec ON ld.id_section = sec.id
-        INNER JOIN years y ON sec.id_year = y.id
-        WHERE ld.id_teacher = ?`,
+        `SELECT 
+    s.name, 
+    s.code_subject, 
+    sec.name AS section_name, 
+    y.name AS year_name, 
+    ld.id AS id_load_academic, 
+    sec.id AS id_section 
+FROM subjects s 
+INNER JOIN load_academic ld ON s.code_subject = ld.id_subject
+INNER JOIN sections sec ON ld.id_section = sec.id
+INNER JOIN years y ON sec.id_year = y.id
+-- 🌟 NUEVO JOIN: Conectamos con el periodo académico de la carga docente
+INNER JOIN academic_periods ap ON ld.id_period = ap.id
+
+WHERE ld.id_teacher = ?
+  AND ap.is_active = 1;`,
         [teacher[0].id],
       );
       return loadAcademic;

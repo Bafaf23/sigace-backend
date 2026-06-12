@@ -20,7 +20,7 @@ router.get("/", (_req, res) => {
     },
   });
 });
-router.get("/getStudents/:SIG", getStudents);
+router.get("/getStudents/:SIG/:id_period", getStudents);
 router.post("/createStudent", createStudent);
 router.put("/updateStudent", updateStudent);
 router.get("/getStudentNotEnrolled/:id_period/:SIG", getStudentNotEnrolled);

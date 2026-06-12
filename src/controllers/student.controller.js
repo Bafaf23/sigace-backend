@@ -11,7 +11,7 @@ const { verify } = jsonwebtoken;
 export const getStudents = async (req, res) => {
   try {
     console.log("⚠️ getStudents");
-    const { SIG } = req.params;
+    const { SIG, id_period } = req.params;
 
     const auth = req.headers.authorization;
     const token = auth?.startsWith("Bearer ") ? auth.split(" ")[1] : null;
@@ -41,7 +41,10 @@ export const getStudents = async (req, res) => {
       return res.status(400).json({ message: "SIG es requerido" });
     }
 
-    const students = await Students.getAllStudents({ SIG: schoolSIG });
+    const students = await Students.getAllStudents({
+      SIG: schoolSIG,
+      id_period,
+    });
 
     if (students.length === 0) {
       return res

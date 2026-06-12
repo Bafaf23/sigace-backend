@@ -1,17 +1,18 @@
 import { LapseModel } from "../models/Lapse.model.js";
+import { Academic_periods } from "../models/Academin_period.model.js";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-dotenv.config();
+
 const { verify } = jwt;
 
 export const getLapses = async (req, res) => {
   try {
     console.log(`⚠️ Getting lapses...`);
-    const { SIG } = req.params;
-    if (!SIG) {
+    const { SIG, id_period } = req.params;
+
+    if (!SIG && !id_period) {
       return res.status(400).json({ message: "SIG es requerido" });
     }
-    const lapses = await LapseModel.getLapses(SIG);
+    const lapses = await LapseModel.getLapses(SIG, id_period);
     console.log(`✅ Lapses obtenidos correctamente`);
     res.status(200).json(lapses);
   } catch (error) {
@@ -31,6 +32,7 @@ export const getLapseActive = async (req, res) => {
     const lapses = await LapseModel.getLapses(SIG);
     console.log(`🔃 Obteniando el lapso.......`);
     const lapseActive = lapses.find((lapse) => lapse.is_active === 1);
+    console.log(lapseActive);
     return res.status(200).json(lapseActive);
   } catch (error) {
     console.error(error);
@@ -48,7 +50,7 @@ export const createLapse = async (req, res) => {
       return res.status(400).json({ message: "SIG es requerido" });
     }
 
-    const periods = await LapseModel.getAcademicPeriods(SIG);
+    const periods = await Academic_periods.getAcademicPeriods(SIG);
     console.log(`✅ Periodos académicos obtenidos`);
     const periodActive = periods[0];
 
@@ -156,132 +158,5 @@ export const startLapse = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error al iniciar el lapso" });
-  }
-};
-
-export const createAcademicPeriod = async (req, res) => {
-  try {
-    console.log(`⚠️ Creating academic period...`);
-    const auth = req.headers.authorization;
-    const SIG = req.params.SIG;
-
-    if (!SIG) {
-      return res.status(400).json({ message: "SIG es requerido" });
-    }
-    if (!auth) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    const token = auth.split(" ")[1];
-    const decoded = verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "Administrador") {
-      return res.status(401).json({
-        message: "No tienes permisos para crear el periodo académico",
-      });
-    }
-    const periods = await LapseModel.getAcademicPeriods(SIG);
-    const periodActive = periods[0];
-
-    if (periodActive) {
-      console.log(`⚠️ Periodo académico activo: ${periodActive.name}`);
-      return res.status(400).json({
-        message: `Ya existe un periodo académico activo: ${periodActive.name}`,
-      });
-    }
-
-    const name =
-      new Date().getFullYear() + "-" + (new Date().getFullYear() + 1); // Ej: "2025-2026"
-    const start_date = new Date().toISOString().split("T")[0]; // Ej: "2025-09-15"
-    const end_date = new Date(start_date);
-    end_date.setMonth(end_date.getMonth() + 12); // Ej: "2026-07-31"
-
-    const academicPeriod = await LapseModel.createAcademicPeriod({
-      name,
-      start_date,
-      end_date,
-      SIG,
-    });
-    console.log(`✅ Periodo académico creado correctamente`);
-    res.status(201).json({
-      success: true,
-      message: "Periodo académico creado correctamente",
-      academicPeriod,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al crear el periodo académico" });
-  }
-};
-
-export const endAcademicPeriod = async (req, res) => {
-  try {
-    console.log(`⚠️ Ending academic period...`);
-    const auth = req.headers.authorization;
-    const { SIG } = req.params;
-    if (!SIG) {
-      return res.status(400).json({ message: "SIG es requerido" });
-    }
-    if (!auth) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    const token = auth.split(" ")[1];
-    const decoded = verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "Administrador") {
-      return res.status(401).json({
-        message: "No tienes permisos para finalizar el periodo académico",
-      });
-    }
-    const academicPeriod = await LapseModel.endAcademicPeriod(SIG);
-    console.log(`✅ Periodo académico finalizado correctamente`);
-    res.status(200).json({
-      success: true,
-      message: "Periodo académico finalizado correctamente",
-      academicPeriod,
-    });
-  } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ message: "Error al finalizar el periodo académico" });
-  }
-};
-
-export const getAcademicPeriods = async (req, res) => {
-  try {
-    console.log(`⚠️ Getting academic periods...`);
-    const auth = req.headers.authorization;
-    const { SIG } = req.params;
-    if (!SIG) {
-      return res.status(400).json({ message: "SIG es requerido" });
-    }
-    if (!auth) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    const token = auth.split(" ")[1];
-    const decoded = verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "Administrador") {
-      return res.status(401).json({
-        message: "No tienes permisos para obtener los periodos académicos",
-      });
-    }
-    const academicPeriods = await LapseModel.getAcademicPeriods(SIG);
-    const periodActive = academicPeriods[0];
-    if (!periodActive) {
-      return res.status(400).json({
-        message: "No existe un periodo académico activo para esta institución",
-      });
-    }
-    console.log(
-      `✅ Periodos académicos obtenidos correctamente` + periodActive.name,
-    );
-    res.status(200).json({
-      success: true,
-      message: "Periodos académicos obtenidos correctamente",
-      periodActive,
-    });
-  } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ message: "Error al obtener los periodos académicos" });
   }
 };
