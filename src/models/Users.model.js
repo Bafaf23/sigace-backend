@@ -248,19 +248,6 @@ export class Users {
     let db;
     try {
       db = await connectToDatabase();
-      let [currentPeriod] = await db.query(
-        "SELECT id, name FROM academic_periods WHERE is_active = 1 LIMIT 1",
-      );
-      let id_period = currentPeriod[0]?.id;
-      let period = currentPeriod[0]?.name;
-      if (!id_period) {
-        [currentPeriod] = await db.query(
-          "SELECT id FROM academic_periods WHERE name = ? LIMIT 1",
-          [getCurrentPeriod()],
-        );
-        id_period = currentPeriod[0]?.id ?? null;
-        period = currentPeriod[0]?.name ?? null;
-      }
 
       const [result] = await db.query(
         `SELECT 
@@ -290,7 +277,7 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
       if (!result[0]) {
         return null;
       }
-      return { ...result[0], id_period, period };
+      return { ...result[0] };
     } catch (error) {
       console.error("Error al obtener usuario por email:", error);
       return null;

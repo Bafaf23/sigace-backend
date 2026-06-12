@@ -12,8 +12,9 @@ export class LapseModel {
   }
 
   /**
-   * Obtiene los lapsos de una institución
+   ** Obtiene los lapsos de una institución
    * @param {string} SIG
+   * @param {number} id_period id del period activo
    * @returns {Promise<Array<object>>}
    */
   static async getLapses(SIG) {
@@ -23,7 +24,7 @@ export class LapseModel {
       const [rows] = await db.query(
         `SELECT l.id, l.name, l.start_date, l.end_date, l.is_active FROM lapses l
           JOIN academic_periods ap ON l.id_period = ap.id
-          WHERE ap.SIG = ?`,
+          WHERE ap.SIG = ? AND ap.is_active = 1`,
         [SIG],
       );
       return rows;
@@ -79,76 +80,6 @@ export class LapseModel {
       const [result] = await db.query(
         "UPDATE lapses SET is_active = 0 WHERE id = ?",
         [id],
-      );
-      return result.affectedRows > 0;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    } finally {
-      if (db) await closeDatabaseConnection(db);
-    }
-  }
-
-  /**
-   * crea un nuevo periodo académico
-   * @param {{ name: string, start_date: string, end_date: string, is_active?: boolean }} academicPeriodModel
-   */
-  static async createAcademicPeriod(academicPeriodModel) {
-    let db;
-    try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
-        "INSERT INTO academic_periods (name, start_date, end_date, is_active, SIG) VALUES (?, ?, ?, ?, ?)",
-        [
-          academicPeriodModel.name,
-          academicPeriodModel.start_date,
-          academicPeriodModel.end_date,
-          academicPeriodModel.is_active ?? true,
-          academicPeriodModel.SIG,
-        ],
-      );
-      return result.insertId;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    } finally {
-      if (db) await closeDatabaseConnection(db);
-    }
-  }
-  /**
-   * obtiene los periodos académicos activos
-   * @param {string} SIG
-   * @returns {Promise<Array<object>>}
-   */
-  static async getAcademicPeriods(SIG) {
-    let db;
-    try {
-      db = await connectToDatabase();
-      const [rows] = await db.query(
-        "SELECT * FROM academic_periods WHERE is_active = 1 AND SIG = ?",
-        [SIG],
-      );
-      return rows;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    } finally {
-      if (db) await closeDatabaseConnection(db);
-    }
-  }
-
-  /**
-   * finaliza un periodo académico
-   * @param {string} SIG
-   * @returns {boolean} success
-   */
-  static async endAcademicPeriod(SIG) {
-    let db;
-    try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
-        "UPDATE academic_periods SET is_active = 0 WHERE SIG = ?",
-        [SIG],
       );
       return result.affectedRows > 0;
     } catch (error) {

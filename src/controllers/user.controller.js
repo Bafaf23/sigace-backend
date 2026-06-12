@@ -51,17 +51,12 @@ export const createUser = async (req, res) => {
 
 export const getUsers = async (_req, res) => {
   try {
-    console.log("--------------------------------");
     console.log("✅ getUsers... getting users...");
-    console.log("--------------------------------");
-
     const users = await Users.getUsers();
     res.status(200).json(users);
   } catch (error) {
-    console.log("--------------------------------");
-    console.log(" ❌ getUsers... error getting users...");
-    console.log("--------------------------------");
     console.error("❌ Error al obtener usuarios:", error);
+
     throw error;
   }
 };

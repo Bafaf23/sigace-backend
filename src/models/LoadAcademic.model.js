@@ -45,15 +45,26 @@ export class LoadAcademic {
     let db;
     try {
       db = await connectToDatabase();
-      const query = `SELECT la.*, se.name AS name_section, y.name AS name_year, p.name AS name_period, su.name AS name_subject, u.name AS name_teacher, u.last_name AS last_name_teacher
-        FROM load_academic la
-        LEFT JOIN teachers t ON la.id_teacher = t.id
-        LEFT JOIN users u ON t.id_user = u.id
-        LEFT JOIN sections se ON la.id_section = se.id
-        LEFT JOIN years y ON se.id_year = y.id
-        LEFT JOIN academic_periods p ON la.id_period = p.id
-        LEFT JOIN subjects su ON la.id_subject = su.code_subject
-        WHERE la.SIG = ?`;
+      const query = `SELECT 
+    la.*, 
+    se.name AS name_section, 
+    y.name AS name_year, 
+    p.name AS name_period, 
+    su.name AS name_subject, 
+    u.name AS name_teacher, 
+    u.last_name AS last_name_teacher
+FROM load_academic la
+-- Cambiados a INNER JOIN porque la carga académica depende obligatoriamente de ellos
+INNER JOIN sections se ON la.id_section = se.id
+INNER JOIN academic_periods p ON la.id_period = p.id
+INNER JOIN subjects su ON la.id_subject = su.code_subject
+-- Mantenemos LEFT JOIN por si un año o profesor fue eliminado en cascada/desactivado
+LEFT JOIN years y ON se.id_year = y.id
+LEFT JOIN teachers t ON la.id_teacher = t.id
+LEFT JOIN users u ON t.id_user = u.id
+
+WHERE la.SIG = ? 
+  AND p.is_active = 1;`;
       const [rows] = await db.query(query, [SIG]);
       return rows;
     } catch (error) {

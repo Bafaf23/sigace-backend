@@ -64,21 +64,58 @@ export class Students {
     this.created_at = created_at;
     this.updated_at = updated_at;
   }
-
-  static async getAllStudents({ SIG }) {
+  /**
+   ** Obtiene a todos los estudiantes de un colegio dentro de un periodo específico.
+   * @param {object} param
+   * @param {string} param.SIG - codigo unico del colegio
+   * @param {number} param.id_period - id del period academico
+   * @returns
+   */
+  static async getAllStudents({ SIG, id_period }) {
     let db;
     try {
       db = await connectToDatabase();
       const [rows] = await db.query(
-        `SELECT students.id, students.id_user, students.gender, students.SIG, students.representative_id, students.tuition_number, students.birth_date, students.allergies, students.medical_condition, students.weight, students.height, students.shirt_size, students.pants_size, students.shoe_size, users.name, users.last_name, users.email, users.phone, users.document, users.role_id, representatives.name as representative_name, representatives.last_name as representative_last_name, representatives.phone as representative_phone, representatives.relationship as representative_relationship, en.id_section, sec.name as section, yer.id as id_year, yer.name as year FROM students 
-        INNER JOIN users ON students.id_user = users.id 
-        INNER JOIN representatives ON students.representative_id = representatives.id
-        INNER JOIN enrollments en ON students.id = id_student
-        INNER JOIN sections sec ON en.id_section = sec.id
-        INNER JOIN years yer ON sec.id_year = yer.id
-        WHERE students.SIG = ?
-        ORDER BY en.id DESC`,
-        [SIG],
+        `SELECT 
+          students.id, 
+          students.id_user, 
+          students.gender, 
+          students.SIG, 
+          students.representative_id, 
+          students.tuition_number, 
+          students.birth_date, 
+          students.allergies, 
+          students.medical_condition, 
+          students.weight, 
+          students.height, 
+          students.shirt_size, 
+          students.pants_size, 
+          students.shoe_size, 
+          users.name, 
+          users.last_name, 
+          users.email, 
+          users.phone, 
+          users.document, 
+          users.role_id, 
+          representatives.name AS representative_name, 
+          representatives.last_name AS representative_last_name, 
+          representatives.phone AS representative_phone, 
+          representatives.relationship AS representative_relationship, 
+          en.id_section, 
+          sec.name AS section, 
+          yer.id AS id_year, 
+          yer.name AS year,
+          en.status AS enrollment_status
+      FROM students 
+      INNER JOIN users ON students.id_user = users.id 
+      INNER JOIN representatives ON students.representative_id = representatives.id
+      INNER JOIN enrollments en ON students.id = en.id_student 
+      INNER JOIN sections sec ON en.id_section = sec.id
+      INNER JOIN years yer ON sec.id_year = yer.id
+      WHERE students.SIG = ? 
+        AND en.id_period = ?
+      ORDER BY yer.id ASC, sec.name ASC, users.last_name ASC`,
+        [SIG, id_period],
       );
       return rows;
     } catch (error) {
@@ -222,5 +259,4 @@ WHERE e.id_section = ? AND s.SIG = ?`,
       }
     }
   }
-
 }

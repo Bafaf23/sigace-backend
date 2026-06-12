@@ -1,4 +1,5 @@
 import { Users } from "../models/Users.model.js";
+import { Academic_periods } from "../models/Academin_period.model.js";
 import bcrypt from "bcryptjs";
 import jsonwebtoken from "jsonwebtoken";
 
@@ -20,6 +21,9 @@ export const login = async (req, res) => {
     if (!user) {
       return res.status(401).json({ error: "Usuario no encontrado" });
     }
+    const period = await Academic_periods.getAcademicPeriods(user.SIG);
+    const currentPeriodId = period ? period.id : null;
+    const currentPeriodName = period ? period.name : "Sin Periodo Activo";
 
     const passwordMatch = await bcrypt.compare(password, user.password);
 
@@ -54,7 +58,8 @@ export const login = async (req, res) => {
       phone: user.phone,
       role: user.role,
       SIG: user.SIG,
-      period: user.period,
+      id_period: currentPeriodId,
+      period: currentPeriodName,
     };
 
     if (mustChangePassword) {
