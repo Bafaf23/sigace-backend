@@ -10,29 +10,59 @@ export const login = async (req, res) => {
     console.log("⚠️ Iniciando proceso de login...");
     const { email, password } = req.body;
 
+    // 1. Validaciones básicas de entrada
     if (!email || !password) {
       return res
         .status(400)
         .json({ error: "El email y la contraseña son obligatorios" });
     }
 
+    // 2. Buscar usuario
     const user = await Users.getUserByEmail(email);
 
     if (!user) {
+      console.log(`usuario no encontrado`);
       return res.status(401).json({ error: "Usuario no encontrado" });
     }
-    const period = await Academic_periods.getAcademicPeriods(user.SIG);
-    const currentPeriodId = period ? period.id : null;
-    const currentPeriodName = period ? period.name : "Sin Periodo Activo";
 
+    // 3. Verificar contraseña
     const passwordMatch = await bcrypt.compare(password, user.password);
-
     if (!passwordMatch) {
       return res.status(401).json({ error: "Contraseña incorrecta" });
     }
 
+    // 4. Circuito de seguridad: Restricción por Período Académico Inactivo
+    if (user.role !== "Administrador") {
+      const isSystemOpen = await Academic_periods.hasActivePeriod(user.SIG);
+
+      if (!isSystemOpen) {
+        console.log(
+          `⚠️ Intento de acceso bloqueado para ${user.email}. Sistema cerrado sin período activo.`,
+        );
+        return res.status(403).json({
+          success: false,
+          message:
+            "El sistema se encuentra temporalmente cerrado. No hay un período académico activo en este momento. Por favor, contacte al administrador.",
+        });
+      }
+    }
+
+    // 🌟 5. CORREGIDO: Carga del período dinámico (Tratamiento como Array)
+    const periodsList = await Academic_periods.getAcademicPeriods(user.SIG);
+
+    // Buscamos el que verdaderamente está corriendo en la institución
+    const activePeriod = Array.isArray(periodsList)
+      ? periodsList.find((p) => p.is_active === 1)
+      : null;
+
+    const currentPeriodId = activePeriod ? activePeriod.id : null;
+    const currentPeriodName = activePeriod
+      ? activePeriod.name
+      : "Sin Periodo Activo";
+
     const mustChangePassword = user.is_first_login === 1;
 
+    // 6. Generación del JWT Token
     const token = sign(
       {
         email: user.email,
@@ -47,6 +77,7 @@ export const login = async (req, res) => {
       },
     );
 
+    // 7. Preparación de la sesión en memoria
     req.session.user = {
       token: token,
       id: user.id,
@@ -58,48 +89,36 @@ export const login = async (req, res) => {
       phone: user.phone,
       role: user.role,
       SIG: user.SIG,
-      id_period: currentPeriodId,
-      period: currentPeriodName,
+      id_period: currentPeriodId, // Ahora sí guardará el ID correcto (Ej: 9)
+      period: currentPeriodName, // Ahora sí guardará el String correcto (Ej: "2026-2027")
     };
 
-    if (mustChangePassword) {
-      const userSession = {
-        token: token,
-        id: user.id,
-        id_user: user.id_user,
-        email: user.email,
-        role: user.role,
-        mustChangePassword: true,
-      };
-
-      return new Promise((resolve) => {
-        req.session.save((err) => {
-          if (err) {
-            console.error("Error al guardar la sesión:", err);
-            return resolve(
-              res.status(500).json({ error: "Error al establecer la sesión" }),
-            );
-          }
-
-          console.log(
-            `⚠️ Primer login detectado. Redireccionando cambio de clave: ${user.email}`,
-          );
-          return resolve(
-            res.status(200).json({
-              mustChangePassword: true,
-              user: userSession,
-            }),
-          );
-        });
-      });
-    }
-
+    // 8. Persistencia de la sesión de Express
     return new Promise((resolve) => {
       req.session.save((err) => {
         if (err) {
           console.error("Error al guardar la sesión:", err);
           return resolve(
             res.status(500).json({ error: "Error al establecer la sesión" }),
+          );
+        }
+
+        if (mustChangePassword) {
+          console.log(
+            `⚠️ Primer login detectado. Redireccionando cambio de clave: ${user.email}`,
+          );
+          return resolve(
+            res.status(200).json({
+              mustChangePassword: true,
+              user: {
+                token: token,
+                id: user.id,
+                id_user: user.id_user,
+                email: user.email,
+                role: user.role,
+                mustChangePassword: true,
+              },
+            }),
           );
         }
 
@@ -116,15 +135,12 @@ export const login = async (req, res) => {
     console.error("Error al iniciar sesión:", error);
     return res
       .status(500)
-      .json({ error: "Error al iniciar sesión : " + error });
+      .json({ error: "Error interno al iniciar sesión: " + error.message });
   }
 };
+
 export const logout = async (req, res) => {
   try {
-    /* if (!req.session || !req.session.user) {
-      console.error("No hay ninguna sesión activa");
-      return res.status(400).json({ error: "No hay ninguna sesión activa" });
-    } */
     const emailUsuario = req.session?.user?.email;
 
     return new Promise((resolve) => {
@@ -137,8 +153,10 @@ export const logout = async (req, res) => {
         }
 
         res.clearCookie("connect.sid");
+        console.log(
+          `🔒 Sesión cerrada correctamente para: ${emailUsuario || "Usuario no identificado"}`,
+        );
 
-        console.log(`🔒 Sesión cerrada correctamente para: ${emailUsuario}`);
         return resolve(
           res.status(200).json({ message: "Sesión cerrada correctamente" }),
         );

@@ -252,7 +252,7 @@ export class Users {
       const [result] = await db.query(
         `SELECT 
     u.id AS id_user,                       
-    COALESCE(s.id, t.id, a.id) AS id,      -- 🌟 Esto se queda intacto porque es el que necesitamos
+    COALESCE(s.id, t.id, a.id) AS id,     
     u.document, 
     u.name, 
     u.last_name, 

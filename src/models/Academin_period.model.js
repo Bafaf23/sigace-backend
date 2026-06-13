@@ -34,25 +34,25 @@ export class Academic_periods {
       if (db) await closeDatabaseConnection(db);
     }
   }
+
   /**
-   * obtiene los periodos académicos activos
+   * CORREGIDO: Obtiene TODOS los periodos académicos de una institución (tanto activos como históricos)
+   * Ordenados por ID descendente para tener los más recientes al principio.
    * @param {string} SIG
-   * @returns {Promise<Array<object>>}
+   * @returns {Promise<Array<object>>} Array con todos los periodos
    */
   static async getAcademicPeriods(SIG) {
     let db;
     try {
       db = await connectToDatabase();
       const [rows] = await db.query(
-        `SELECT * FROM academic_periods 
-        WHERE SIG = ? 
-        ORDER BY is_active DESC, id DESC 
-        LIMIT 1;`,
+        `SELECT * FROM academic_periods WHERE SIG = ? ORDER BY id DESC`,
         [SIG],
       );
-      return rows.length > 0 ? rows[0] : null;
+      // Retorna el array completo (vacío si no hay filas), permitiendo métodos de array en el controlador
+      return rows;
     } catch (error) {
-      console.error(error);
+      console.error("Error en getAcademicPeriods:", error);
       throw error;
     } finally {
       if (db) await closeDatabaseConnection(db);
@@ -78,6 +78,31 @@ export class Academic_periods {
       throw error;
     } finally {
       if (db) await closeDatabaseConnection(db);
+    }
+  }
+
+  /**
+   ** Verifica si existe al menos un período académico activo en el sistema.
+   * @param {string} SIG codigo inico del colegio
+   * @returns {Promise<boolean>} True si hay un período activo, False de lo contrario.
+   */
+  static async hasActivePeriod(SIG) {
+    let db;
+    try {
+      db = await connectToDatabase();
+      const [rows] = await db.query(
+        `SELECT id FROM academic_periods WHERE is_active = 1 AND  SIG = ? LIMIT 1`,
+        [SIG],
+      );
+      // Retorna true si encontró registros válidos
+      return rows && rows.length > 0;
+    } catch (error) {
+      console.error("Error en Academic_periods.hasActivePeriod:", error);
+      throw error; // Dejar que el controlador maneje el error general
+    } finally {
+      if (db) {
+        await closeDatabaseConnection(db);
+      }
     }
   }
 }

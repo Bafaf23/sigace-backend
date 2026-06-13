@@ -72,47 +72,47 @@ export class Sections {
   }
 
   /**
-   * Obtiene las secciones de la escuela
+   ** Obtiene las secciones de la escuela
    * @param {string} SIG - SIG de la escuela
+   * @param {number} id_period id del periodo academico
    * @returns {Promise<Array<object>>} - Array de secciones
    */
-  static async getSections(SIG) {
+  static async getSections(SIG, id_period) {
     let db;
     try {
       db = await connectToDatabase();
       const [rows] = await db.query(
         `SELECT 
-        sections.id, 
-        sections.name, 
-        sections.id_period, 
-        sections.id_year, 
-        sections.guide_id, 
-        sections.capacity,
-        years.name AS year_name, 
-        teachers.id AS teacher_id,
-        users.name AS teacher_name, 
-        users.last_name AS teacher_last_name,
-        
-        -- CORREGIDO: Contamos solo los estudiantes que están cursando realmente ('Activo')
-        (
-          SELECT COUNT(e.id) 
-          FROM enrollments e 
-          WHERE e.id_section = sections.id 
-            AND e.id_period = sections.id_period 
-            AND e.status = 'Activo'
-        ) AS total_students
+    sections.id, 
+    sections.name, 
+    sections.id_period, 
+    sections.id_year, 
+    sections.guide_id, 
+    sections.capacity,
+    years.name AS year_name, 
+    teachers.id AS teacher_id,
+    users.name AS teacher_name, 
+    users.last_name AS teacher_last_name,
     
-    FROM sections
-    INNER JOIN years ON sections.id_year = years.id
-    INNER JOIN teachers ON sections.guide_id = teachers.id
-    INNER JOIN users ON teachers.id_user = users.id
-    -- NUEVO JOIN: Para amarrar las secciones únicamente al periodo que está corriendo actualmente
-    INNER JOIN academic_periods ap ON sections.id_period = ap.id
-    
-    WHERE sections.SIG = ? 
-      AND users.role_id = 3
-      AND ap.is_active = 1;`,
-        [SIG],
+    -- Contamos los alumnos activos inscritos en esta sección y período
+    (
+      SELECT COUNT(e.id) 
+      FROM enrollments e 
+      WHERE e.id_section = sections.id 
+        AND e.id_period = sections.id_period 
+        AND e.status IN ('Activo','Aprobado','Retirado','Materia Pendiente','Reprobado')
+    ) AS total_students
+
+FROM sections
+INNER JOIN years ON sections.id_year = years.id
+INNER JOIN academic_periods ap ON sections.id_period = ap.id
+-- LEFT JOIN clave: si la sección no tiene profesor, igual se muestra
+LEFT JOIN teachers ON sections.guide_id = teachers.id
+LEFT JOIN users ON teachers.id_user = users.id
+
+WHERE sections.SIG = ? 
+  AND sections.id_period = ?;`,
+        [SIG, id_period],
       );
       return rows;
     } catch (error) {

@@ -7,6 +7,6 @@ import {
 const router = Router();
 
 router.post("/create", createSection);
-router.get("/get/:SIG", getSections);
+router.get("/get/:SIG/:id_period", getSections);
 
 export default router;

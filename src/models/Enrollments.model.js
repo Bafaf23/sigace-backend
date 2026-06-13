@@ -44,7 +44,8 @@ export class Enrollments {
     e.id_student,
     u.name, 
     u.last_name,   
-    u.document, 
+    u.document,
+    ap.name AS period,
     sec.name AS current_section,
     ye.name AS year_name, 
     e.status,
@@ -61,8 +62,9 @@ INNER JOIN students s ON e.id_student = s.id
 INNER JOIN users u ON s.id_user = u.id
 INNER JOIN sections sec ON e.id_section = sec.id
 INNER JOIN years ye ON sec.id_year = ye.id
+INNER JOIN academic_periods ap ON ap.id = e.id_period
 WHERE e.id_period = ? 
-  AND e.status = 'Aprobado'
+AND e.status IN ('Aprobado', 'Materia Pendiente')
 ORDER BY sec.name ASC, u.last_name ASC;`;
 
       const [rows] = await db.query(sql, [id_period]);

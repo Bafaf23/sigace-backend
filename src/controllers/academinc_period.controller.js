@@ -122,12 +122,14 @@ export const getAcademicPeriods = async (req, res) => {
     console.log(`⚠️ Getting academic periods...`);
     const auth = req.headers.authorization;
     const { SIG } = req.params;
+
     if (!SIG) {
       return res.status(400).json({ message: "SIG es requerido" });
     }
     if (!auth) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+
     const token = auth.split(" ")[1];
     const decoded = verify(token, process.env.JWT_SECRET);
     if (decoded.role !== "Administrador") {
@@ -135,23 +137,32 @@ export const getAcademicPeriods = async (req, res) => {
         message: "No tienes permisos para obtener los periodos académicos",
       });
     }
+
     const academicPeriods = await Academic_periods.getAcademicPeriods(SIG);
-    const periodActive = academicPeriods[0];
-    if (!periodActive) {
-      return res.status(400).json({
-        message: "No existe un periodo académico activo para esta institución",
+
+    if (!academicPeriods || academicPeriods.length === 0) {
+      return res.status(404).json({
+        message:
+          "No existen periodos académicos registrados para esta institución",
       });
     }
+
+    // Buscamos cuál es el activo para marcarlo como preferencia en la UI
+    const periodActive = academicPeriods.find((item) => item.is_active === 1);
+
     console.log(
-      `✅ Periodos académicos obtenidos correctamente` + periodActive.name,
+      `✅ ${academicPeriods.length} Periodos académicos recuperados con éxito.`,
     );
+
+    // Retornamos TODA la lista para que la interfaz pueda armar selectores históricos
     res.status(200).json({
       success: true,
       message: "Periodos académicos obtenidos correctamente",
-      periodActive,
+      periodActive: periodActive || null,
+      allPeriods: academicPeriods,
     });
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error en getAcademicPeriods:", error);
     res
       .status(500)
       .json({ message: "Error al obtener los periodos académicos" });

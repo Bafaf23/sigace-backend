@@ -8,73 +8,87 @@ export class Teachers {
   }
 
   /**
-   * Obtiene los profesores de la base de datos y a un profesor espesifico si se proporciona el SIG
-   * @param {string} SIG
-   * @returns {Promise<Array<Teachers>>}
+   * Obtiene todos los profesores registrados con su respectiva carga académica
+   * del periodo activo inyectada en un array.
+   * Formateo manual ultra-compatible y libre de errores de sintaxis.
    */
-  static async getTeachers(SIG) {
+  static async getAllTeachersWithLoad({ SIG }) {
     let db;
     try {
       db = await connectToDatabase();
-      if (SIG) {
-        const [teachers] = await db.query(
-          "SELECT t.id, t.id_user, t.SIG, t.is_active, u.name, u.last_name, u.email, u.phone, u.document FROM teachers t INNER JOIN users u ON t.id_user = u.id WHERE t.SIG = ?",
-          [SIG],
-        );
-        return teachers;
-      } else {
-        const [teachers] = await db.query(
-          "SELECT t.id, t.id_user, t.SIG, t.is_active, u.name, u.last_name, u.email, u.phone FROM teachers t INNER JOIN users u ON t.id_user = u.id",
-        );
-        return teachers;
-      }
-    } catch (error) {
-      console.error(error);
-      throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
-    }
-  }
-
-  /**
-   * Obtiene un profesor por su ID
-   * @param {string} id - Id usuario
-   * @returns {Promise<Teachers>}
-   */
-  static async getLoadAcademicTeacher(id) {
-    let db;
-    try {
-      db = await connectToDatabase();
-
-      const [teacher] = await db.query(
-        `SELECT id FROM teachers WHERE id_user = ?`,
-        [id],
-      );
-
-      const [loadAcademic] = await db.query(
+      const [rows] = await db.query(
         `SELECT 
-    s.name, 
-    s.code_subject, 
-    sec.name AS section_name, 
-    y.name AS year_name, 
-    ld.id AS id_load_academic, 
-    sec.id AS id_section 
-FROM subjects s 
-INNER JOIN load_academic ld ON s.code_subject = ld.id_subject
-INNER JOIN sections sec ON ld.id_section = sec.id
-INNER JOIN years y ON sec.id_year = y.id
--- 🌟 NUEVO JOIN: Conectamos con el periodo académico de la carga docente
-INNER JOIN academic_periods ap ON ld.id_period = ap.id
-
-WHERE ld.id_teacher = ?
-  AND ap.is_active = 1;`,
-        [teacher[0].id],
+          t.id AS id_teacher, 
+          t.id_user, 
+          t.SIG, 
+          t.is_active, 
+          u.name, 
+          u.last_name, 
+          u.email, 
+          u.phone, 
+          u.document,
+          -- 🌟 Armamos el JSON string de forma milimétrica
+          CASE 
+            WHEN ld.id IS NULL THEN '[]'
+            ELSE CONCAT(
+              '[',
+              GROUP_CONCAT(
+                CONCAT(
+                  '{"id_load_academic":', ld.id,
+                  ',"id_section":', sec.id,
+                  ',"section_name":"', sec.name, '"',
+                  ',"year_name":"', y.name, '"',
+                  ',"subject_name":"', s.name, '"',
+                  ',"code_subject":"', s.code_subject, '"}'
+                )
+              ),
+              ']'
+            )
+          END AS academic_load
+       FROM teachers t 
+       INNER JOIN users u ON t.id_user = u.id 
+       
+       -- 🌟 LEFT JOINs vinculados al periodo activo de la institución
+       LEFT JOIN load_academic ld ON t.id = ld.id_teacher 
+         AND ld.id_period = (SELECT id FROM academic_periods WHERE is_active = 1 AND SIG = t.SIG LIMIT 1)
+       LEFT JOIN subjects s ON ld.id_subject = s.code_subject
+       LEFT JOIN sections sec ON ld.id_section = sec.id
+       LEFT JOIN years y ON sec.id_year = y.id
+       
+       WHERE t.SIG = ?
+       
+       GROUP BY t.id, u.id
+       ORDER BY u.last_name ASC, u.name ASC;`,
+        [SIG],
       );
-      return loadAcademic;
+
+      // Parseamos de forma segura la cadena a array de JavaScript
+      return rows.map((teacher) => {
+        let parsedLoad = [];
+        try {
+          parsedLoad =
+            typeof teacher.academic_load === "string"
+              ? JSON.parse(teacher.academic_load)
+              : teacher.academic_load || [];
+        } catch (parseError) {
+          console.error(
+            `⚠️ Error al parsear carga del profesor ${teacher.id_teacher}:`,
+            parseError,
+          );
+          console.log("String corrupto obtenido:", teacher.academic_load); // Por si necesitas debuguear
+          parsedLoad = [];
+        }
+
+        return {
+          ...teacher,
+          academic_load: parsedLoad,
+        };
+      });
     } catch (error) {
-      console.error(error);
+      console.error(
+        "❌ Error al obtener profesores con carga académica masiva:",
+        error,
+      );
       throw error;
     } finally {
       if (db) {
