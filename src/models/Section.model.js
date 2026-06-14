@@ -166,4 +166,38 @@ WHERE sections.SIG = ?
       }
     }
   }
+
+  /**
+   ** Obtiene una seccion por su id de un colegio
+   * @param {string} SIG - codigo unico del colegio
+   * @param {number} id_section - ID de la seccion
+   * @returns {<object>} La seccion
+   */
+  static async getSectionByID(SIG, id_section) {
+    let db;
+    try {
+      db = await connectToDatabase();
+      const query = `SELECT 
+      s.name AS section_name,        
+      y.name AS year_name,             
+      u.name AS teacher_name,         
+      u.last_name AS teacher_last_name,
+      u.document AS teacher_document,
+      sho.name AS school_name
+  FROM sections s
+  -- 1. Conectamos con el año escolar asignado a la sección
+  INNER JOIN years y ON s.id_year = y.id
+  -- 2. Conectamos con el profesor guía de la sección
+  INNER JOIN teachers t ON s.guide_id = t.id
+  INNER JOIN schools sho ON s.SIG = sho.SIG
+  -- 3. Conectamos con los datos personales del profesor en la tabla de usuarios
+  INNER JOIN users u ON t.id_user = u.id
+  WHERE s.SIG = ? AND s.id = ?;`;
+
+      const section = await db.query(query, [SIG, id_section]);
+      return section[0];
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }

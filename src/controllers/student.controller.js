@@ -290,6 +290,7 @@ export const getStudentsBySection = async (req, res) => {
   try {
     console.log("⚠️ getStudentsBySection");
     const { id_section, SIG } = req.params;
+    
     if (!id_section) {
       return res.status(400).json({ message: "ID de la sección es requerido" });
     }
