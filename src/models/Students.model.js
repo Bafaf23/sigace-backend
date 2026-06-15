@@ -264,4 +264,40 @@ WHERE e.id_section = ? AND s.SIG = ?`,
       }
     }
   }
+
+  /**
+   * Busca a un estudiante por su ID
+   * @param {number} id_student - id del estudiante
+   * @return {object|null} - info del estudiante o null si no existe
+   */
+  static async getStudentByID(id_student) {
+    // 1. Quitamos SIG de los parámetros de la función si no lo usas
+    let db = null;
+    try {
+      db = await connectToDatabase();
+
+      const sql = `
+      SELECT 
+        u.name , 
+        u.last_name, 
+        u.document 
+      FROM students st
+      INNER JOIN users u ON st.id_user = u.id 
+      WHERE st.id = ? 
+      LIMIT 1
+    `;
+
+      // 2. Le pasamos ÚNICAMENTE el id_student para que calce con el único '?'
+      const [rows] = await db.query(sql, [Number(id_student)]);
+
+      return rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+      console.log(`Error en getStudentByID: ${error}`);
+      return null;
+    } finally {
+      if (db) {
+        await closeDatabaseConnection(db);
+      }
+    }
+  }
 }

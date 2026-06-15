@@ -17,6 +17,7 @@ function validatePorcentages(details) {
   return null;
 }
 
+// TODO: revisar la validacion del procentaje de las avtivides
 export const createEvaluation = async (req, res) => {
   try {
     console.log("⚠️ Creando evaluación...");

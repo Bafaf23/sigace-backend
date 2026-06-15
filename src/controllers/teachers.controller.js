@@ -78,16 +78,46 @@ export const getTeachers = async (req, res) => {
 };
 export const getLoadAcademicTeacher = async (req, res) => {
   try {
-    console.log("🔍 getLoadAcademicTeacher");
-    const { id } = req.params;
-    if (!id) {
-      console.log(`❌ el ID es requerido`);
-      return res.status(200).json(loadAcademicTeacher);
+    console.log("🔍 Iniciando getLoadAcademicTeacher");
+    const { id, SIG } = req.params;
+    console.log(
+      "✈️ VALORES QUE LLEGAN AL BACKEND -> id:",
+      id,
+      " (Tipo:",
+      typeof id,
+      ") | SIG:",
+      SIG,
+    );
+    // 1. Validación de parámetros con el HTTP Status correcto (400)
+    if (!id || !SIG) {
+      console.log(
+        `❌ Error: El ID del profesor y el SIG son totalmente requeridos.`,
+      );
+      return res.status(400).json({
+        success: false,
+        error: "Faltan parámetros obligatorios (ID o SIG).",
+      });
     }
-    const loadAcademicTeacher = await Teachers.getLoadAcademicTeacher(id);
-    console.log("✅ loadAcademicTeacher");
-    return res.status(200).json(loadAcademicTeacher);
+
+    // 2. Ejecutamos la consulta en el Modelo
+    const teacherData = await Teachers.getTeacherWithLoadByID(SIG, id);
+    console.log("✅ Resultado del modelo loadAcademicTeacher:", teacherData);
+
+    // 3. Si el modelo devuelve null, respondemos de forma controlada con un 404
+    if (!teacherData) {
+      return res.status(404).json({
+        success: false,
+        error:
+          "No se encontró ningún profesor con el ID suministrado en este período activo.",
+      });
+    }
+
+    // 4. Respondemos con éxito pasándole directamente el array que tu frontend mapea
+    // Si tu frontend espera el objeto completo del profesor, manda 'teacherData'
+    // Si espera solo las materias, manda 'teacherData.academic_load'
+    return res.status(200).json(teacherData.academic_load || []);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("❌ Error catastrófico en getLoadAcademicTeacher:", error);
+    return res.status(500).json({ error: error.message });
   }
 };

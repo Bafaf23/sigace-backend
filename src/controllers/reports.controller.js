@@ -1,4 +1,6 @@
 import { Students } from "../models/Students.model.js";
+import { Grade } from "../models/Grade.model.js";
+import { boletaTemplate } from "../templates/boleta.template.js";
 import { Sections } from "../models/Section.model.js";
 import puppeteer from "puppeteer";
 
@@ -170,6 +172,141 @@ export const sectionList = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Ocurrió un error interno al procesar el documento PDF.",
+    });
+  }
+};
+
+/**
+ * Genera la boleta de notas del estudiante
+ */
+export const boleta = async (req, res) => {
+  const { SIG, id_student, id_section } = req.params;
+  let browser = null;
+
+  // 1. Validación de parámetros correcta con operadores lógicos (||)
+  if (!SIG || !id_student || !id_section) {
+    console.log(`❌ Los datos son requeridos`);
+    return res.status(400).json({
+      success: false,
+      message: "Faltan parámetros requeridos en la solicitud.",
+    });
+  }
+
+  // 2. El bloque try-catch engloba todo el proceso principal
+  try {
+    // Consultas a la base de datos en paralelo o consecutivas
+    const grades = await Grade.getGradesForBoleta(SIG, id_student, id_section);
+    const [seccionInfo] = await Sections.getSectionByID(SIG, id_section);
+    const student = await Students.getStudentByID(id_student);
+
+    console.log("section", seccionInfo);
+    console.log("grade", grades);
+    // Validar que encontramos la información básica
+    if (!seccionInfo || !student) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "No se encontró la información del estudiante o de la sección.",
+      });
+    }
+
+    let totalAcumulado = 0;
+    let materiasContadas = 0;
+
+    // Generación de filas HTML
+    const rowsSubjec = grades
+      .map((subject) => {
+        const classNota = (n) =>
+          n < 10 ? "text-red-600 font-bold bg-red-50" : "text-slate-900";
+        const classDef = (n) =>
+          n < 10
+            ? "text-red-700 font-black bg-red-100"
+            : "text-blue-950 font-black bg-slate-100";
+
+        if (subject.definitiva_ano > 0) {
+          totalAcumulado += parseFloat(subject.definitiva_ano);
+          materiasContadas++;
+        }
+
+        // Corregido el cierre de la etiqueta </tr>
+        return `
+        <tr class="border-b border-slate-200">
+          <td class="p-2 text-left pl-3 font-bold text-slate-700">${subject.subject_name.toUpperCase()}</td>
+          <td class="p-2 font-mono text-center ${classNota(subject.momento_1)}">${String(subject.momento_1 || 0).padStart(2, "0")}</td>
+          <td class="p-2 font-mono text-center ${classNota(subject.momento_2)}">${String(subject.momento_2 || 0).padStart(2, "0")}</td>
+          <td class="p-2 font-mono text-center ${classNota(subject.momento_3)}">${String(subject.momento_3 || 0).padStart(2, "0")}</td>
+          <td class="p-2 font-mono text-center text-xs ${classDef(subject.definitiva_ano)}">${String(subject.definitiva_ano || 0).padStart(2, "0")}</td>
+        </tr>`;
+      })
+      .join("");
+
+    // Calcular promedio general
+    const promedioGeneral =
+      materiasContadas > 0
+        ? (totalAcumulado / materiasContadas).toFixed(1)
+        : "00";
+
+    // Creamos el objeto resumen que tu plantilla necesita para mostrar el promedio y la observación
+    const resumen = {
+      promedio: promedioGeneral,
+      observaciones:
+        promedioGeneral >= 10
+          ? "Estudiante demuestra rendimiento satisfactorio, logrando consolidar las competencias."
+          : "Estudiante requiere asistir a los procesos de nivelación en las áreas reprobadas.",
+    };
+
+    // Pasamos los 4 parámetros correspondientes a tu boletaTemplate
+    const htmlContent = boletaTemplate(
+      seccionInfo,
+      student,
+      rowsSubjec,
+      resumen,
+    );
+
+    // Lanzamiento de Puppeteer
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+
+    const pdfBuffer = await page.pdf({
+      format: "Letter",
+      printBackground: true,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+
+    // Cierre seguro del navegador
+    await browser.close();
+    browser = null; // Reseteamos la variable
+
+    // Formatear nombres para el archivo descargable
+    const filenameYear = (seccionInfo.year_name || "Anio").replace(/\s+/g, "_");
+    const filenameSection = (seccionInfo.section_name || "Seccion").replace(
+      /\s+/g,
+      "_",
+    );
+    const studentDoc = student.document || "Estudiante";
+
+    // Cabeceras de respuesta
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename=Boleta_${studentDoc}_${filenameYear}_${filenameSection}.pdf`,
+    );
+
+    return res.end(pdfBuffer);
+  } catch (error) {
+    // Si el navegador quedó abierto al ocurrir el error, lo cerramos para evitar fugas de RAM
+    if (browser) {
+      await browser.close();
+    }
+    console.error("❌ Error al generar la boleta:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Ocurrió un error al procesar la boleta de calificaciones.",
     });
   }
 };

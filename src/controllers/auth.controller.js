@@ -32,7 +32,7 @@ export const login = async (req, res) => {
     }
 
     // 4. Circuito de seguridad: Restricción por Período Académico Inactivo
-    if (user.role !== "Administrador") {
+    if (user.role !== "Administrador" && user.role !== "SuperAdmin") {
       const isSystemOpen = await Academic_periods.hasActivePeriod(user.SIG);
 
       if (!isSystemOpen) {
