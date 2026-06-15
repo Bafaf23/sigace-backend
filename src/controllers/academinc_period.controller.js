@@ -7,8 +7,18 @@ const { verify } = jwt;
 export const createAcademicPeriod = async (req, res) => {
   try {
     console.log(`⚠️ Creating academic period...`);
+
+    // CONTROL DEFENSIVO: Si req.body no existe por problemas de middleware,
+    // evitamos que tire un error fatal inicializando un objeto vacío.
+    const body = req.body || {};
+
     const auth = req.headers.authorization;
     const SIG = req.params.SIG;
+
+    // CORRECCIÓN: Soportar tanto 'dateStart' como 'dateStard' (el del Front) para evitar fallos
+    const namePeriod = body.namePeriod;
+    const dateStart = body.dateStart || body.dateStard;
+    const dateEnd = body.dateEnd;
 
     if (!SIG) {
       return res.status(400).json({ message: "SIG es requerido" });
@@ -16,6 +26,7 @@ export const createAcademicPeriod = async (req, res) => {
     if (!auth) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+
     const token = auth.split(" ")[1];
     const decoded = verify(token, process.env.JWT_SECRET);
     if (decoded.role !== "Administrador") {
@@ -23,8 +34,17 @@ export const createAcademicPeriod = async (req, res) => {
         message: "No tienes permisos para crear el periodo académico",
       });
     }
+
+    // Validar que los campos requeridos no vengan vacíos antes de operar en la BD
+    if (!namePeriod || !dateStart || !dateEnd) {
+      return res.status(400).json({
+        message:
+          "Faltan datos requeridos. Verifique el nombre, fecha de inicio y de cierre.",
+      });
+    }
+
     const periods = await Academic_periods.getAcademicPeriods(SIG);
-    const periodActive = periods[0];
+    const periodActive = periods.find((item) => item.is_active === 1);
 
     if (periodActive) {
       console.log(`⚠️ Periodo académico activo: ${periodActive.name}`);
@@ -32,19 +52,14 @@ export const createAcademicPeriod = async (req, res) => {
         message: `Ya existe un periodo académico activo: ${periodActive.name}`,
       });
     }
-    // Nombre atomatico del periodo academico
-    const name =
-      new Date().getFullYear() + "-" + (new Date().getFullYear() + 1); // Ej: "2025-2026"
-    const start_date = new Date().toISOString().split("T")[0]; // Ej: "2025-09-15"
-    const end_date = new Date(start_date);
-    end_date.setMonth(end_date.getMonth() + 12); // Ej: "2026-07-31"
 
     const academicPeriod = await Academic_periods.createAcademicPeriod({
-      name,
-      start_date,
-      end_date,
-      SIG,
+      name: namePeriod,
+      start_date: dateStart,
+      end_date: dateEnd,
+      SIG: SIG,
     });
+
     console.log(`✅ Periodo académico creado correctamente`);
     res.status(201).json({
       success: true,
@@ -52,7 +67,7 @@ export const createAcademicPeriod = async (req, res) => {
       academicPeriod,
     });
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error en createAcademicPeriod:", error);
     res.status(500).json({ message: "Error al crear el periodo académico" });
   }
 };
@@ -79,9 +94,7 @@ export const endAcademicPeriod = async (req, res) => {
       });
     }
 
-    // 1. PASO NUEVO: Obtener el periodo activo actual mediante el SIG para conocer su ID
     const currentPeriod = await Academic_periods.getAcademicPeriods(SIG);
-
     const currentPeriodActive = currentPeriod.find(
       (item) => item.is_active === 1,
     );
@@ -147,14 +160,12 @@ export const getAcademicPeriods = async (req, res) => {
       });
     }
 
-    // Buscamos cuál es el activo para marcarlo como preferencia en la UI
     const periodActive = academicPeriods.find((item) => item.is_active === 1);
 
     console.log(
       `✅ ${academicPeriods.length} Periodos académicos recuperados con éxito.`,
     );
 
-    // Retornamos TODA la lista para que la interfaz pueda armar selectores históricos
     res.status(200).json({
       success: true,
       message: "Periodos académicos obtenidos correctamente",
