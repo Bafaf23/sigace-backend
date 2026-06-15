@@ -86,6 +86,7 @@ export const getSections = async (req, res) => {
   try {
     console.log("⚠️ getSections");
     const SIG = req.params.SIG;
+    const id_period = req.params.id_period;
     const auth = req.headers.authorization;
     const token = auth?.startsWith("Bearer ") ? auth.split(" ")[1] : null;
     let tokenUser = null;
@@ -101,13 +102,14 @@ export const getSections = async (req, res) => {
       console.log("❌ getSections... error getting sections...");
       return res.status(401).json({ error: true, message: "Token inválido" });
     }
-    if (!SIG) {
+    if (!SIG || !id_period) {
       console.log("❌ getSections... error getting sections...");
       return res.status(400).json({ error: true, message: "SIG es requerido" });
     }
     console.log("🔄 getSections loading...");
-    const sections = await Sections.getSections(SIG);
+    const sections = await Sections.getSections(SIG, id_period);
     console.log("✅ Sections found successfully");
+    console.log(sections);
     return res.status(200).json(sections);
   } catch (error) {
     return res.status(500).json({ message: "Error al obtener las secciones" });

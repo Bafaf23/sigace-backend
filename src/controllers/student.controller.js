@@ -3,16 +3,16 @@ import { Representative } from "../models/Representative.model.js";
 import { Users } from "../models/Users.model.js";
 import jsonwebtoken from "jsonwebtoken";
 import { generateTuitionNumber } from "../utils/tuitoinNumber.js";
-import dotenv from "dotenv";
-dotenv.config();
+import { Academic_periods } from "../models/Academin_period.model.js";
+
 const { verify } = jsonwebtoken;
 
 /* Obtener todos los estudiantes */
 export const getStudents = async (req, res) => {
   try {
     console.log("⚠️ getStudents");
-    const { SIG, id_period } = req.params;
-
+    const { SIG } = req.params;
+    const { id_period } = req.query;
     const auth = req.headers.authorization;
     const token = auth?.startsWith("Bearer ") ? auth.split(" ")[1] : null;
     let tokenUser = null;
@@ -29,7 +29,10 @@ export const getStudents = async (req, res) => {
     const userRole = authUser?.role;
     const allowedRoles = ["SuperAdmin", "Director", "Administrador"];
 
+    console.log("🔄 to the getStudents... userRole", userRole);
+
     if (!authUser || !allowedRoles.includes(userRole)) {
+      console.log("❌ to the getStudents... user not allowed");
       return res
         .status(403)
         .json({ error: "No tienes permisos para acceder a esta ruta" });
@@ -38,24 +41,42 @@ export const getStudents = async (req, res) => {
     const schoolSIG = SIG?.trim();
 
     if (!schoolSIG) {
+      console.log("❌ to the getStudents... schoolSIG is required");
       return res.status(400).json({ message: "SIG es requerido" });
     }
+    
+    let targetPeriodId = id_period;
 
+    if (!targetPeriodId) {
+      // Si el frontend no mandó id_period, buscamos cuál es el activo en la institución
+      const periods = await Academic_periods.getAcademicPeriods(schoolSIG);
+      const activePeriod = periods.find((item) => item.is_active === 1);
+
+      if (!activePeriod) {
+        console.log("❌ to the getStudents... no active period found");
+        return res.status(404).json({
+          message:
+            "No se encontró ningún periodo académico activo para esta institución.",
+        });
+      }
+      targetPeriodId = activePeriod.id;
+    }
+    console.log("🔄 to the getStudents... schoolSIG", schoolSIG);
     const students = await Students.getAllStudents({
       SIG: schoolSIG,
-      id_period,
+      id_period: Number(targetPeriodId),
     });
 
     if (students.length === 0) {
+      console.log("❌ to the getStudents... no students found");
       return res
         .status(404)
         .json({ message: "Esta escuela no tiene estudiantes" });
     }
-
-    console.log("✅ Estudiantes obtenidos correctamente");
-    return res.status(200).json(students);
+    console.log("✅ to the getStudents... students found");
+    res.status(200).json(students);
   } catch (error) {
-    console.error("Error en getStudents:", error);
+    console.log("❌ to the getStudents... error", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -269,6 +290,7 @@ export const getStudentsBySection = async (req, res) => {
   try {
     console.log("⚠️ getStudentsBySection");
     const { id_section, SIG } = req.params;
+    
     if (!id_section) {
       return res.status(400).json({ message: "ID de la sección es requerido" });
     }
