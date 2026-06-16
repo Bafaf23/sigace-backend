@@ -8,7 +8,7 @@ import {
 const router = Router();
 
 router.put("/endAcademicPeriod/:SIG", endAcademicPeriod);
-router.get("/createAcademicPeriod/:SIG", createAcademicPeriod);
+router.post("/createAcademicPeriod/:SIG", createAcademicPeriod);
 router.get("/getAcademicPeriods/:SIG", getAcademicPeriods);
 
 export default router;

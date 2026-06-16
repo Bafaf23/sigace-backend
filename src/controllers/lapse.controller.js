@@ -43,16 +43,27 @@ export const getLapseActive = async (req, res) => {
 export const createLapse = async (req, res) => {
   try {
     console.log(`⚠️ Creating lapse...`);
-
     const { SIG } = req.params;
+
+    const body = req.body || {};
+    const { nameLapse, dateStart, dateEnd } = body;
+
     if (!SIG) {
-      console.log(`⚠️ SIG es requerido`);
-      return res.status(400).json({ message: "SIG es requerido" });
+      return res
+        .status(400)
+        .json({ message: "SIG es requerido en los parámetros" });
+    }
+
+    if (!nameLapse || !dateStart || !dateEnd) {
+      console.log(`⚠️ Todos los campos son requeridos`);
+      return res
+        .status(400)
+        .json({ message: "Todos los campos son requeridos" });
     }
 
     const periods = await Academic_periods.getAcademicPeriods(SIG);
     console.log(`✅ Periodos académicos obtenidos`);
-    const periodActive = periods[0];
+    const periodActive = periods.find((item) => item.is_active === 1);
 
     if (!periodActive) {
       console.log(
@@ -65,38 +76,21 @@ export const createLapse = async (req, res) => {
 
     console.log(`✅ Periodo académico activo encontrado: ${periodActive.name}`);
 
-    const lapsos = [];
-    let dateRef = new Date(periodActive.start_date);
-    for (let i = 1; i <= 3; i++) {
-      // El inicio de este lapso es la fecha de referencia actual
-      const start_date = new Date(dateRef);
+    const lapse = await LapseModel.createLapses({
+      id_period: periodActive.id,
+      name: nameLapse,
+      start_date: dateStart,
+      end_date: dateEnd,
+      is_active: true,
+    });
 
-      // El cierre es 3 meses después
-      const end_date = new Date(start_date);
-      end_date.setMonth(end_date.getMonth() + 3);
-
-      const nuevoLapsoData = {
-        id_period: periodActive.id,
-        name: `Lapso ${i}`,
-        start_date: start_date.toISOString().split("T")[0],
-        end_date: end_date.toISOString().split("T")[0],
-        is_active: i === 1,
-      };
-
-      const createdLapse = await LapseModel.createLapses(nuevoLapsoData);
-      lapsos.push(createdLapse);
-
-      dateRef = new Date(end_date);
-      dateRef.setDate(dateRef.getDate() + 7);
-    }
-
-    console.log(lapsos);
-    console.log(`✅ Los 3 Lapsos del año escolar fueron creados exitosamente`);
+    console.log(lapse);
+    console.log(`✅ EL ${lapse.name} fueron creados exitosamente`);
     return res.status(201).json({
       success: true,
       message:
         "Año escolar inicializado: Se crearon los 3 Lapsos automáticamente.",
-      lapses: lapsos,
+      lapses: lapse,
     });
   } catch (error) {
     console.error(error);
