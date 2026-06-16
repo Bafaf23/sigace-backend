@@ -278,9 +278,22 @@ WHERE e.id_section = ? AND s.SIG = ?`,
 
       const sql = `
       SELECT 
+        st.id,
         u.name , 
         u.last_name, 
-        u.document 
+        u.document,
+        u.phone,
+        u.email,
+        st.birth_date,
+        st.tuition_number,
+        st.allergies,
+        st.medical_condition,
+        st.weight,
+        st.height,
+        st.shirt_size,
+        st.pants_size,
+        st.shoe_size,
+        st.gender
       FROM students st
       INNER JOIN users u ON st.id_user = u.id 
       WHERE st.id = ? 
