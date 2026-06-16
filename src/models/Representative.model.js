@@ -51,4 +51,24 @@ export class Representative {
       await closeDatabaseConnection(db);
     }
   }
+
+  static async getRepresentativeByID(id_representative) {
+    let db;
+    try {
+      db = await connectToDatabase();
+
+      const sql = `SELECT * FROM representatives WHERE id = ?`;
+
+      const [result] = await db.query(sql, [id_representative]);
+
+      return result.length > 0 ? result[0] : null;
+    } catch (error) {
+      console.error("Error en getRepresentativeByID:", error);
+      throw error;
+    } finally {
+      if (db) {
+        await closeDatabaseConnection(db);
+      }
+    }
+  }
 }
