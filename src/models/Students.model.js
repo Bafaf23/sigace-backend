@@ -96,7 +96,8 @@ export class Students {
           representatives.relationship AS representative_relationship,
           representatives.document AS representative_document, 
           representatives.repEmail AS representative_repEmail, 
-          en.id_section, 
+          en.id_section,
+          students.condition, 
           en.status AS enrollment_status,
           sec.name AS section, 
           yer.id AS id_year, 
@@ -289,14 +290,29 @@ WHERE e.id_section = ? AND s.SIG = ?`,
         st.allergies,
         st.medical_condition,
         st.weight,
+        st.condition,
+        st.SIG, 
         st.height,
         st.shirt_size,
         st.pants_size,
         st.shoe_size,
-        st.gender
+        st.gender,
+        en.status,
+        sc.name AS section_name, 
+        y.name AS year_name
       FROM students st
-      INNER JOIN users u ON st.id_user = u.id 
+      INNER JOIN users u ON st.id_user = u.id
+      INNER JOIN enrollments en ON st.id = en.id_student
+      INNER JOIN sections sc ON en.id_section = sc.id
+      INNER JOIN years y ON sc.id_year = y.id
       WHERE st.id = ? 
+
+      AND en.id = (
+      SELECT MAX(id) 
+      FROM enrollments 
+      WHERE id_student = st.id
+      )
+
       LIMIT 1
     `;
 
@@ -311,6 +327,196 @@ WHERE e.id_section = ? AND s.SIG = ?`,
       if (db) {
         await closeDatabaseConnection(db);
       }
+    }
+  }
+
+  /**
+   * Recupera todo el récord académico del estudiante y lo agrupa por períodos lectivos,
+   * calculando la nota acumulativa por lapso en base al plan de evaluación real de su sección.
+   * @param {number|string} id_student - ID del estudiante
+   */
+  static async getRecordStudent(id_student) {
+    let db;
+    try {
+      db = await connectToDatabase();
+
+      // SQL corregido al 100%: Filtra materias y notas limitándose estrictamente al periodo y sección inscrita
+      const sql = `
+        SELECT 
+          en.id AS enrollment_id,
+          ap.name AS school_year,
+          y.name AS year_level,
+          sc.name AS section,
+          sb.name AS subject_name,
+          lap.name AS lapse_name,
+          g.grade,
+          epd.porcentage
+        FROM enrollments en
+        INNER JOIN sections sc ON en.id_section = sc.id
+        INNER JOIN years y ON sc.id_year = y.id
+        INNER JOIN academic_periods ap ON en.id_period = ap.id
+        -- Unimos con la carga académica programada únicamente para la sección y periodo del alumno
+        INNER JOIN load_academic la ON la.id_section = en.id_section AND la.id_period = en.id_period
+        INNER JOIN subjects sb ON la.id_subject = sb.code_subject
+        -- Traemos el plan de evaluación de lapsos correspondiente de forma segura
+        LEFT JOIN evaluation_plans ep ON ep.id_load_academic = la.id
+        LEFT JOIN lapses lap ON ep.id_lapse = lap.id
+        LEFT JOIN evaluation_plan_details epd ON epd.id_evaluation_plan = ep.id
+        -- Hacemos left join de las notas del estudiante restringiendo a la evaluación correspondiente
+        LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = en.id_student
+        WHERE en.id_student = ?
+        ORDER BY ap.start_date DESC, sb.name ASC, lap.id ASC
+      `;
+
+      const [rows] = await db.query(sql, [id_student]);
+
+      // Si no hay inscripciones, retornamos un arreglo vacío
+      if (!rows || rows.length === 0) {
+        return [];
+      }
+
+      // Helper para identificar de forma segura el número de lapso desde la base de datos
+      const parseLapseNumber = (name) => {
+        if (!name) return null;
+        const normalized = name.toString().toLowerCase();
+        if (
+          normalized.includes("1") ||
+          (normalized.includes("i") &&
+            !normalized.includes("ii") &&
+            !normalized.includes("iii"))
+        )
+          return 1;
+        if (
+          normalized.includes("2") ||
+          (normalized.includes("ii") && !normalized.includes("iii"))
+        )
+          return 2;
+        if (normalized.includes("3") || normalized.includes("iii")) return 3;
+        const match = normalized.match(/\d+/);
+        return match ? parseInt(match[0], 10) : null;
+      };
+
+      const periodsMap = {};
+
+      for (const row of rows) {
+        const enrollmentId = row.enrollment_id;
+
+        // Inicializamos el periodo lectivo de inscripción si no existe en el mapa
+        if (!periodsMap[enrollmentId]) {
+          periodsMap[enrollmentId] = {
+            school_year: row.school_year,
+            year_level: row.year_level,
+            section: row.section,
+            subjectsMap: {},
+          };
+        }
+
+        const subjectName = row.subject_name;
+        if (subjectName) {
+          if (!periodsMap[enrollmentId].subjectsMap[subjectName]) {
+            periodsMap[enrollmentId].subjectsMap[subjectName] = {
+              subject_name: subjectName,
+              lapsesEvaluations: {
+                1: [],
+                2: [],
+                3: [],
+              },
+            };
+          }
+
+          const subjectObj = periodsMap[enrollmentId].subjectsMap[subjectName];
+          const lapseNum = parseLapseNumber(row.lapse_name);
+
+          // Si la evaluación posee una nota cargada y un lapso válido, la añadimos al set de cálculos
+          if (
+            lapseNum &&
+            lapseNum >= 1 &&
+            lapseNum <= 3 &&
+            row.grade !== null
+          ) {
+            subjectObj.lapsesEvaluations[lapseNum].push({
+              grade: parseFloat(row.grade),
+              percentage: parseFloat(row.porcentage || 0),
+            });
+          }
+        }
+      }
+
+      // =========================================================================
+      // CÁLCULO DE NOTAS ACUMULATIVAS DEL PERIODO (ESCALA 0 A 20)
+      // =========================================================================
+      for (const enrollmentId in periodsMap) {
+        const subjectsMap = periodsMap[enrollmentId].subjectsMap;
+        const subjectsList = [];
+
+        for (const subName in subjectsMap) {
+          const sub = subjectsMap[subName];
+          const finalSubjectObj = {
+            subject_name: sub.subject_name,
+            lap_1: null,
+            lap_2: null,
+            lap_3: null,
+            final_grade: null,
+          };
+
+          // Calculamos la nota acumulada de cada uno de los 3 lapsos reglamentarios
+          for (let l = 1; l <= 3; l++) {
+            const evals = sub.lapsesEvaluations[l];
+            if (evals && evals.length > 0) {
+              let accumulatedGrade = 0;
+              let totalPercent = 0;
+
+              evals.forEach((ev) => {
+                accumulatedGrade += (ev.grade * ev.percentage) / 100;
+                totalPercent += ev.percentage;
+              });
+
+              // Si el docente cargó notas pero el plan no está al 100% todavía,
+              // proyectamos proporcionalmente para no perjudicar la nota acumulada del alumno
+              if (totalPercent > 0 && totalPercent < 100) {
+                accumulatedGrade = (accumulatedGrade / totalPercent) * 100;
+              }
+
+              // Redondeamos la nota del lapso a la escala oficial venezolana (0 al 20)
+              finalSubjectObj[`lap_${l}`] = Math.round(accumulatedGrade);
+            }
+          }
+
+          // Calculamos la nota definitiva del año escolar basándonos en los lapsos culminados
+          const l1 = finalSubjectObj.lap_1;
+          const l2 = finalSubjectObj.lap_2;
+          const l3 = finalSubjectObj.lap_3;
+
+          let lapseCount = 0;
+          let sumLapses = 0;
+
+          if (l1 !== null) {
+            sumLapses += l1;
+            lapseCount++;
+          }
+          if (l2 !== null) {
+            sumLapses += l2;
+            lapseCount++;
+          }
+          if (l3 !== null) {
+            sumLapses += l3;
+            lapseCount++;
+          }
+
+          finalSubjectObj.final_grade =
+            lapseCount > 0 ? Math.round(sumLapses / lapseCount) : null;
+          subjectsList.push(finalSubjectObj);
+        }
+
+        periodsMap[enrollmentId].subjects = subjectsList;
+        delete periodsMap[enrollmentId].subjectsMap;
+      }
+
+      // Retornamos el array de periodos académicos ordenados cronológicamente
+      return Object.values(periodsMap);
+    } catch (error) {
+      console.error("❌ Error en modelo Students.getRecordStudent:", error);
+      throw error;
     }
   }
 }
