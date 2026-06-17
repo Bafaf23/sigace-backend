@@ -70,7 +70,6 @@ CREATE TABLE IF NOT EXISTS academic_periods (
     FOREIGN KEY (SIG) REFERENCES schools (SIG) ON DELETE CASCADE
 );
 
--- 🌟 Movida aquí: Ya existen los periodos académicos
 CREATE TABLE IF NOT EXISTS lapses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(20) NOT NULL,
@@ -184,11 +183,20 @@ CREATE TABLE IF NOT EXISTS students (
     gender ENUM('Masculino', 'Femenino') NOT NULL DEFAULT 'Masculino',
     birth_date DATE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `condition` ENUM(
+        'Regular',
+        'Nuevo Ingreso',
+        'Retirado',
+        'Repitiente'
+    ),
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_user) REFERENCES users (id) ON DELETE CASCADE,
     FOREIGN KEY (SIG) REFERENCES schools (SIG) ON DELETE CASCADE,
     FOREIGN KEY (representative_id) REFERENCES representatives (id) ON DELETE RESTRICT
 );
+
+ALTER TABLE students
+ADD COLUMN CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Regular';
 
 CREATE TABLE IF NOT EXISTS enrollments (
     id INT AUTO_INCREMENT PRIMARY KEY,

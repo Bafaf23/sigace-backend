@@ -44,7 +44,7 @@ export const getStudents = async (req, res) => {
       console.log("❌ to the getStudents... schoolSIG is required");
       return res.status(400).json({ message: "SIG es requerido" });
     }
-    
+
     let targetPeriodId = id_period;
 
     if (!targetPeriodId) {
@@ -290,7 +290,7 @@ export const getStudentsBySection = async (req, res) => {
   try {
     console.log("⚠️ getStudentsBySection");
     const { id_section, SIG } = req.params;
-    
+
     if (!id_section) {
       return res.status(400).json({ message: "ID de la sección es requerido" });
     }
@@ -311,5 +311,71 @@ export const getStudentsBySection = async (req, res) => {
   } catch (error) {
     console.error("Error en getStudentsBySection:", error);
     res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+export const getStudentByID = async (req, res) => {
+  const { id_student } = req.params;
+
+  if (!id_student) {
+    console.log(`❌ Id es requerido`);
+    res
+      .status(404)
+      .json({ success: false, message: "Id el estudante es requerido" });
+  }
+
+  const student = await Students.getStudentByID(id_student);
+
+  if (!student) {
+    console.log(`❌ No heciste el estudiante`);
+    res.status(404).json({
+      success: false,
+      message:
+        "Upss..., para que no hay imfomacion de este estudiante, recarga la pagina, si el problema persiste conatacta a soporte.",
+    });
+  }
+
+  return res.status(200).json(student);
+};
+
+export const getRecordStudent = async (req, res) => {
+  console.log(`⚠️ Recuperando el récord académico del estudiante`);
+
+  const id_student = req.params.id_student || req.params.idStudent;
+
+  if (!id_student) {
+    console.log(`❌ No se proporcionó el ID del estudiante`);
+    return res.status(400).json({
+      success: false,
+      message: "El ID del estudiante es requerido para procesar la solicitud.",
+    });
+  }
+
+  try {
+    console.log("🔄 Cargando el récord desde la base de datos...");
+    const record = await Students.getRecordStudent(id_student);
+
+    // Al usar el modelo optimizado que agrupa por JS, el resultado es un array directo limpio
+    if (!record || record.length === 0) {
+      console.log(
+        `❌ No se encontró récord para el estudiante ID: ${id_student}`,
+      );
+      return res.status(404).json({
+        success: false,
+        message:
+          "Parece que el estudiante no tiene récord académico registrado todavía.",
+      });
+    }
+
+    console.log("✅ Récord procesado con éxito para el cliente", record);
+    return res.status(200).json(record);
+  } catch (error) {
+    console.error("❌ Error interno al recuperar el récord académico:", error);
+    return res.status(500).json({
+      success: false,
+      message:
+        "Ocurrió un error interno en el servidor al procesar el expediente académico.",
+      error: error.message,
+    });
   }
 };
