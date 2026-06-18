@@ -52,6 +52,7 @@ export const sectionList = async (req, res) => {
       )
       .join("");
 
+    // TODO: Cambiar esta plantilla a un documento aparte
     const htmlContent = `<!DOCTYPE html>
     <html lang="es">
     <head>

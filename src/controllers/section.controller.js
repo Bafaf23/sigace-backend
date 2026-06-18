@@ -1,8 +1,5 @@
 import { Sections } from "../models/Section.model.js";
 import { getCurrentPeriod } from "../utils/periodAc.js";
-import jsonwebtoken from "jsonwebtoken";
-
-const { verify } = jsonwebtoken;
 
 export const createSection = async (req, res) => {
   try {
@@ -22,26 +19,6 @@ export const createSection = async (req, res) => {
       guide_id,
       capacity,
     });
-
-    const auth = req.headers.authorization;
-    const token = auth?.startsWith("Bearer ") ? auth.split(" ")[1] : null;
-
-    let tokenUser = null;
-
-    if (token) {
-      try {
-        tokenUser = verify(token, process.env.JWT_SECRET);
-      } catch (_error) {
-        console.log("❌ createSection... error creating section...");
-
-        return res.status(401).json({ error: true, message: "Token inválido" });
-      }
-    }
-
-    if (!tokenUser) {
-      console.log("❌ createSection... error creating section...");
-      return res.status(401).json({ error: true, message: "Token inválido" });
-    }
 
     if (!name || !SIG || !id_year || !guide_id || !capacity) {
       console.log("❌ Todos los campos son requeridos");
@@ -87,21 +64,7 @@ export const getSections = async (req, res) => {
     console.log("⚠️ getSections");
     const SIG = req.params.SIG;
     const id_period = req.params.id_period;
-    const auth = req.headers.authorization;
-    const token = auth?.startsWith("Bearer ") ? auth.split(" ")[1] : null;
-    let tokenUser = null;
-    if (token) {
-      try {
-        tokenUser = verify(token, process.env.JWT_SECRET);
-      } catch (_error) {
-        console.log("❌ getSections... error getting sections...");
-        return res.status(401).json({ error: true, message: "Token inválido" });
-      }
-    }
-    if (!tokenUser) {
-      console.log("❌ getSections... error getting sections...");
-      return res.status(401).json({ error: true, message: "Token inválido" });
-    }
+    
     if (!SIG || !id_period) {
       console.log("❌ getSections... error getting sections...");
       return res.status(400).json({ error: true, message: "SIG es requerido" });

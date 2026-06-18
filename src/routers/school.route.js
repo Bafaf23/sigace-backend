@@ -7,6 +7,10 @@ import {
   updateSchool,
   getRoles,
 } from "../controllers/school.controller.js";
+import {
+  verificarAutenticacion,
+  permitirRoles,
+} from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -26,10 +30,40 @@ router.get("/", (req, res) => {
     },
   });
 });
-router.get("/getAllSchools", getAllSchools);
-router.get("/getSchoolBySIG/:SIG", getSchoolBySIG);
-router.post("/createSchool", createSchool);
-router.delete("/deleteSchool/:SIG", deleteSchool);
-router.post("/updateSchool", updateSchool);
-router.get("/getRoles", getRoles);
+router.get(
+  "/getAllSchools",
+  verificarAutenticacion,
+  permitirRoles("SuperAdmin"),
+  getAllSchools,
+);
+router.get(
+  "/getSchoolBySIG/:SIG",
+  verificarAutenticacion,
+  permitirRoles("SuperAdmin"),
+  getSchoolBySIG,
+);
+router.post(
+  "/createSchool",
+  verificarAutenticacion,
+  permitirRoles("SuperAdmin"),
+  createSchool,
+);
+router.delete(
+  "/deleteSchool/:SIG",
+  verificarAutenticacion,
+  permitirRoles("SuperAdmin"),
+  deleteSchool,
+);
+router.post(
+  "/updateSchool",
+  verificarAutenticacion,
+  permitirRoles("SuperAdmin"),
+  updateSchool,
+);
+router.get(
+  "/getRoles",
+  verificarAutenticacion,
+  permitirRoles("SuperAdmin"),
+  getRoles,
+);
 export default router;

@@ -3,10 +3,23 @@ import {
   createSection,
   getSections,
 } from "../controllers/section.controller.js";
-
+import {
+  verificarAutenticacion,
+  permitirRoles,
+} from "../middlewares/auth.middleware.js";
 const router = Router();
 
-router.post("/create", createSection);
-router.get("/get/:SIG/:id_period", getSections);
+router.post(
+  "/create",
+  verificarAutenticacion,
+  permitirRoles("Administrador"),
+  createSection,
+);
+router.get(
+  "/get/:SIG/:id_period",
+  verificarAutenticacion,
+  permitirRoles("Administrador", "Profesor", "Estudiante"),
+  getSections,
+);
 
 export default router;

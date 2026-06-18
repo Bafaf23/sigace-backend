@@ -1,15 +1,10 @@
 import { Academic_periods } from "../models/Academin_period.model.js";
 import { Enrollments } from "../models/Enrollments.model.js";
-import jwt from "jsonwebtoken";
-
-const { verify } = jwt;
 
 export const createAcademicPeriod = async (req, res) => {
   try {
     console.log(`⚠️ Creating academic period...`);
 
-    // CONTROL DEFENSIVO: Si req.body no existe por problemas de middleware,
-    // evitamos que tire un error fatal inicializando un objeto vacío.
     const body = req.body || {};
 
     const auth = req.headers.authorization;
@@ -22,17 +17,6 @@ export const createAcademicPeriod = async (req, res) => {
 
     if (!SIG) {
       return res.status(400).json({ message: "SIG es requerido" });
-    }
-    if (!auth) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const token = auth.split(" ")[1];
-    const decoded = verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "Administrador") {
-      return res.status(401).json({
-        message: "No tienes permisos para crear el periodo académico",
-      });
     }
 
     // Validar que los campos requeridos no vengan vacíos antes de operar en la BD
@@ -75,25 +59,13 @@ export const createAcademicPeriod = async (req, res) => {
 export const endAcademicPeriod = async (req, res) => {
   try {
     console.log(`⚠️ Ending academic period...`);
-    const auth = req.headers.authorization;
+
     const { SIG } = req.params;
 
     if (!SIG) {
       return res.status(400).json({ message: "SIG es requerido" });
     }
-    if (!auth) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const token = auth.split(" ")[1];
-    const decoded = verify(token, process.env.JWT_SECRET);
-
-    if (decoded.role !== "Administrador") {
-      return res.status(401).json({
-        message: "No tienes permisos para finalizar el periodo académico",
-      });
-    }
-
+  
     const currentPeriod = await Academic_periods.getAcademicPeriods(SIG);
     const currentPeriodActive = currentPeriod.find(
       (item) => item.is_active === 1,
@@ -133,23 +105,13 @@ export const endAcademicPeriod = async (req, res) => {
 export const getAcademicPeriods = async (req, res) => {
   try {
     console.log(`⚠️ Getting academic periods...`);
-    const auth = req.headers.authorization;
+  
     const { SIG } = req.params;
 
     if (!SIG) {
       return res.status(400).json({ message: "SIG es requerido" });
     }
-    if (!auth) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const token = auth.split(" ")[1];
-    const decoded = verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "Administrador") {
-      return res.status(401).json({
-        message: "No tienes permisos para obtener los periodos académicos",
-      });
-    }
+    
 
     const academicPeriods = await Academic_periods.getAcademicPeriods(SIG);
 

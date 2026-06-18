@@ -3,6 +3,10 @@ import {
   createGrade,
   getGradeStudent,
 } from "../controllers/grade.controller.js";
+import {
+  verificarAutenticacion,
+  permitirRoles,
+} from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -12,6 +16,16 @@ router.get("/", (req, res) => {
   });
 });
 
-router.put("/uploadNote", createGrade);
-router.get("/getGrade/:idLoadAcademic", getGradeStudent);
+router.put(
+  "/uploadNote",
+  verificarAutenticacion,
+  permitirRoles("Profesores"),
+  createGrade,
+);
+router.get(
+  "/getGrade/:idLoadAcademic",
+  verificarAutenticacion,
+  permitirRoles("Profesores", "Adminstradores", "Estudiante"),
+  getGradeStudent,
+);
 export default router;
