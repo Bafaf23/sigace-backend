@@ -1,11 +1,8 @@
 import { Students } from "../models/Students.model.js";
 import { Representative } from "../models/Representative.model.js";
 import { Users } from "../models/Users.model.js";
-import jsonwebtoken from "jsonwebtoken";
 import { generateTuitionNumber } from "../utils/tuitoinNumber.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
-
-const { verify } = jsonwebtoken;
 
 /* Obtener todos los estudiantes */
 export const getStudents = async (req, res) => {
@@ -13,30 +10,8 @@ export const getStudents = async (req, res) => {
     console.log("⚠️ getStudents");
     const { SIG } = req.params;
     const { id_period } = req.query;
-    const auth = req.headers.authorization;
-    const token = auth?.startsWith("Bearer ") ? auth.split(" ")[1] : null;
-    let tokenUser = null;
 
-    if (token) {
-      try {
-        tokenUser = verify(token, process.env.JWT_SECRET);
-      } catch (_error) {
-        return res.status(401).json({ error: "Token inválido" });
-      }
-    }
-
-    const authUser = tokenUser ?? req.session?.user;
-    const userRole = authUser?.role;
-    const allowedRoles = ["SuperAdmin", "Director", "Administrador"];
-
-    console.log("🔄 to the getStudents... userRole", userRole);
-
-    if (!authUser || !allowedRoles.includes(userRole)) {
-      console.log("❌ to the getStudents... user not allowed");
-      return res
-        .status(403)
-        .json({ error: "No tienes permisos para acceder a esta ruta" });
-    }
+    console.log("🔄 to the getStudents... userRole", req.user.role);
 
     const schoolSIG = SIG?.trim();
 
@@ -137,20 +112,6 @@ export const createStudent = async (req, res) => {
       return res
         .status(400)
         .json({ error: true, message: "Algunos campos son requeridos" });
-    }
-
-    const auth = req.headers.authorization;
-    const token = auth?.startsWith("Bearer ") ? auth.split(" ")[1] : null;
-    let tokenUser = null;
-    if (token) {
-      try {
-        tokenUser = verify(token, process.env.JWT_SECRET);
-      } catch (error) {
-        return res.status(401).json({ error: true, message: "Token inválido" });
-      }
-    }
-    if (!tokenUser) {
-      return res.status(401).json({ error: true, message: "Token inválido" });
     }
 
     const representativeId =

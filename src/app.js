@@ -16,11 +16,13 @@ import enrollmentRouter from "./routers/enrollment.route.js";
 import evaluationRouter from "./routers/evaluation.route.js";
 import lapseRouter from "./routers/lapse.route.js";
 import gredeRouter from "./routers/grade.route.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser())
 
 app.use(
   cors({
@@ -32,7 +34,7 @@ app.use(
 );
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "secret", // Clave para firmar la cookie de sesión
+    secret: process.env.SESSION_SECRET, // Clave para firmar la cookie de sesión
     resave: false, // Evita guardar la sesión si no hubo cambios
     saveUninitialized: false, // No crea una sesión vacía para usuarios no logueados
     cookie: {

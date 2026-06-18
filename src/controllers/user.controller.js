@@ -1,13 +1,8 @@
 import { Users } from "../models/Users.model.js";
-import jsonwebtoken from "jsonwebtoken";
-
-const { verify } = jsonwebtoken;
 
 export const createUser = async (req, res) => {
   try {
-    console.log("--------------------------------");
     console.log("createUser... creating user...");
-    console.log("--------------------------------");
 
     if (!req.body) {
       return res.status(400).json({ error: "No se proporcionaron datos" });
@@ -32,14 +27,13 @@ export const createUser = async (req, res) => {
     });
 
     if (!user) {
-      console.log("--------------------------------");
       console.log("❌ createUser... error creating user...");
-      console.log("--------------------------------");
+
       return res.status(500).json({ error: "Error al crear usuario" });
     }
-    console.log("--------------------------------");
+
     console.log("✅ createUser... user created successfully...");
-    console.log("--------------------------------");
+
     return res
       .status(201)
       .json({ success: true, message: "Usuario creado correctamente" });
@@ -63,32 +57,7 @@ export const getUsers = async (_req, res) => {
 
 export const changePassword = async (req, res) => {
   try {
-    console.log("--------------------------------");
     console.log("✅ changePassword... changing password...");
-    console.log("--------------------------------");
-
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : null;
-
-    let tokenUser = null;
-    if (token) {
-      try {
-        tokenUser = verify(token, process.env.JWT_SECRET);
-      } catch (_error) {
-        console.log("--------------------------------");
-        console.log("❌ changePassword... error changing password...");
-        console.log("--------------------------------");
-        return res.status(401).json({ error: "Token inválido o expirado" });
-      }
-    }
-
-    const id = tokenUser?.id_user ?? req.session?.user?.id_user;
-    console.log(id);
-    if (!id) {
-      return res.status(401).json({ error: "No autorizado" });
-    }
 
     const { newPassword, confirmPassword, confirmNewPassword } = req.body;
     const passwordConfirmation = confirmNewPassword ?? confirmPassword;
@@ -104,9 +73,8 @@ export const changePassword = async (req, res) => {
     const passwordChanged = await Users.changePassword(id, newPassword);
 
     if (!passwordChanged) {
-      console.log("--------------------------------");
       console.log("❌ changePassword... error changing password...");
-      console.log("--------------------------------");
+
       return res.status(500).json({ error: "Error al cambiar la contraseña" });
     }
 
@@ -114,9 +82,7 @@ export const changePassword = async (req, res) => {
       req.session.user.mustChangePassword = false;
     }
 
-    console.log("--------------------------------");
     console.log("✅ changePassword... password changed successfully...");
-    console.log("--------------------------------");
 
     return res.status(200).json({
       success: true,
@@ -132,9 +98,7 @@ export const changePassword = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   try {
-    console.log("--------------------------------");
     console.log("⚠️ deleteUser... warning deleting user...");
-    console.log("--------------------------------");
 
     const authHeader = req.headers.authorization;
     const idUser = req.params.id;
@@ -158,16 +122,14 @@ export const deleteUser = async (req, res) => {
       return res.status(500).json({ error: "Error al eliminar usuario" });
     }
 
-    console.log("--------------------------------");
     console.log("✅ deleteUser... user deleted successfully...");
-    console.log("--------------------------------");
+
     return res
       .status(200)
       .json({ success: true, message: "Usuario eliminado correctamente" });
   } catch (error) {
-    console.log("--------------------------------");
     console.log(" ❌ deleteUser denied... error deleting user...");
-    console.log("--------------------------------");
+
     console.error("❌ Error al eliminar usuario:", error);
     return res.status(500).json({ error: "Error al eliminar usuario" });
   }
@@ -175,9 +137,8 @@ export const deleteUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-    console.log("--------------------------------");
     console.log("⚠️ updateUser... warning updating user...");
-    console.log("--------------------------------");
+
     const user = { ...req.body, id: req.body.id };
     if (!user.id) {
       console.log(" ❌ updateUser denied... no id provided...");
@@ -194,16 +155,15 @@ export const updateUser = async (req, res) => {
       console.log(" ❌ updateUser denied... error updating user...");
       return res.status(500).json({ error: "Error al actualizar usuario" });
     }
-    console.log("--------------------------------");
+
     console.log("✅ updateUser... user updated successfully...");
-    console.log("--------------------------------");
+
     return res
       .status(200)
       .json({ success: true, message: "Usuario actualizado correctamente" });
   } catch (error) {
-    console.log("--------------------------------");
     console.log(" ❌ updateUser denied... error updating user...");
-    console.log("--------------------------------");
+
     console.error("❌ Error al actualizar usuario:", error);
     return res.status(500).json({ error: "Error al actualizar usuario" });
   }

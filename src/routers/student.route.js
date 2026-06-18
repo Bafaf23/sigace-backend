@@ -8,6 +8,10 @@ import {
   getStudentByID,
   getRecordStudent,
 } from "../controllers/student.controller.js";
+import {
+  verificarAutenticacion,
+  permitirRoles,
+} from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -22,11 +26,46 @@ router.get("/", (_req, res) => {
     },
   });
 });
-router.get("/getStudents/:SIG", getStudents);
-router.post("/createStudent", createStudent);
-router.put("/updateStudent", updateStudent);
-router.get("/getStudentNotEnrolled/:id_period/:SIG", getStudentNotEnrolled);
-router.get("/getStudentsBySection/:id_section/:SIG", getStudentsBySection);
-router.get("/getStudentByID/:id_student", getStudentByID);
-router.get("/getRecordStudent/:id_student", getRecordStudent);
+router.get(
+  "/getStudents/:SIG",
+  verificarAutenticacion,
+  permitirRoles("Administrador"),
+  getStudents,
+);
+router.post(
+  "/createStudent",
+  verificarAutenticacion,
+  permitirRoles("Administrador"),
+  createStudent,
+);
+router.put(
+  "/updateStudent",
+  verificarAutenticacion,
+  permitirRoles("Administrador"),
+  updateStudent,
+);
+router.get(
+  "/getStudentNotEnrolled/:id_period/:SIG",
+  verificarAutenticacion,
+  permitirRoles("Administrador"),
+  getStudentNotEnrolled,
+);
+router.get(
+  "/getStudentsBySection/:id_section/:SIG",
+  verificarAutenticacion,
+  permitirRoles("Administrador", "Profesor"),
+  getStudentsBySection,
+);
+router.get(
+  "/getStudentByID/:id_student",
+  verificarAutenticacion,
+  permitirRoles("Administrador"),
+  getStudentByID,
+);
+router.get(
+  "/getRecordStudent/:id_student",
+  verificarAutenticacion,
+  permitirRoles("Administrador"),
+  getRecordStudent,
+);
 export default router;

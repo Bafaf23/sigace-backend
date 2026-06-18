@@ -1,8 +1,5 @@
 import { LapseModel } from "../models/Lapse.model.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
-import jwt from "jsonwebtoken";
-
-const { verify } = jwt;
 
 export const getLapses = async (req, res) => {
   try {
@@ -101,29 +98,23 @@ export const createLapse = async (req, res) => {
 export const endLapse = async (req, res) => {
   try {
     console.log(`⚠️ Ending lapse...`);
-    const auth = req.headers.authorization;
+
     const idLapse = req.params.id;
+
     if (!idLapse) {
       return res.status(400).json({ message: "ID del lapso es requerido" });
     }
-    if (!auth) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    const token = auth.split(" ")[1];
-    const decoded = verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "Administrador") {
-      return res
-        .status(401)
-        .json({ message: "No tienes permisos para finalizar el lapso" });
-    }
+
     const lapse = await LapseModel.endLapse(idLapse);
+
     console.log(`✅ Lapso finalizado correctamente`);
-    res
+
+    return res
       .status(200)
       .json({ success: true, message: "Lapso finalizado correctamente" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error al finalizar el lapso" });
+    return res.status(500).json({ message: "Error al finalizar el lapso" });
   }
 };
 

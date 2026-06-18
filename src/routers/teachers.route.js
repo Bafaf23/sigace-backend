@@ -3,9 +3,25 @@ import {
   getTeachers,
   getLoadAcademicTeacher,
 } from "../controllers/teachers.controller.js";
+import {
+  verificarAutenticacion,
+  permitirRoles,
+} from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.get("/get", getTeachers);
-router.get("/getLoadAcademicTeacher/:id/:SIG", getLoadAcademicTeacher);
+router.get(
+  "/get",
+  verificarAutenticacion,
+  permitirRoles("Administrador"),
+  getTeachers,
+);
+
+router.get(
+  "/getLoadAcademicTeacher/:id/:SIG",
+  verificarAutenticacion,
+  permitirRoles("Administrador", "Profesor"),
+  getLoadAcademicTeacher,
+);
+
 export default router;

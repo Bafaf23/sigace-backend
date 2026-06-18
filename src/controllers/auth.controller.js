@@ -47,22 +47,27 @@ export const login = async (req, res) => {
       }
     }
 
-    // 🌟 5. CORREGIDO: Carga del período dinámico (Tratamiento como Array)
+    // 5. Carga del periodo académico (Orden descendente)
     const periodsList = await Academic_periods.getAcademicPeriods(user.SIG);
 
-    // Buscamos el que verdaderamente está corriendo en la institución
-    const activePeriod = Array.isArray(periodsList)
+    let activePeriod = Array.isArray(periodsList)
       ? periodsList.find((p) => p.is_active === 1)
       : null;
 
-    const currentPeriodId = activePeriod ? activePeriod.id : null;
-    const currentPeriodName = activePeriod
-      ? activePeriod.name
-      : "Sin Periodo Activo";
+    if (!activePeriod && (user.role === "Administrador" || user.role === "SuperAdmin")) {
+      if (Array.isArray(periodsList) && periodsList.length > 0) {
+        activePeriod = periodsList[0];
+        console.log(
+          `⚠️ Admin sin periodo activo. Asignando último periodo creado de la lista: ${activePeriod.name}`,
+        );
+      }
+    }
 
+    const currentPeriodId = activePeriod ? activePeriod.id : null;
+    const currentPeriodName = activePeriod ? activePeriod.name : "Sin Periodo Activo";
     const mustChangePassword = user.is_first_login === 1;
 
-    // 6. Generación del JWT Token
+    // 🌟 CORREGIDO: 6. Generación del JWT Token (Subido de posición en el flujo)
     const token = sign(
       {
         email: user.email,
@@ -77,60 +82,52 @@ export const login = async (req, res) => {
       },
     );
 
-    // 7. Preparación de la sesión en memoria
-    req.session.user = {
-      token: token,
-      id: user.id,
-      id_user: user.id_user,
-      dni: user.document,
-      email: user.email,
-      name: user.name,
-      lastName: user.last_name,
-      phone: user.phone,
-      role: user.role,
-      SIG: user.SIG,
-      id_period: currentPeriodId, // Ahora sí guardará el ID correcto (Ej: 9)
-      period: currentPeriodName, // Ahora sí guardará el String correcto (Ej: "2026-2027")
+    // 🌟 CORREGIDO: 7. Establecimiento de las Cookies (Ahora la variable 'token' ya existe)
+    const cookieOptionsBase = {
+      secure: process.env.NODE_ENV === "production", // true en producción (HTTPS)
+      sameSite: "lax",
     };
 
-    // 8. Persistencia de la sesión de Express
-    return new Promise((resolve) => {
-      req.session.save((err) => {
-        if (err) {
-          console.error("Error al guardar la sesión:", err);
-          return resolve(
-            res.status(500).json({ error: "Error al establecer la sesión" }),
-          );
-        }
-
-        if (mustChangePassword) {
-          console.log(
-            `⚠️ Primer login detectado. Redireccionando cambio de clave: ${user.email}`,
-          );
-          return resolve(
-            res.status(200).json({
-              mustChangePassword: true,
-              user: {
-                token: token,
-                id: user.id,
-                id_user: user.id_user,
-                email: user.email,
-                role: user.role,
-                mustChangePassword: true,
-              },
-            }),
-          );
-        }
-
-        console.log(`✅ Sesión iniciada correctamente para: ${user.email}`);
-        return resolve(
-          res.status(200).json({
-            mustChangePassword: false,
-            user: req.session.user,
-          }),
-        );
-      });
+    res.cookie("auth_token", token, {
+      ...cookieOptionsBase,
+      httpOnly: true,
+      maxAge: mustChangePassword ? 15 * 60 * 1000 : 60 * 60 * 1000, // 15m o 1h
     });
+
+    res.cookie("user_name", encodeURIComponent(user.name), {
+      ...cookieOptionsBase,
+      httpOnly: false,
+      maxAge: mustChangePassword ? 15 * 60 * 1000 : 60 * 60 * 1000,
+    });
+
+    
+    if (mustChangePassword) {
+      console.log(`⚠️ Primer login detectado. Redireccionando cambio de clave: ${user.email}`);
+      return res.status(200).json({
+        mustChangePassword: true,
+        user: { 
+          id: user.id, 
+          email: user.email, 
+          role: user.role,
+          mustChangePassword: true 
+        },
+      });
+    }
+
+    console.log(`✅ Sesión iniciada y cookies establecidas para: ${user.email}`);
+    return res.status(200).json({
+      mustChangePassword: false,
+      user: {
+        id: user.id,
+        role: user.role,
+        id_period: currentPeriodId,
+        period: currentPeriodName,
+        name: user.name,
+        lastName: user.last_name,
+        last_name: user.last_name,
+      },
+    });
+
   } catch (error) {
     console.error("Error al iniciar sesión:", error);
     return res
@@ -141,27 +138,12 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    const emailUsuario = req.session?.user?.email;
+    res.clearCookie("auth_token");
+    res.clearCookie("user_name");
+    res.clearCookie("connect.sid"); 
 
-    return new Promise((resolve) => {
-      req.session.destroy((err) => {
-        if (err) {
-          console.error("Error al destruir la sesión:", err);
-          return resolve(
-            res.status(500).json({ error: "No se pudo cerrar la sesión" }),
-          );
-        }
-
-        res.clearCookie("connect.sid");
-        console.log(
-          `🔒 Sesión cerrada correctamente para: ${emailUsuario || "Usuario no identificado"}`,
-        );
-
-        return resolve(
-          res.status(200).json({ message: "Sesión cerrada correctamente" }),
-        );
-      });
-    });
+    console.log(`🔒 Cookies de sesión limpiadas correctamente.`);
+    return res.status(200).json({ message: "Sesión cerrada correctamente" });
   } catch (error) {
     console.error("Error en el proceso de logout:", error);
     return res.status(500).json({ error: "Error interno al cerrar sesión" });

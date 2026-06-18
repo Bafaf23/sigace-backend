@@ -6,6 +6,10 @@ import {
   deleteUser,
   updateUser,
 } from "../controllers/user.controller.js";
+import {
+  verificarAutenticacion,
+  permitirRoles,
+} from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
@@ -25,10 +29,35 @@ router.get("/", (_req, res) => {
     },
   });
 });
-router.get("/getUser", getUsers);
-router.post("/createUser", createUser);
-router.post("/changePassword", changePassword);
-router.delete("/deleteUser/:id", deleteUser);
-router.put("/updateUser", updateUser);
+router.get(
+  "/getUser",
+  verificarAutenticacion,
+  permitirRoles("SuperAdmin"),
+  getUsers,
+);
+router.post(
+  "/createUser",
+  verificarAutenticacion,
+  permitirRoles("SuperAdmin"),
+  createUser,
+);
+router.post(
+  "/changePassword",
+  verificarAutenticacion,
+  permitirRoles("SuperAdmin", "Administrador", "Profesor", "Estudiante"),
+  changePassword,
+);
+router.delete(
+  "/deleteUser/:id",
+  verificarAutenticacion,
+  permitirRoles("SuperAdmin"),
+  deleteUser,
+);
+router.put(
+  "/updateUser",
+  verificarAutenticacion,
+  permitirRoles("SuperAdmin"),
+  updateUser,
+);
 
 export default router;
