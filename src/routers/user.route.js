@@ -39,7 +39,7 @@ router.get(
 router.post(
   "/createUser",
   verificarAutenticacion,
-  permitirRoles("SuperAdmin"),
+  permitirRoles("SuperAdmin", "Administrador"),
   createUser,
 );
 router.post(

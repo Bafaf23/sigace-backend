@@ -5,27 +5,17 @@ export const getTeachers = async (req, res) => {
   try {
     console.log("🔍 getTeachers");
 
-    // 🌟 CORREGIDO: Desestructuramos correctamente las propiedades desde req.query
-    const { SIG, id_period } = req.query;
-    const authHeader = req.headers.authorization;
+    const SIG  = req.user.SIG;
+    const id_period = req.user.id_period
 
     if (!SIG) {
       console.log("❌ SIG es requerido");
       return res.status(400).json({ message: "SIG es requerido" });
     }
 
-    if (!authHeader) {
-      console.log(
-        "❌ Authorization: No tienes permisos para realizar esta acción",
-      );
-      return res
-        .status(401)
-        .json({ message: "No tienes permisos para realizar esta acción" });
-    }
-
+  
     let targetPeriodId = id_period;
-
-    // 🌟 Ahora sí funcionará la validación porque si no viene en la URL, será undefined
+    
     if (!targetPeriodId) {
       console.log(
         "📅 No se especificó id_period, buscando el periodo activo...",
@@ -76,10 +66,11 @@ export const getTeachers = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
 export const getLoadAcademicTeacher = async (req, res) => {
   try {
     console.log("🔍 Iniciando getLoadAcademicTeacher");
-    const { id, SIG } = req.params;
+    const { id, SIG } = req.user.SIG;
     console.log(
       "✈️ VALORES QUE LLEGAN AL BACKEND -> id:",
       id,

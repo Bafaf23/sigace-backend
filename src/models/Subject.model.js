@@ -173,8 +173,8 @@ LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = ?
     let db 
     try{
       db = await connectToDatabase()
-      const sql = `DELETE subject WHERE = ? AND SIG = ?`
-      const result = await db.query(sql, [code_subject, SIG])
+      const query = `DELETE FROM subjects WHERE code_subject = ? AND SIG = ?`;
+      const result = await db.query(query, [code_subject, SIG])
       return result.affectedRows > 0
     } catch(error){
       throw error

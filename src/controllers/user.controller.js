@@ -22,7 +22,7 @@ export const createUser = async (req, res) => {
       email: req.body.email,
       phone: req.body.phone,
       role_id: req.body.role_id,
-      SIG: req.body.SIG,
+      SIG: req.user.SIG,
       password: passgeneric,
     });
 

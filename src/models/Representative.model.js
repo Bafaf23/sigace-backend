@@ -8,7 +8,6 @@ export class Representative {
     phone,
     relationship,
     repEmail,
-    birthCertificate,
   ) {
     this.document = document;
     this.name = name;
@@ -16,7 +15,6 @@ export class Representative {
     this.phone = phone;
     this.relationship = relationship;
     this.repEmail = repEmail;
-    this.birthCertificate = birthCertificate;
   }
 
   static async createRepresentative(representative) {
@@ -31,7 +29,7 @@ export class Representative {
         return resultExists[0].id;
       } else {
         const [result] = await db.query(
-          "INSERT INTO representatives (document, name, last_name, phone, relationship, repEmail, birthCertificate) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          "INSERT INTO representatives (document, name, last_name, phone, relationship, repEmail) VALUES (?, ?, ?, ?, ?, ?)",
           [
             representative.document,
             representative.name,
@@ -39,7 +37,6 @@ export class Representative {
             representative.phone,
             representative.relationship,
             representative.repEmail,
-            representative.birthCertificate,
           ],
         );
         return result.insertId;

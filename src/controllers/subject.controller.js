@@ -16,10 +16,26 @@ export const createSubject = async (req, res) => {
         .json({ message: "Todos los campos son requeridos" });
     }
 
-    // Formateo del sufijo basado en el ID de año/nivel
-    const suffix = String(year_id).substring(0, 1).toUpperCase();
+    const years = await Subject.getYears(req.user.SIG);
+
+
+    const yearSelet = years.find((year) => year.id == year_id);
+
+    if (!yearSelet) {
+      console.log(`❌ No se encontró ningún año escolar con el ID: ${year_id}`);
+      return res.status(400).json({
+        message:
+          "El año escolar seleccionado no es válido para esta institución.",
+      });
+    }
+
+
+    // Extraer el número (ej: de "1er Año" extrae "1", de "2do Año" extrae "2")
+    const suffix = String(yearSelet.name).substring(0, 1).toUpperCase();
     const code_suffix = suffix.padStart(2, "0");
     const code_subject = `${name.substring(0, 3).toUpperCase()}-${code_suffix}`;
+
+    console.log(`Código generado automáticamente: ${code_subject}`);
 
     const subject = new Subject(code_subject, name, year_id, req.user.SIG);
     const subjectCreated = await Subject.createSubject(subject);
@@ -199,24 +215,36 @@ export const getSubjectBySection = async (req, res) => {
 };
 
 export const deleteSubjects = async (req, res) => {
-  console.log(`Eliminando Asignatura`)
+  try {
+    console.log(`⚠️ Eliminando Asignatura`);
 
-  const {code_subject} = req.body
+    const { code_subject } = req.params;
 
-  if(!code_subject) {
-    console.log(`El id de la asignatura es requerido`)
-    res.status(500).json({success:false, message:"Upss... No se puedo eliminar la asigantura, intenta de nuevo."})
+    if (!code_subject) {
+      console.log(`El id de la asignatura es requerido`);
+      return res.status(500).json({
+        success: false,
+        message:
+          "Upss... No se puedo eliminar la asigantura, intenta de nuevo.",
+      });
+    }
+
+    const del = await Subject.deleteSubjects(code_subject, req.user.SIG);
+
+    if (del === false) {
+      console.log(`La asignatura ya fue eliminada del sistema`);
+      return res.status(500).json({
+        success: false,
+        message:
+          "Upss... No se puedo eliminar la asigantura, intenta de nuevo.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "La asignatura fue eliminada con exito.",
+    });
+  } catch (error) {
+    console.error(error);
   }
-
-  const del = await Subject.deleteSubjects(code_subject, req.user.SIG)
-
-  if(del === false){
-    console.log(`La asignatura ya fue eliminada del sistema`)
-    res.status(500).json({success:false, message:"Upss... No se puedo eliminar la asigantura, intenta de nuevo."})
-  }
-
-  return res.status(200).json({
-    success: true,
-    message:"La asignatura fue eliminada con exito."
-  })
 };

@@ -8,14 +8,12 @@ import { Academic_periods } from "../models/Academin_period.model.js";
 export const getStudents = async (req, res) => {
   try {
     console.log("⚠️ getStudents");
-    const { SIG } = req.params;
-    const { id_period } = req.query;
+    const SIG = req.user.SIG;
+    const id_period = req.user.id_period;
 
     console.log("🔄 to the getStudents... userRole", req.user.role);
 
-    const schoolSIG = SIG?.trim();
-
-    if (!schoolSIG) {
+    if (!SIG) {
       console.log("❌ to the getStudents... schoolSIG is required");
       return res.status(400).json({ message: "SIG es requerido" });
     }
@@ -24,7 +22,7 @@ export const getStudents = async (req, res) => {
 
     if (!targetPeriodId) {
       // Si el frontend no mandó id_period, buscamos cuál es el activo en la institución
-      const periods = await Academic_periods.getAcademicPeriods(schoolSIG);
+      const periods = await Academic_periods.getAcademicPeriods(SIG);
       const activePeriod = periods.find((item) => item.is_active === 1);
 
       if (!activePeriod) {
@@ -36,9 +34,9 @@ export const getStudents = async (req, res) => {
       }
       targetPeriodId = activePeriod.id;
     }
-    console.log("🔄 to the getStudents... schoolSIG", schoolSIG);
+    console.log("🔄 to the getStudents... schoolSIG", SIG);
     const students = await Students.getAllStudents({
-      SIG: schoolSIG,
+      SIG: SIG,
       id_period: Number(targetPeriodId),
     });
 
@@ -55,32 +53,29 @@ export const getStudents = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 /* Crear un estudiante */
 export const createStudent = async (req, res) => {
   try {
     console.log("⚠️ createStudent");
 
-    /* Datos del estudiante */
+    /* Datos del estudiante unificados */
     const studentObject = {
-      SIG: req.body.SIG,
+      SIG: req.user?.SIG, // 💡 Usa el de la sesión o el cuerpo de forma segura
       document: `${req.body.documentType}${req.body.document}`,
       name: req.body.name,
       last_name: req.body.lastName,
       phone: req.body.phone,
       representative_id: req.body.representative_id,
       gender: req.body.gender,
-      role_id: req.body.role_id,
+      role_id: req.body.role_id || 2, // Por defecto rol estudiante
       email: req.body.email,
       birth_date: req.body.birthDate,
-
       isNewEntry: req.body.isNewEntry,
       previousSchool: req.body.previousSchool,
       previousSchoolCode: req.body.previousSchoolCode,
       previousYear: req.body.previousYear,
       previousSection: req.body.previousSection,
-      canaimaSerial: req.body.canaimaSerial,
-
-      SIG: req.body.SIG,
 
       allergies: req.body.allergies,
       medical_condition: req.body.medicalCondition,
@@ -90,9 +85,9 @@ export const createStudent = async (req, res) => {
       pants_size: req.body.pantSize,
       shoe_size: req.body.shoeSize,
 
-      year_id: req.body.year_id,
-      id_section: req.body.id_section,
-      id_period: req.body.id_period,
+      year_id: req.body.year,
+      id_section: req.body.section,
+      id_period: req.user?.id_period,
     };
 
     /* Datos del representante */
@@ -103,15 +98,14 @@ export const createStudent = async (req, res) => {
       phone: req.body.repPhone,
       relationship: req.body.relationship,
       repEmail: req.body.repEmail,
-      birthCertificate: req.body.birthCertificate,
     };
 
-    if (
-      Object.values(representativeObject).some((value) => value === undefined)
-    ) {
-      return res
-        .status(400)
-        .json({ error: true, message: "Algunos campos son requeridos" });
+    // Validar campos requeridos del representante antes de insertar
+    if (!req.body.repdni || !req.body.repName || !req.body.repLastName) {
+      return res.status(400).json({
+        success: false,
+        message: "Los datos básicos del representante son requeridos",
+      });
     }
 
     const representativeId =
@@ -120,19 +114,22 @@ export const createStudent = async (req, res) => {
     if (!representativeId) {
       return res
         .status(400)
-        .json({ error: true, message: "Error al crear el representante" });
+        .json({ success: false, message: "Error al crear el representante" });
     }
 
-    /* Contraseña genérica: primeros 4 caracteres del documento + @2026 (cambio obligatorio en primer login) */
+    /* Contraseña genérica */
     const passgeneric = studentObject.document.substring(0, 4) + "@2026";
 
     /* Generar el número de matrícula único */
     const tuitionNumber = await generateTuitionNumber(studentObject.SIG);
+
     if (!tuitionNumber) {
-      return res.status(400).json({
-        error: true,
-        message: "Error al generar el número de matrícula",
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Error al generar el número de matrícula",
+        });
     }
 
     const userId = await Users.createUser({
@@ -140,24 +137,26 @@ export const createStudent = async (req, res) => {
       password: passgeneric,
       representative_id: representativeId,
       tuition_number: tuitionNumber,
-      status: "Activo",
+      status: "Nuevo Ingreso",
     });
 
     if (!userId) {
       return res
         .status(400)
-        .json({ error: true, message: "Error al crear el usuario" });
+        .json({ success: false, message: "Error al crear el usuario" });
     }
 
     console.log("✅ Estudiante creado correctamente");
     return res.status(201).json({
       success: true,
-      message: "El estudiante se ha creado correctamente",
+      message: "El estudiante se ha inscrito correctamente en el sistema.",
     });
   } catch (error) {
-    res.status(500).json({ error: true, message: error.message });
+    console.error("❌ Error en createStudent:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 /* Actualizar un estudiante */
 export const updateStudent = async (req, res) => {
   try {
@@ -166,7 +165,7 @@ export const updateStudent = async (req, res) => {
     const userUpdateObject = {
       document: req.body.document,
       name: req.body.name,
-      last_name: req.body.lastName,
+      last_name: req.body.lastName, // 💡 Sincronizado con key del front
       email: req.body.email,
       phone: req.body.phone,
       role_id: req.body.role_id,
@@ -175,7 +174,7 @@ export const updateStudent = async (req, res) => {
 
     const studentUpdateObject = {
       gender: req.body.gender,
-      SIG: req.body.SIG,
+      SIG: req.user?.SIG || req.body.SIG,
       allergies: req.body.allergies,
       medical_condition: req.body.medicalCondition,
       weight: req.body.weight,
@@ -193,7 +192,10 @@ export const updateStudent = async (req, res) => {
     if (userUpdated === false) {
       return res
         .status(404)
-        .json({ error: true, message: "Error al actualizar el estudiante" });
+        .json({
+          success: false,
+          message: "No se pudo actualizar los datos de usuario del estudiante",
+        });
     }
 
     const studentUpdated = await Students.updateStudent(
@@ -204,7 +206,11 @@ export const updateStudent = async (req, res) => {
     if (studentUpdated === false) {
       return res
         .status(404)
-        .json({ error: true, message: "Error al actualizar el estudiante" });
+        .json({
+          success: false,
+          message:
+            "No se pudieron actualizar los datos escolares del estudiante",
+        });
     }
 
     console.log("✅ Estudiante actualizado correctamente");
@@ -212,37 +218,58 @@ export const updateStudent = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Estudiante actualizado correctamente" });
   } catch (error) {
-    console.error("Error en updateStudent:", error);
-    res.status(500).json({ error: true, message: error.message });
+    console.error("❌ Error en updateStudent:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 /* Obtener los estudiantes no matriculados */
 export const getStudentNotEnrolled = async (req, res) => {
   try {
     console.log("⚠️ getStudentNotEnrolled");
-    const { id_period, SIG } = req.params;
+
+    // 💡 Busca tanto en params como de forma segura en la sesión del usuario si aplica
+    const SIG = req.params.SIG || req.user?.SIG;
+    const id_period = req.params.id_period || req.query.id_period;
 
     if (!SIG) {
-      return res.status(400).json({ message: "SIG es requerido" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "El código SIG de la institución es requerido",
+        });
     }
 
-    if (!id_period) {
-      return res.status(400).json({ message: "ID del periodo es requerido" });
+    if (!id_period || isNaN(parseInt(id_period))) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Un ID de periodo escolar válido es requerido",
+        });
     }
 
-    const students = await Students.getStudentNotEnrolled({ id_period, SIG });
+    const students = await Students.getStudentNotEnrolled({
+      id_period: parseInt(id_period),
+      SIG,
+    });
 
-    if (!students?.length) {
+    if (!students || students.length === 0) {
       return res
         .status(404)
-        .json({ message: "No hay estudiantes no matriculados" });
+        .json({
+          success: false,
+          message:
+            "Todos los estudiantes se encuentran matriculados en este lapso.",
+        });
     }
 
     console.log("✅ Estudiantes no matriculados obtenidos");
-    return res.status(200).json(students);
+    return res.status(200).json({ success: true, data: students });
   } catch (error) {
-    console.error("Error en getStudentNotEnrolled:", error);
-    res.status(500).json({ error: true, message: error.message });
+    console.error("❌ Error en getStudentNotEnrolled:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

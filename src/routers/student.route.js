@@ -27,7 +27,7 @@ router.get("/", (_req, res) => {
   });
 });
 router.get(
-  "/getStudents/:SIG",
+  "/getStudents",
   verificarAutenticacion,
   permitirRoles("Administrador"),
   getStudents,

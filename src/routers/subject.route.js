@@ -4,6 +4,7 @@ import {
   getSubjects,
   getSubjectBySection,
   getYears,
+  deleteSubjects,
 } from "../controllers/subject.controller.js";
 import {
   verificarAutenticacion,
@@ -37,11 +38,11 @@ router.get(
   getSubjectBySection,
 );
 
-router.get(
+router.delete(
   "/deleteSub/:code_subject",
   verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor"),
-  getSubjectBySection,
+  permitirRoles("Administrador"),
+  deleteSubjects
 );
 
 export default router;
