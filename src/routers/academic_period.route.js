@@ -12,19 +12,19 @@ import {
 const router = Router();
 
 router.put(
-  "/endAcademicPeriod/:SIG",
+  "/endAcademicPeriod",
   verificarAutenticacion,
   permitirRoles("Administrador"),
   endAcademicPeriod,
 );
 router.post(
-  "/createAcademicPeriod/:SIG",
+  "/createAcademicPeriod",
   verificarAutenticacion,
   permitirRoles("Administrador"),
   createAcademicPeriod,
 );
 router.get(
-  "/getAcademicPeriods/:SIG",
+  "/getAcademicPeriods",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor", "Estudiante"),
   getAcademicPeriods,

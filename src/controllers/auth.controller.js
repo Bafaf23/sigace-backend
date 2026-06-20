@@ -20,6 +20,8 @@ export const login = async (req, res) => {
     // 2. Buscar usuario
     const user = await Users.getUserByEmail(email);
 
+    console.log(user)
+
     if (!user) {
       console.log(`usuario no encontrado`);
       return res.status(401).json({ error: "Usuario no encontrado" });
@@ -71,9 +73,10 @@ export const login = async (req, res) => {
     const token = sign(
       {
         email: user.email,
-        id: user.id,
+        id: user.id_user,
         id_user: user.id_user,
         role: user.role,
+        SIG: user.SIG,
         mustChangePassword,
       },
       process.env.JWT_SECRET,
@@ -106,7 +109,7 @@ export const login = async (req, res) => {
       return res.status(200).json({
         mustChangePassword: true,
         user: { 
-          id: user.id, 
+          id: user.id_user, 
           email: user.email, 
           role: user.role,
           mustChangePassword: true 
@@ -123,7 +126,6 @@ export const login = async (req, res) => {
         id_period: currentPeriodId,
         period: currentPeriodName,
         name: user.name,
-        lastName: user.last_name,
         last_name: user.last_name,
       },
     });

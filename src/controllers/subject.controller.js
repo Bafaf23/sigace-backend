@@ -8,9 +8,9 @@ import { Sections } from "../models/Section.model.js";
 export const createSubject = async (req, res) => {
   try {
     console.log("⚠️ createSubject");
-    const { name, SIG, year_id } = req.body ?? {};
+    const { name, year_id } = req.body ?? {};
 
-    if (!name || !SIG || !year_id) {
+    if (!name || !year_id) {
       return res
         .status(400)
         .json({ message: "Todos los campos son requeridos" });
@@ -21,7 +21,7 @@ export const createSubject = async (req, res) => {
     const code_suffix = suffix.padStart(2, "0");
     const code_subject = `${name.substring(0, 3).toUpperCase()}-${code_suffix}`;
 
-    const subject = new Subject(code_subject, name, year_id, SIG);
+    const subject = new Subject(code_subject, name, year_id, req.user.SIG);
     const subjectCreated = await Subject.createSubject(subject);
 
     if (!subjectCreated) {
@@ -42,7 +42,7 @@ export const createSubject = async (req, res) => {
 export const getSubjects = async (req, res) => {
   try {
     console.log("⚠️ getSubjects");
-    const { SIG } = req.params ?? {};
+    const SIG = req.user.SIG;
 
     if (!SIG) {
       return res.status(400).json({ message: "SIG es requerido" });
@@ -68,7 +68,7 @@ export const getSubjects = async (req, res) => {
 export const getYears = async (req, res) => {
   try {
     console.log("⚠️ getYears");
-    const { SIG } = req.params ?? {};
+    const SIG = req.user.SIG;
 
     if (!SIG) {
       return res.status(400).json({ message: "SIG es requerido" });
@@ -196,4 +196,27 @@ export const getSubjectBySection = async (req, res) => {
       message: "Error interno del servidor al procesar la carga académica",
     });
   }
+};
+
+export const deleteSubjects = async (req, res) => {
+  console.log(`Eliminando Asignatura`)
+
+  const {code_subject} = req.body
+
+  if(!code_subject) {
+    console.log(`El id de la asignatura es requerido`)
+    res.status(500).json({success:false, message:"Upss... No se puedo eliminar la asigantura, intenta de nuevo."})
+  }
+
+  const del = await Subject.deleteSubjects(code_subject, req.user.SIG)
+
+  if(del === false){
+    console.log(`La asignatura ya fue eliminada del sistema`)
+    res.status(500).json({success:false, message:"Upss... No se puedo eliminar la asigantura, intenta de nuevo."})
+  }
+
+  return res.status(200).json({
+    success: true,
+    message:"La asignatura fue eliminada con exito."
+  })
 };

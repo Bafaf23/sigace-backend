@@ -7,17 +7,9 @@ export const createAcademicPeriod = async (req, res) => {
 
     const body = req.body || {};
 
-    const auth = req.headers.authorization;
-    const SIG = req.params.SIG;
-
-    // CORRECCIÓN: Soportar tanto 'dateStart' como 'dateStard' (el del Front) para evitar fallos
     const namePeriod = body.namePeriod;
     const dateStart = body.dateStart || body.dateStard;
     const dateEnd = body.dateEnd;
-
-    if (!SIG) {
-      return res.status(400).json({ message: "SIG es requerido" });
-    }
 
     // Validar que los campos requeridos no vengan vacíos antes de operar en la BD
     if (!namePeriod || !dateStart || !dateEnd) {
@@ -27,7 +19,7 @@ export const createAcademicPeriod = async (req, res) => {
       });
     }
 
-    const periods = await Academic_periods.getAcademicPeriods(SIG);
+    const periods = await Academic_periods.getAcademicPeriods(req.user.SIG);
     const periodActive = periods.find((item) => item.is_active === 1);
 
     if (periodActive) {
@@ -41,7 +33,7 @@ export const createAcademicPeriod = async (req, res) => {
       name: namePeriod,
       start_date: dateStart,
       end_date: dateEnd,
-      SIG: SIG,
+      SIG: req.user.SIG,
     });
 
     console.log(`✅ Periodo académico creado correctamente`);
@@ -60,12 +52,12 @@ export const endAcademicPeriod = async (req, res) => {
   try {
     console.log(`⚠️ Ending academic period...`);
 
-    const { SIG } = req.params;
+    const  SIG  = req.user.SIG;
 
     if (!SIG) {
       return res.status(400).json({ message: "SIG es requerido" });
     }
-  
+
     const currentPeriod = await Academic_periods.getAcademicPeriods(SIG);
     const currentPeriodActive = currentPeriod.find(
       (item) => item.is_active === 1,
@@ -105,13 +97,12 @@ export const endAcademicPeriod = async (req, res) => {
 export const getAcademicPeriods = async (req, res) => {
   try {
     console.log(`⚠️ Getting academic periods...`);
-  
-    const { SIG } = req.params;
+
+    const SIG  = req.user.SIG;
 
     if (!SIG) {
       return res.status(400).json({ message: "SIG es requerido" });
     }
-    
 
     const academicPeriods = await Academic_periods.getAcademicPeriods(SIG);
 

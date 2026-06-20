@@ -5,6 +5,7 @@ import {
   changePassword,
   deleteUser,
   updateUser,
+  getProfile,
 } from "../controllers/user.controller.js";
 import {
   verificarAutenticacion,
@@ -59,5 +60,7 @@ router.put(
   permitirRoles("SuperAdmin"),
   updateUser,
 );
+
+router.get("/profile", verificarAutenticacion, getProfile)
 
 export default router;

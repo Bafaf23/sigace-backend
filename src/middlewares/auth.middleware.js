@@ -20,7 +20,7 @@ export const verificarAutenticacion = (req, res, next) => {
     // Inyectamos los datos del usuario decodificados en el objeto request
     req.user = decoded; 
     
-    return next(); // Damos paso al controlador correspondiente
+    return next(); 
   } catch (error) {
     console.error("❌ Error en verificación de Token:", error.message);
     

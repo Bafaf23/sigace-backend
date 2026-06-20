@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS schools (
 -- 🌟 Movida aquí: Ya existe la tabla schools
 CREATE TABLE IF NOT EXISTS academic_periods (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(20) NOT NULL UNIQUE, -- Ej: "2025-2026"
+    name VARCHAR(20) NOT NULL, -- Ej: "2025-2026"
     start_date DATE NOT NULL, -- Ej: "2025-09-15"
     end_date DATE NOT NULL, -- Ej: "2026-07-31"
     is_active BOOLEAN DEFAULT FALSE, -- Período en curso (solo uno en TRUE)
@@ -346,9 +346,9 @@ VALUES (
 
 INSERT INTO
     years (name, SIG)
-VALUES ('1er Año', 'SIG1234'),
-    ('2do Año', 'SIG1234'),
-    ('3er Año', 'SIG1234'),
-    ('4to Año', 'SIG1234'),
-    ('5to Año', 'SIG1234'),
-    ('6to Año', 'SIG1234');
+VALUES ('1er Año', 'SIG3134'),
+    ('2do Año', 'SIG3134'),
+    ('3er Año', 'SIG3134'),
+    ('4to Año', 'SIG3134'),
+    ('5to Año', 'SIG3134'),
+    ('6to Año', 'SIG3134');

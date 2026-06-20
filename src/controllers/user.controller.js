@@ -70,7 +70,12 @@ export const changePassword = async (req, res) => {
       return res.status(400).json({ error: "Las contraseñas no coinciden" });
     }
 
-    const passwordChanged = await Users.changePassword(id, newPassword);
+    console.log(`${req.user.id} ${req.user.email}`);
+
+    const passwordChanged = await Users.changePassword(
+      req.user.id,
+      newPassword,
+    );
 
     if (!passwordChanged) {
       console.log("❌ changePassword... error changing password...");
@@ -78,7 +83,7 @@ export const changePassword = async (req, res) => {
       return res.status(500).json({ error: "Error al cambiar la contraseña" });
     }
 
-    if (req.session?.user?.id_user === id) {
+    if (req.session?.user?.id_user === req.id) {
       req.session.user.mustChangePassword = false;
     }
 
@@ -167,4 +172,30 @@ export const updateUser = async (req, res) => {
     console.error("❌ Error al actualizar usuario:", error);
     return res.status(500).json({ error: "Error al actualizar usuario" });
   }
+};
+
+export const getProfile = async (req, res) => {
+  console.log(req.user.email);
+
+  console.log(`Obtiendo los datos del perfil`);
+
+
+  if (!req.session) {
+    console.log(`No hay una session activa`);
+    res
+      .status(404)
+      .json({ success: false, message: "Inicia session nuevamente" });
+  }
+
+
+  if (!req.user.email) {
+    console.log(`hubo un error al obtiner el correo del usuario`);
+  }
+  const [dataPorfil] = await Users.getUsers(req.user.email);
+
+  if (!dataPorfil) {
+    console.log(`No hay datos del usuario`);
+  }
+
+  return res.status(202).json(dataPorfil);
 };

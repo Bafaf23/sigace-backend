@@ -4,13 +4,11 @@ import { Academic_periods } from "../models/Academin_period.model.js";
 export const getLapses = async (req, res) => {
   try {
     console.log(`⚠️ Getting lapses...`);
-    const { SIG, id_period } = req.params;
 
-    if (!SIG && !id_period) {
-      return res.status(400).json({ message: "SIG es requerido" });
-    }
-    const lapses = await LapseModel.getLapses(SIG, id_period);
+    const lapses = await LapseModel.getLapses(req.user.SIG, req.user.id_period);
+
     console.log(`✅ Lapses obtenidos correctamente`);
+
     res.status(200).json(lapses);
   } catch (error) {
     console.error(error);
@@ -20,8 +18,11 @@ export const getLapses = async (req, res) => {
 
 export const getLapseActive = async (req, res) => {
   try {
+
     console.log(`⚠️ Getting Lapse Acive`);
-    const { SIG } = req.params;
+
+    const  SIG  = req.user.SIG;
+
     if (!SIG) {
       return res.status(400).json({ message: "SIG es requerido" });
     }
@@ -40,7 +41,7 @@ export const getLapseActive = async (req, res) => {
 export const createLapse = async (req, res) => {
   try {
     console.log(`⚠️ Creating lapse...`);
-    const { SIG } = req.params;
+    const SIG  = req.user.SIG;
 
     const body = req.body || {};
     const { nameLapse, dateStart, dateEnd } = body;
@@ -78,7 +79,7 @@ export const createLapse = async (req, res) => {
       name: nameLapse,
       start_date: dateStart,
       end_date: dateEnd,
-      is_active: true,
+      is_active: false,
     });
 
     console.log(lapse);

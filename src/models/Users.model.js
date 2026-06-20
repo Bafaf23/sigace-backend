@@ -239,7 +239,7 @@ export class Users {
   }
 
   /**
-   * Obtiene un usuario por su email
+   * Obtiene un usuario por su email (metodo para el login)
    * @param {string} email
    * @returns {object} El usuario encontrado
    * @returns {null} Null si no se encuentra el usuario
@@ -297,6 +297,7 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
     try {
       db = await connectToDatabase();
       const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
       const [result] = await db.query(
         "UPDATE users SET pass = ?, is_first_login = ? WHERE id = ?",
         [hashedPassword, 0, id],

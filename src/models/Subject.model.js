@@ -1,3 +1,4 @@
+import { deleteSubjects } from "../controllers/subject.controller.js";
 import { connectToDatabase, closeDatabaseConnection } from "../db.js";
 
 export class Subject {
@@ -160,6 +161,23 @@ LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = ?
       if (db) {
         await closeDatabaseConnection(db);
       }
+    }
+  }
+
+  /**
+   * Elimina una materia
+   * @param {number} code_subject - asignatura a eliminar
+   * @returns {boolean} terdadero si elimina una asignatura
+   */
+  static async deleteSubjects(code_subject, SIG) {
+    let db 
+    try{
+      db = await connectToDatabase()
+      const sql = `DELETE subject WHERE = ? AND SIG = ?`
+      const result = await db.query(sql, [code_subject, SIG])
+      return result.affectedRows > 0
+    } catch(error){
+      throw error
     }
   }
 }

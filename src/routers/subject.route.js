@@ -19,19 +19,26 @@ router.post(
   createSubject,
 );
 router.get(
-  "/get/:SIG",
+  "/get",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor"),
   getSubjects,
 );
 router.get(
-  "/getYears/:SIG",
+  "/getYears",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor"),
   getYears,
 );
 router.get(
   "/getSubjectSecction/student/:id_student/:SIG",
+  verificarAutenticacion,
+  permitirRoles("Administrador", "Profesor"),
+  getSubjectBySection,
+);
+
+router.get(
+  "/deleteSub/:code_subject",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor"),
   getSubjectBySection,

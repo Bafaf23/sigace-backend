@@ -14,33 +14,34 @@ import {
 const router = Router();
 // Lapses
 router.post(
-  "/create/:SIG",
+  "/create",
   verificarAutenticacion,
-  permitirRoles("Adminstrador"),
+  permitirRoles("Administrador"),
   createLapse,
 );
+
 router.put(
   "/start/:id",
   verificarAutenticacion,
-  permitirRoles("Adminstrador"),
+  permitirRoles("Administrador"),
   startLapse,
 );
 router.put(
   "/end/:id",
   verificarAutenticacion,
-  permitirRoles("Adminstrador"),
+  permitirRoles("Administrador"),
   endLapse,
 );
 router.get(
-  "/getLapses/:SIG/:id_period",
+  "/getLapses",
   verificarAutenticacion,
-  permitirRoles("Adminstrador", "Profesor", "Estudiante"),
+  permitirRoles("Administrador", "Profesor", "Estudiante"),
   getLapses,
 );
 router.get(
-  "/getLapseActive/:SIG",
+  "/getLapseActive",
   verificarAutenticacion,
-  permitirRoles("Adminstrador", "Profesor", "Estudiante"),
+  permitirRoles("Administrador", "Profesor", "Estudiante"),
   getLapseActive,
 );
 
