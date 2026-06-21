@@ -2,7 +2,8 @@ import { Students } from "../models/Students.model.js";
 import { Representative } from "../models/Representative.model.js";
 import { Grade } from "../models/Grade.model.js";
 import { boletaTemplate } from "../templates/boleta.template.js";
-import { enrollmentP } from "../templates/EnrollmetP.template.js"; // Asegúrate de que coincida con el nombre del archivo real
+import { enrollmentP } from "../templates/EnrollmetP.template.js";
+import { listSection } from "../templates/listSectio.template.js";
 import { Sections } from "../models/Section.model.js";
 import fs from "fs";
 import puppeteer from "puppeteer";
@@ -13,7 +14,8 @@ import path from "path";
  * Genera la lista de los estudiantes por sección de un Colegio
  */
 export const sectionList = async (req, res) => {
-  const { SIG, id_section } = req.params;
+  const { id_section } = req.params;
+  const SIG = req.user.SIG;
   let browser = null;
 
   if (!SIG || !id_section) {
@@ -27,12 +29,12 @@ export const sectionList = async (req, res) => {
   }
 
   try {
-    const students = await Students.getStudentsBySection({
-      id_section: id_section,
-      SIG: SIG,
-    });
+    const [students, sectionsResult] = await Promise.all([
+      Students.getStudentsBySection({ id_section, SIG }),
+      Sections.getSectionByID(SIG, id_section),
+    ]);
 
-    const [seccionInfo] = await Sections.getSectionByID(SIG, id_section);
+    const seccionInfo = sectionsResult?.[0];
 
     if (!seccionInfo) {
       return res.status(404).json({
@@ -54,75 +56,28 @@ export const sectionList = async (req, res) => {
       )
       .join("");
 
-    // TODO: Cambiar esta plantilla a un documento aparte
-    const htmlContent = `<!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-8">
-      <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-      <style>
-        @page { size: letter; margin: 0; }
-        body { font-family: 'Helvetica', -webkit-print-color-adjust: exact; }
-        .watermark {
-          position: absolute; top: 35%; left: 25%; width: 50%;
-          opacity: 0.03; z-index: -1; transform: rotate(-30deg);
-        }
-      </style>
-    </head>
-    <body class="bg-white p-12 text-slate-700 relative min-h-screen flex flex-col justify-between">
-      <div class="absolute top-0 left-0 right-0 h-2 bg-[#04C4D9]"></div>
-      <div>
-        <div class="flex justify-between items-center border-b-2 border-slate-100 pb-4">
-          <div>
-            <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">República Bolivariana de Venezuela</p>
-            <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Ministerio del Poder Popular para la Educación</p>
-            <h1 class="text-base font-bold text-slate-900 mt-1 uppercase">${seccionInfo.school_name || "N/A"}</h1>
-            <span class="inline-block bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded mt-2 uppercase">
-              ${seccionInfo.year_name || "AÑO NO ASIGNADO"} - SECCIÓN "${(seccionInfo.section_name || "").toUpperCase()}"
-            </span>
-          </div>
-          <div class="text-right">
-            <h2 class="text-sm font-black text-slate-900 tracking-tight">LISTA DE</h2>
-            <h2 class="text-sm font-black text-[#04C4D9] tracking-tight">ESTUDIANTES</h2>
-            <p class="text-[10px] text-slate-400 mt-1 font-medium">Total Aula: ${students.length} Alumnos</p>
-          </div>
-        </div>
-        <table class="w-full mt-6 text-left border-collapse">
-          <thead>
-            <tr class="bg-slate-800 text-white uppercase text-[10px] font-bold tracking-wider">
-              <th class="p-3 rounded-l w-[8%]">N°</th>
-              <th class="p-3 w-[22%]">Matrícula</th>
-              <th class="p-3 w-[45%]">Apellidos y Nombres</th>
-              <th class="p-3 rounded-r w-[25%]">Cédula de Identidad</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${filasEstudiantes || '<tr><td colspan="4" class="text-center p-4 text-slate-400 text-xs">No hay estudiantes inscritos en esta sección</td></tr>'}
-          </tbody>
-        </table>
-      </div>
-      <div class="mt-auto">
-        <div class="flex justify-around items-center pt-12">
-          <div class="w-[35%] border-t border-slate-300 text-center pt-2">
-            <p class="text-[10px] font-bold text-slate-800">Docente / Guía</p>
-            <p class="text-[10px] text-slate-500 font-medium uppercase">
-              ${seccionInfo.teacher_name || "No asignado"} ${seccionInfo.teacher_last_name || ""}
-            </p>
-            <p class="text-[10px] text-slate-500 font-medium">
-              ${seccionInfo.teacher_document ? seccionInfo.teacher_document : ""}
-            </p>
-          </div>
-          <div class="w-[35%] border-t border-slate-300 text-center pt-2">
-            <p class="text-[10px] font-bold text-slate-800">Control de Estudios</p>
-          </div>
-        </div>
-        <div class="text-center text-[9px] text-slate-400 border-t border-slate-100 pt-4 mt-8">
-          SIGACE • Simplificando procesos, impulsando el futuro.
-        </div>
-      </div>
-    </body>
-    </html>`;
+    const studentAcount = students.length;
 
+    // 3. Procesamiento del Logo / Marca de Agua en Base64
+    const nameLogo = seccionInfo.logo_school || "default.png";
+    const rutaDelLogo = path.join(process.cwd(), "public", "logos", nameLogo);
+    let logoBase64 = "";
+
+    if (fs.existsSync(rutaDelLogo)) {
+      const imagenBuffer = fs.readFileSync(rutaDelLogo);
+      let formato = path.extname(nameLogo).replace(".", "").toLowerCase();
+      if (formato === "jpg") formato = "jpeg"; // Estandarizar para el data URI
+      logoBase64 = `data:image/${formato};base64,${imagenBuffer.toString("base64")}`;
+    }
+
+    const htmlContent = listSection(
+      seccionInfo,
+      filasEstudiantes,
+      logoBase64,
+      studentAcount,
+    );
+
+    // 4. Generación del PDF con Puppeteer
     browser = await puppeteer.launch({
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -140,6 +95,7 @@ export const sectionList = async (req, res) => {
     await browser.close();
     browser = null;
 
+    // 5. Formateo del nombre del archivo de descarga
     const filenameYear = (seccionInfo.year_name || "Anio").replace(/\s+/g, "_");
     const filenameSection = (seccionInfo.section_name || "Seccion").replace(
       /\s+/g,

@@ -45,13 +45,13 @@ router.put(
   updateStudent,
 );
 router.get(
-  "/getStudentNotEnrolled/:id_period/:SIG",
+  "/getStudentNotEnrolled/:id_period",
   verificarAutenticacion,
   permitirRoles("Administrador"),
   getStudentNotEnrolled,
 );
 router.get(
-  "/getStudentsBySection/:id_section/:SIG",
+  "/getStudentsBySection/:id_section",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor"),
   getStudentsBySection,

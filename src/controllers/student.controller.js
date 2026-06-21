@@ -4,6 +4,23 @@ import { Users } from "../models/Users.model.js";
 import { generateTuitionNumber } from "../utils/tuitoinNumber.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
 
+function formatText(text) {
+  const cleanText = text.replace(/\s+/g, "").toLowerCase();
+  if (typeof text !== "string") {
+    return text;
+  }
+  if (cleanText.length === 0) {
+    return "";
+  }
+  const regexPermitido = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/;
+  if (!regexPermitido.test(cleanText)) {
+    console.warn("⚠️ El texto contiene caracteres no permitidos.");
+    return null;
+  }
+  console.log(`texto Formateado`);
+  return cleanText.charAt(0).toUpperCase() + cleanText.slice(1);
+}
+
 /* Obtener todos los estudiantes */
 export const getStudents = async (req, res) => {
   try {
@@ -63,41 +80,41 @@ export const createStudent = async (req, res) => {
     const studentObject = {
       SIG: req.user?.SIG, // 💡 Usa el de la sesión o el cuerpo de forma segura
       document: `${req.body.documentType}${req.body.document}`,
-      name: req.body.name,
-      last_name: req.body.lastName,
+      name: formatText(req.body.name),
+      last_name: formatText(req.body.lastName),
       phone: req.body.phone,
-      representative_id: req.body.representative_id,
-      gender: req.body.gender,
-      role_id: req.body.role_id || 2, // Por defecto rol estudiante
-      email: req.body.email,
-      birth_date: req.body.birthDate,
-      isNewEntry: req.body.isNewEntry,
-      previousSchool: req.body.previousSchool,
-      previousSchoolCode: req.body.previousSchoolCode,
-      previousYear: req.body.previousYear,
-      previousSection: req.body.previousSection,
+      representative_id: req.body.representative_id.trim(),
+      gender: req.body.gender.trim(),
+      role_id: req.body.role_id.trim() || 2, // Por defecto rol estudiante
+      email: req.body.email.trim(),
+      birth_date: req.body.birthDate.trim(),
+      isNewEntry: req.body.isNewEntry.trim(),
+      previousSchool: req.body.previousSchool.trim(),
+      previousSchoolCode: req.body.previousSchoolCode.trim(),
+      previousYear: req.body.previousYear.trim(),
+      previousSection: req.body.previousSection.trim(),
 
-      allergies: req.body.allergies,
-      medical_condition: req.body.medicalCondition,
-      weight: req.body.weight,
-      height: req.body.height,
-      shirt_size: req.body.shirtSize,
-      pants_size: req.body.pantSize,
-      shoe_size: req.body.shoeSize,
+      allergies: req.body.allergies.trim(),
+      medical_condition: req.body.medicalCondition.trim(),
+      weight: req.body.weight.trim(),
+      height: req.body.height.trim(),
+      shirt_size: req.body.shirtSize.trim(),
+      pants_size: req.body.pantSizev.trim(),
+      shoe_size: req.body.shoeSize.trim(),
 
-      year_id: req.body.year,
-      id_section: req.body.section,
-      id_period: req.user?.id_period,
+      year_id: req.body.year.trim(),
+      id_section: req.body.section.trim(),
+      id_period: req.user?.id_period.trim(),
     };
 
     /* Datos del representante */
     const representativeObject = {
       document: `${req.body.repdniType}${req.body.repdni}`,
-      name: req.body.repName,
-      last_name: req.body.repLastName,
-      phone: req.body.repPhone,
-      relationship: req.body.relationship,
-      repEmail: req.body.repEmail,
+      name: formatText(req.body.repName),
+      last_name: formatText(req.body.repLastName),
+      phone: req.body.repPhone.trim(),
+      relationship: req.body.relationship.trim(),
+      repEmail: req.body.repEmail.trim(),
     };
 
     // Validar campos requeridos del representante antes de insertar
@@ -124,12 +141,10 @@ export const createStudent = async (req, res) => {
     const tuitionNumber = await generateTuitionNumber(studentObject.SIG);
 
     if (!tuitionNumber) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Error al generar el número de matrícula",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Error al generar el número de matrícula",
+      });
     }
 
     const userId = await Users.createUser({
@@ -164,20 +179,19 @@ export const updateStudent = async (req, res) => {
 
     const userUpdateObject = {
       document: req.body.document,
-      name: req.body.name,
-      last_name: req.body.lastName, 
-      email: req.body.email,
+      name: formatText(req.body.name),
+      last_name: formatText(req.body.lastName),
+      email: req.body.email.trim(),
       phone: req.body.phone,
       role_id: req.body.role_id,
       id_user: req.body.id_user,
-
     };
 
     const studentUpdateObject = {
-      gender: req.body.gender,
-      SIG: req.user?.SIG || req.body.SIG,
-      allergies: req.body.allergies,
-      medical_condition: req.body.medicalCondition,
+      gender: req.body.gender.trim(),
+      SIG: req.user?.SIG,
+      allergies: req.body.allergies.trim(),
+      medical_condition: req.body.medicalCondition.trim(),
       weight: req.body.weight,
       height: req.body.height,
       shirt_size: req.body.shirtSize,
@@ -187,18 +201,16 @@ export const updateStudent = async (req, res) => {
       id: req.body.id_student,
     };
 
-    console.log(userUpdateObject)
-    console.log(studentUpdateObject)
+    console.log(userUpdateObject);
+    console.log(studentUpdateObject);
 
     const userUpdated = await Users.updateUser(userUpdateObject);
 
     if (userUpdated === false) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "No se pudo actualizar los datos de usuario",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "No se pudo actualizar los datos de usuario",
+      });
     }
 
     const studentUpdated = await Students.updateStudent(
@@ -207,13 +219,10 @@ export const updateStudent = async (req, res) => {
     );
 
     if (studentUpdated === false) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message:
-            "No se pudieron actualizar los datos escolares del estudiante",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "No se pudieron actualizar los datos escolares del estudiante",
+      });
     }
 
     console.log("✅ Estudiante actualizado correctamente");
@@ -232,25 +241,21 @@ export const getStudentNotEnrolled = async (req, res) => {
     console.log("⚠️ getStudentNotEnrolled");
 
     // 💡 Busca tanto en params como de forma segura en la sesión del usuario si aplica
-    const SIG = req.params.SIG || req.user?.SIG;
+    const SIG = req.user?.SIG;
     const id_period = req.params.id_period || req.query.id_period;
 
     if (!SIG) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "El código SIG de la institución es requerido",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "El código SIG de la institución es requerido",
+      });
     }
 
     if (!id_period || isNaN(parseInt(id_period))) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Un ID de periodo escolar válido es requerido",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Un ID de periodo escolar válido es requerido",
+      });
     }
 
     const students = await Students.getStudentNotEnrolled({
@@ -259,13 +264,11 @@ export const getStudentNotEnrolled = async (req, res) => {
     });
 
     if (!students || students.length === 0) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message:
-            "Todos los estudiantes se encuentran matriculados en este lapso.",
-        });
+      return res.status(404).json({
+        success: false,
+        message:
+          "Todos los estudiantes se encuentran matriculados en este lapso.",
+      });
     }
 
     console.log("✅ Estudiantes no matriculados obtenidos");
@@ -280,7 +283,8 @@ export const getStudentNotEnrolled = async (req, res) => {
 export const getStudentsBySection = async (req, res) => {
   try {
     console.log("⚠️ getStudentsBySection");
-    const { id_section, SIG } = req.params;
+    const { id_section } = req.params;
+    const SIG = req.user.SIG;
 
     if (!id_section) {
       return res.status(400).json({ message: "ID de la sección es requerido" });
@@ -292,6 +296,7 @@ export const getStudentsBySection = async (req, res) => {
     const students = await Students.getStudentsBySection({ id_section, SIG });
 
     if (!students?.length) {
+      console.log(`No hay estudiante en esta seccion ${id_section}`);
       return res
         .status(404)
         .json({ message: "No hay estudiantes en esta sección" });
@@ -308,7 +313,7 @@ export const getStudentsBySection = async (req, res) => {
 export const getStudentByID = async (req, res) => {
   const { id_student } = req.params;
 
-  const id_period = req.user.id_period
+  const id_period = req.user.id_period;
 
   if (!id_student) {
     console.log(`❌ Id es requerido`);
@@ -316,20 +321,20 @@ export const getStudentByID = async (req, res) => {
       .status(404)
       .json({ success: false, message: "Id el estudante es requerido" });
   }
-  console.log(id_student)
+  console.log(id_student);
 
   const student = await Students.getStudentByID(id_student, id_period);
 
   if (!student) {
     console.log(`❌ No existe el estudiante`);
-   return res.status(404).json({
+    return res.status(404).json({
       success: false,
       message:
         "Upss..., para que no hay imfomacion de este estudiante, recarga la pagina, si el problema persiste conatacta a soporte.",
     });
-  } 
+  }
 
-  console.log(student)
+  console.log(student);
 
   return res.status(200).json(student);
 };
@@ -337,7 +342,7 @@ export const getStudentByID = async (req, res) => {
 export const getRecordStudent = async (req, res) => {
   console.log(`⚠️ Recuperando el récord académico del estudiante`);
 
-  const id_student = req.params.id_student 
+  const id_student = req.params.id_student;
 
   if (!id_student) {
     console.log(`❌ No se proporcionó el ID del estudiante`);

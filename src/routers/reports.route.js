@@ -12,7 +12,7 @@ import {
 const router = Router();
 
 router.get(
-  "/sectionList/:SIG/:id_section",
+  "/sectionList/:id_section",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor"),
   sectionList,

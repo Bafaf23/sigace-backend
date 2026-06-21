@@ -10,16 +10,33 @@ export const createUser = async (req, res) => {
 
     const document = req.body.typeDocuement + req.body.document;
 
+    function formatText(text) {
+      const clearText = text.trim().toLowerCase().split(/\s+/);
+
+      if (typeof text !== "string") {
+        return text;
+      }
+      if (clearText.length === 0) {
+        return "";
+      }
+      const regexPermitido = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/;
+      if (!regexPermitido.test(clearText)) {
+        console.warn("⚠️ El texto contiene caracteres no permitidos.");
+        return null;
+      }
+      return clearText.charAt(0).toUpperCase() + clearText.slice(1);
+    }
+
     /* Generar una contraseña generica para el usuario esta debe ser cambiada por el usuario en el primer login  document(4)@2026*/
     const passgeneric = req.body.document.substring(0, 4) + "@2026";
 
     console.log("passgeneric", passgeneric);
 
     const user = await Users.createUser({
-      document: document,
-      name: req.body.name,
-      last_name: req.body.last_name,
-      email: req.body.email,
+      document: document.trim(),
+      name: formatText(req.body.name),
+      last_name: formatText(req.body.last_name),
+      email: req.body.email.trim(),
       phone: req.body.phone,
       role_id: req.body.role_id,
       SIG: req.user.SIG,
@@ -179,14 +196,12 @@ export const getProfile = async (req, res) => {
 
   console.log(`Obtiendo los datos del perfil`);
 
-
   if (!req.session) {
     console.log(`No hay una session activa`);
     res
       .status(404)
       .json({ success: false, message: "Inicia session nuevamente" });
   }
-
 
   if (!req.user.email) {
     console.log(`hubo un error al obtiner el correo del usuario`);

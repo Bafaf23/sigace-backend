@@ -4,7 +4,7 @@ import { getCurrentPeriod } from "../utils/periodAc.js";
 export const createSection = async (req, res) => {
   try {
     console.log("⚠️ createSection");
-    const SIG = req.body.SIG;
+    const SIG = req.user.SIG;
     const id_year = req.body.yearId;
     const name = req.body.name;
     const guide_id = req.body.teacherId;
@@ -62,9 +62,9 @@ export const createSection = async (req, res) => {
 export const getSections = async (req, res) => {
   try {
     console.log("⚠️ getSections");
-    const SIG = req.params.SIG;
+    const SIG = req.user.SIG;
     const id_period = req.params.id_period;
-    
+
     if (!SIG || !id_period) {
       console.log("❌ getSections... error getting sections...");
       return res.status(400).json({ error: true, message: "SIG es requerido" });

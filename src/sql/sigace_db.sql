@@ -188,15 +188,12 @@ CREATE TABLE IF NOT EXISTS students (
         'Nuevo Ingreso',
         'Retirado',
         'Repitiente'
-    ),
+    ) DEFAULT "Nuevo Ingreso",
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_user) REFERENCES users (id) ON DELETE CASCADE,
     FOREIGN KEY (SIG) REFERENCES schools (SIG) ON DELETE CASCADE,
     FOREIGN KEY (representative_id) REFERENCES representatives (id) ON DELETE RESTRICT
 );
-
-ALTER TABLE students
-ADD COLUMN CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Regular';
 
 CREATE TABLE IF NOT EXISTS enrollments (
     id INT AUTO_INCREMENT PRIMARY KEY,

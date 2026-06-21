@@ -16,7 +16,7 @@ router.post(
   createSection,
 );
 router.get(
-  "/get/:SIG/:id_period",
+  "/get/:id_period",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor", "Estudiante"),
   getSections,

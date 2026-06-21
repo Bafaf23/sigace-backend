@@ -189,6 +189,7 @@ WHERE sections.SIG = ?
       sho.name AS school_name,
       sho.SIG AS SIG,
       sho.DEA_CODE AS school_code,
+      sho.logo_school,
       acp.name AS period
   FROM sections s
   -- 1. Conectamos con el año escolar asignado a la sección

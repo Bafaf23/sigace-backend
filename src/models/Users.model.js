@@ -181,7 +181,7 @@ export class Users {
       switch (roleUser) {
         case 2:
           await connection.query(
-            "INSERT INTO students (id_user, gender, SIG, representative_id, tuition_number, allergies, medical_condition, weight, birth_date, height, shirt_size, pants_size, shoe_size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO students (id_user, gender, SIG, representative_id, tuition_number, allergies, medical_condition, weight, birth_date, height, shirt_size, pants_size, shoe_size, condition) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
               idUser,
               user.gender,
@@ -196,6 +196,7 @@ export class Users {
               user.shirt_size,
               user.pants_size,
               user.shoe_size,
+              user.status,
             ],
           );
           break;
@@ -297,7 +298,7 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
     try {
       db = await connectToDatabase();
       const hashedPassword = await bcrypt.hash(newPassword, 10);
-      
+
       const [result] = await db.query(
         "UPDATE users SET pass = ?, is_first_login = ? WHERE id = ?",
         [hashedPassword, 0, id],
