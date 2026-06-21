@@ -250,6 +250,7 @@ export const enrollmetP = async (req, res) => {
   const { id_student, id_representative } = req.params;
 
   const SIG = req.user.SIG;
+  const id_period = req.user.id_period;
 
   if (!SIG || !id_representative || !id_student) {
     console.log(
@@ -264,7 +265,7 @@ export const enrollmetP = async (req, res) => {
   let browser = null;
   try {
     const [student, school, representative] = await Promise.all([
-      Students.getStudentByID(id_student),
+      Students.getStudentByID(id_student, id_period),
       School.getSchoolBySIG(SIG),
       Representative.getRepresentativeByID(id_representative),
     ]);

@@ -1,10 +1,10 @@
 import { LoadAcademic } from "../models/LoadAcademic.model.js";
 
-
 export const createLoadAcademic = async (req, res) => {
   try {
     console.log("⚠️ createLoadAcademic controller");
-    const { teacherId, sectionId, id_period, subjectId, SIG } = req.body;
+    const { teacherId, sectionId, id_period, subjectId } = req.body;
+    const SIG = req.user.SIG;
 
     if (!teacherId || !sectionId || !id_period || !subjectId || !SIG) {
       console.log("❌ to the capas is required");
@@ -47,7 +47,7 @@ export const getLoadAcademic = async (req, res) => {
   try {
     console.log("⚠️ getLoadAcademic controller");
 
-    const { SIG } = req.params;
+    const SIG = req.user.SIG;
 
     if (!SIG) {
       console.log("❌ SIG is required");

@@ -105,8 +105,6 @@ export class Students {
       FROM students 
       INNER JOIN users ON students.id_user = users.id 
       LEFT JOIN representatives ON students.representative_id = representatives.id
-      
-      -- 🌟 LA MAGIA ESTÁ AQUÍ: El filtro de id_period se ejecuta DENTRO del JOIN, no en el WHERE
       LEFT JOIN enrollments en ON students.id = en.id_student AND en.id_period = ?
       
       LEFT JOIN sections sec ON en.id_section = sec.id
@@ -291,6 +289,7 @@ WHERE e.id_section = ? AND s.SIG = ?`,
         st.weight,
         st.condition,
         st.SIG, 
+        st.created_at AS date_enrollment,
         st.height,
         st.shirt_size,
         st.pants_size,

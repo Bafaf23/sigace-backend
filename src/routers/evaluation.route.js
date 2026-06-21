@@ -14,25 +14,25 @@ const router = Router();
 router.post(
   "/create",
   verificarAutenticacion,
-  permitirRoles("Profesores"),
+  permitirRoles("Profesor"),
   createEvaluation,
 );
 router.get(
   "/get/:id_load_academic",
   verificarAutenticacion,
-  permitirRoles("Profesores", "Administrador"),
+  permitirRoles("Profesor", "Administrador"),
   getEvaluations,
 );
 router.get(
   "/get",
   verificarAutenticacion,
-  permitirRoles("Profesores", "Administrador"),
+  permitirRoles("Profesor", "Administrador"),
   getEvaluations,
 );
 router.delete(
   "/delete/:id",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("Administrador", "Profesor"),
   deleteEvaluation,
 );
 export default router;

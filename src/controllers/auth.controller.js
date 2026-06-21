@@ -20,7 +20,7 @@ export const login = async (req, res) => {
     // 2. Buscar usuario
     const user = await Users.getUserByEmail(email);
 
-    console.log(user)
+    console.log(user);
 
     if (!user) {
       console.log(`usuario no encontrado`);
@@ -56,7 +56,10 @@ export const login = async (req, res) => {
       ? periodsList.find((p) => p.is_active === 1)
       : null;
 
-    if (!activePeriod && (user.role === "Administrador" || user.role === "SuperAdmin")) {
+    if (
+      !activePeriod &&
+      (user.role === "Administrador" || user.role === "SuperAdmin")
+    ) {
       if (Array.isArray(periodsList) && periodsList.length > 0) {
         activePeriod = periodsList[0];
         console.log(
@@ -66,7 +69,9 @@ export const login = async (req, res) => {
     }
 
     const currentPeriodId = activePeriod ? activePeriod.id : null;
-    const currentPeriodName = activePeriod ? activePeriod.name : "Sin Periodo Activo";
+    const currentPeriodName = activePeriod
+      ? activePeriod.name
+      : "Sin Periodo Activo";
     const mustChangePassword = user.is_first_login === 1;
 
     // 🌟 CORREGIDO: 6. Generación del JWT Token (Subido de posición en el flujo)
@@ -77,6 +82,7 @@ export const login = async (req, res) => {
         id_user: user.id_user,
         role: user.role,
         SIG: user.SIG,
+        id_period: currentPeriodId,
         mustChangePassword,
       },
       process.env.JWT_SECRET,
@@ -103,21 +109,24 @@ export const login = async (req, res) => {
       maxAge: mustChangePassword ? 15 * 60 * 1000 : 60 * 60 * 1000,
     });
 
-    
     if (mustChangePassword) {
-      console.log(`⚠️ Primer login detectado. Redireccionando cambio de clave: ${user.email}`);
+      console.log(
+        `⚠️ Primer login detectado. Redireccionando cambio de clave: ${user.email}`,
+      );
       return res.status(200).json({
         mustChangePassword: true,
-        user: { 
-          id: user.id_user, 
-          email: user.email, 
+        user: {
+          id: user.id_user,
+          email: user.email,
           role: user.role,
-          mustChangePassword: true 
+          mustChangePassword: true,
         },
       });
     }
 
-    console.log(`✅ Sesión iniciada y cookies establecidas para: ${user.email}`);
+    console.log(
+      `✅ Sesión iniciada y cookies establecidas para: ${user.email}`,
+    );
     return res.status(200).json({
       mustChangePassword: false,
       user: {
@@ -129,7 +138,6 @@ export const login = async (req, res) => {
         last_name: user.last_name,
       },
     });
-
   } catch (error) {
     console.error("Error al iniciar sesión:", error);
     return res
@@ -142,7 +150,7 @@ export const logout = async (req, res) => {
   try {
     res.clearCookie("auth_token");
     res.clearCookie("user_name");
-    res.clearCookie("connect.sid"); 
+    res.clearCookie("connect.sid");
 
     console.log(`🔒 Cookies de sesión limpiadas correctamente.`);
     return res.status(200).json({ message: "Sesión cerrada correctamente" });

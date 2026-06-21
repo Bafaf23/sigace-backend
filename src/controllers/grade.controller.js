@@ -42,13 +42,12 @@ export const createGrade = async (req, res) => {
   }
 };
 
-export const getGradeStudent = async (req, res) => {
+export const getGradeStudents = async (req, res) => {
   try {
     console.log(`⚠️ Get grade...`);
 
     // 1. CORREGIDO: Buscamos el ID ya sea en los Query params (?idLoadAcademic=...) o en los Path params (/:idLoadAcademic)
-    const idLoadAcademic =
-      req.query.idLoadAcademic || req.params.idLoadAcademic;
+    const idLoadAcademic = req.params.id_load_academic;
 
     if (!idLoadAcademic) {
       console.log(`❌ El parámetro idLoadAcademic es requerido`);

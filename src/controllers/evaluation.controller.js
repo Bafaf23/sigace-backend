@@ -45,12 +45,10 @@ export const createEvaluation = async (req, res) => {
     console.log(
       `✅ Evaluation created successfully (${result.ids.length} detalle(s))`,
     );
-    res.status(201).json({
-      message: "Evaluación creada correctamente",
-      id_load_academic,
-      id_lapse,
-      ...result,
-    });
+
+    return res
+      .status(201)
+      .json({ succes: true, message: "Evaluacion creada", result });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -59,13 +57,9 @@ export const createEvaluation = async (req, res) => {
 export const getEvaluations = async (req, res) => {
   try {
     console.log(`⚠️ Get Evaluation`);
-    const id_load_academic =
-      req.params.id_load_academic ??
-      req.params.id ??
-      req.query.id_load_academic ??
-      req.query.id;
+    const id_load_academic = req.params.id_load_academic;
 
-    const id_lapse = req.query.id_lapse ?? req.params.id_lapse;
+    const id_lapse = req.query.id_lapse;
 
     console.log(
       `⚠️ Obteniendo evaluaciones para carga académica ${id_load_academic}${id_lapse ? `, lapso ${id_lapse}` : ""}...`,

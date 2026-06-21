@@ -321,7 +321,6 @@ export const getStudentByID = async (req, res) => {
       .status(404)
       .json({ success: false, message: "Id el estudante es requerido" });
   }
-  console.log(id_student);
 
   const student = await Students.getStudentByID(id_student, id_period);
 

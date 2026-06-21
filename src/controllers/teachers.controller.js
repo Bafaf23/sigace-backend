@@ -5,17 +5,16 @@ export const getTeachers = async (req, res) => {
   try {
     console.log("🔍 getTeachers");
 
-    const SIG  = req.user.SIG;
-    const id_period = req.user.id_period
+    const SIG = req.user.SIG;
+    const id_period = req.user.id_period;
 
     if (!SIG) {
       console.log("❌ SIG es requerido");
       return res.status(400).json({ message: "SIG es requerido" });
     }
 
-  
     let targetPeriodId = id_period;
-    
+
     if (!targetPeriodId) {
       console.log(
         "📅 No se especificó id_period, buscando el periodo activo...",
@@ -70,15 +69,10 @@ export const getTeachers = async (req, res) => {
 export const getLoadAcademicTeacher = async (req, res) => {
   try {
     console.log("🔍 Iniciando getLoadAcademicTeacher");
-    const { id, SIG } = req.user.SIG;
-    console.log(
-      "✈️ VALORES QUE LLEGAN AL BACKEND -> id:",
-      id,
-      " (Tipo:",
-      typeof id,
-      ") | SIG:",
-      SIG,
-    );
+
+    const SIG = req.user.SIG;
+    const id = req.user.id;
+
     // 1. Validación de parámetros con el HTTP Status correcto (400)
     if (!id || !SIG) {
       console.log(

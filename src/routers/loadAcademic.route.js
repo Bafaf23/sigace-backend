@@ -13,11 +13,11 @@ const router = Router();
 router.post(
   "/create",
   verificarAutenticacion,
-  permitirRoles("Adminstrador"),
+  permitirRoles("Administrador"),
   createLoadAcademic,
 );
 router.get(
-  "/get/:SIG",
+  "/get",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor"),
   getLoadAcademic,

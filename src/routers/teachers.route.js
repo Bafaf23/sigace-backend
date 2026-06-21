@@ -18,7 +18,7 @@ router.get(
 );
 
 router.get(
-  "/getLoadAcademicTeacher/:id/:SIG",
+  "/getLoadAcademicTeacher",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor"),
   getLoadAcademicTeacher,

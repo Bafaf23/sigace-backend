@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   createGrade,
-  getGradeStudent,
+  getGradeStudents,
 } from "../controllers/grade.controller.js";
 import {
   verificarAutenticacion,
@@ -19,13 +19,14 @@ router.get("/", (req, res) => {
 router.put(
   "/uploadNote",
   verificarAutenticacion,
-  permitirRoles("Profesores"),
+  permitirRoles("Profesor"),
   createGrade,
 );
+
 router.get(
-  "/getGrade/:idLoadAcademic",
+  "/getGrade/:id_load_academic",
   verificarAutenticacion,
-  permitirRoles("Profesores", "Adminstradores", "Estudiante"),
-  getGradeStudent,
+  permitirRoles("Profesor", "Administrador", "Estudiante"),
+  getGradeStudents,
 );
 export default router;
