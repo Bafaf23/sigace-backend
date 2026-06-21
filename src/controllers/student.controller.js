@@ -165,11 +165,12 @@ export const updateStudent = async (req, res) => {
     const userUpdateObject = {
       document: req.body.document,
       name: req.body.name,
-      last_name: req.body.lastName, // 💡 Sincronizado con key del front
+      last_name: req.body.lastName, 
       email: req.body.email,
       phone: req.body.phone,
       role_id: req.body.role_id,
-      id: req.body.id_user,
+      id_user: req.body.id_user,
+
     };
 
     const studentUpdateObject = {
@@ -182,10 +183,12 @@ export const updateStudent = async (req, res) => {
       shirt_size: req.body.shirtSize,
       pants_size: req.body.pantSize,
       shoe_size: req.body.shoeSize,
-      status: req.body.status,
       birth_date: req.body.birthDate,
       id: req.body.id_student,
     };
+
+    console.log(userUpdateObject)
+    console.log(studentUpdateObject)
 
     const userUpdated = await Users.updateUser(userUpdateObject);
 
@@ -194,7 +197,7 @@ export const updateStudent = async (req, res) => {
         .status(404)
         .json({
           success: false,
-          message: "No se pudo actualizar los datos de usuario del estudiante",
+          message: "No se pudo actualizar los datos de usuario",
         });
     }
 
@@ -305,23 +308,28 @@ export const getStudentsBySection = async (req, res) => {
 export const getStudentByID = async (req, res) => {
   const { id_student } = req.params;
 
+  const id_period = req.user.id_period
+
   if (!id_student) {
     console.log(`❌ Id es requerido`);
     res
       .status(404)
       .json({ success: false, message: "Id el estudante es requerido" });
   }
+  console.log(id_student)
 
-  const student = await Students.getStudentByID(id_student);
+  const student = await Students.getStudentByID(id_student, id_period);
 
   if (!student) {
-    console.log(`❌ No heciste el estudiante`);
-    res.status(404).json({
+    console.log(`❌ No existe el estudiante`);
+   return res.status(404).json({
       success: false,
       message:
         "Upss..., para que no hay imfomacion de este estudiante, recarga la pagina, si el problema persiste conatacta a soporte.",
     });
-  }
+  } 
+
+  console.log(student)
 
   return res.status(200).json(student);
 };
@@ -329,7 +337,7 @@ export const getStudentByID = async (req, res) => {
 export const getRecordStudent = async (req, res) => {
   console.log(`⚠️ Recuperando el récord académico del estudiante`);
 
-  const id_student = req.params.id_student || req.params.idStudent;
+  const id_student = req.params.id_student 
 
   if (!id_student) {
     console.log(`❌ No se proporcionó el ID del estudiante`);

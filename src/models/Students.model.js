@@ -178,7 +178,7 @@ export class Students {
     try {
       db = await connectToDatabase();
       const [result] = await db.query(
-        "UPDATE students SET gender = ?, birth_date = ?, height = ?, allergies = ?, medical_condition = ?, weight = ?, shirt_size = ?, pants_size = ?, shoe_size = ?, status = ? WHERE id = ?",
+        "UPDATE students SET gender = ?, birth_date = ?, height = ?, allergies = ?, medical_condition = ?, weight = ?, shirt_size = ?, pants_size = ?, shoe_size = ? WHERE id = ?",
         [
           student.gender,
           student.birth_date,
@@ -189,7 +189,6 @@ export class Students {
           student.shirt_size,
           student.pants_size,
           student.shoe_size,
-          student.status,
           id,
         ],
       );
@@ -271,15 +270,15 @@ WHERE e.id_section = ? AND s.SIG = ?`,
    * @param {number} id_student - id del estudiante
    * @return {object|null} - info del estudiante o null si no existe
    */
-  static async getStudentByID(id_student) {
-    // 1. Quitamos SIG de los parámetros de la función si no lo usas
+  static async getStudentByID(id_student, id_period) {
     let db = null;
     try {
       db = await connectToDatabase();
 
       const sql = `
       SELECT 
-        st.id,
+        st.id AS id_student,
+        u.id AS id_user,
         u.name , 
         u.last_name, 
         u.document,
@@ -298,26 +297,18 @@ WHERE e.id_section = ? AND s.SIG = ?`,
         st.shoe_size,
         st.gender,
         en.status,
-        sc.name AS section_name, 
-        y.name AS year_name
+        ye.name AS name_year,
+        sec.name AS name_section
       FROM students st
       INNER JOIN users u ON st.id_user = u.id
-      INNER JOIN enrollments en ON st.id = en.id_student
-      INNER JOIN sections sc ON en.id_section = sc.id
-      INNER JOIN years y ON sc.id_year = y.id
+      LEFT JOIN enrollments en ON en.id_student = st.id AND en.id_period = ?
+      LEFT JOIN sections sec ON sec.id = en.id_section
+      LEFT JOIN years ye ON ye.id = sec.id_year
       WHERE st.id = ? 
-
-      AND en.id = (
-      SELECT MAX(id) 
-      FROM enrollments 
-      WHERE id_student = st.id
-      )
 
       LIMIT 1
     `;
-
-      // 2. Le pasamos ÚNICAMENTE el id_student para que calce con el único '?'
-      const [rows] = await db.query(sql, [Number(id_student)]);
+      const [rows] = await db.query(sql, [id_period, id_student]);
 
       return rows.length > 0 ? rows[0] : null;
     } catch (error) {

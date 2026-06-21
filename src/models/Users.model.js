@@ -394,7 +394,7 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
           user.email,
           user.phone,
           user.role_id,
-          user.id,
+          user.id_user,
         ],
       );
 

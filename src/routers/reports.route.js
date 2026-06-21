@@ -24,7 +24,7 @@ router.get(
   boleta,
 );
 router.get(
-  "/planillaIns/:SIG/:id_student/:id_representative",
+  "/planillaIns/:id_student/:id_representative",
   verificarAutenticacion,
   permitirRoles("Administrador"),
   enrollmetP,

@@ -4,8 +4,10 @@ import { Grade } from "../models/Grade.model.js";
 import { boletaTemplate } from "../templates/boleta.template.js";
 import { enrollmentP } from "../templates/EnrollmetP.template.js"; // Asegúrate de que coincida con el nombre del archivo real
 import { Sections } from "../models/Section.model.js";
+import fs from "fs";
 import puppeteer from "puppeteer";
 import { School } from "../models/School.model.js";
+import path from "path";
 
 /**
  * Genera la lista de los estudiantes por sección de un Colegio
@@ -289,14 +291,15 @@ export const boleta = async (req, res) => {
  * Genera la planilla de inscripción
  */
 export const enrollmetP = async (req, res) => {
-  const { SIG, id_student, id_representative } = req.params;
+  const { id_student, id_representative } = req.params;
+
+  const SIG = req.user.SIG;
 
   if (!SIG || !id_representative || !id_student) {
     console.log(
       `❌ Error al procesar la planilla de inscripción: faltan datos`,
     );
     return res.status(400).json({
-      // Cambiado a 400 (Bad Request)
       success: false,
       message: "Error al procesar la planilla, faltan datos esenciales",
     });
@@ -310,7 +313,6 @@ export const enrollmetP = async (req, res) => {
       Representative.getRepresentativeByID(id_representative),
     ]);
 
-
     if (!student || !school || !representative) {
       console.warn(
         `⚠️ Intento de generación fallido: Información incompleta en BD`,
@@ -322,16 +324,30 @@ export const enrollmetP = async (req, res) => {
       });
     }
 
-    const htmlContent = enrollmentP(student, school, representative);
+    const nameLogo = school.logo_school || "default.png";
+    const rutaDelLogo = path.join(process.cwd(), "public", "logos", nameLogo);
+    let logoBase64 = "";
+
+    if (fs.existsSync(rutaDelLogo)) {
+      const imagenBuffer = fs.readFileSync(rutaDelLogo);
+      const formato = path.extname(nameLogo).replace(".", ""); // png, jpg, etc.
+      logoBase64 = `data:image/${formato};base64,${imagenBuffer.toString("base64")}`;
+    }
+
+    const htmlContent = enrollmentP(
+      student,
+      school,
+      representative,
+      logoBase64,
+    );
 
     browser = await puppeteer.launch({
-      headless: true, // Cambiado a true clásico (o 'new') para compatibilidad limpia
+      headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
     const page = await browser.newPage();
 
-    // 2. 🌟 CORREGIDO: Se inyecta el contenido HTML al navegador antes de compilar el PDF
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
     const pdfBuffer = await page.pdf({
