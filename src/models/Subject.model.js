@@ -1,10 +1,10 @@
-import { deleteSubjects } from "../controllers/subject.controller.js";
 import { connectToDatabase, closeDatabaseConnection } from "../db.js";
 
 export class Subject {
-  constructor(code_subject, name, year_id, SIG) {
+  constructor(code_subject, name, abbreviation, year_id, SIG) {
     this.code_subject = code_subject;
     this.name = name;
+    this.abbreviation = abbreviation;
     this.year_id = year_id;
     this.SIG = SIG;
   }
@@ -13,8 +13,14 @@ export class Subject {
     try {
       db = await connectToDatabase();
       const [result] = await db.query(
-        "INSERT INTO subjects (code_subject, name, year_id, SIG) VALUES (?, ?, ?, ?)",
-        [subject.code_subject, subject.name, subject.year_id, subject.SIG],
+        "INSERT INTO subjects (code_subject, name, year_id, SIG, abbreviation) VALUES (?, ?, ?, ?, ?)",
+        [
+          subject.code_subject,
+          subject.name,
+          subject.year_id,
+          subject.SIG,
+          subject.abbreviation,
+        ],
       );
       return result.affectedRows > 0;
     } catch (error) {
@@ -32,7 +38,7 @@ export class Subject {
     try {
       db = await connectToDatabase();
       const [result] = await db.query(
-        "SELECT s.code_subject, s.name, y.name AS year_name FROM subjects s INNER JOIN years y ON s.year_id = y.id WHERE s.SIG = ?",
+        "SELECT s.code_subject, s.name, y.name AS year_name, s.abbreviation FROM subjects s INNER JOIN years y ON s.year_id = y.id WHERE s.SIG = ?",
         [SIG],
       );
       return result;
@@ -71,12 +77,13 @@ export class Subject {
    * @param {number} id_student - ID del estudiante
    * @returns {Promise<Array<object>>} - Array de materias con sus evaluaciones agrupadas
    */
-  static async getSubjectBySection(id_lapse, id_section, id_student) {
+  static async getSubjectBySection({ id_lapse, id_section, id_student, SIG }) {
     let db = null;
     try {
       db = await connectToDatabase();
 
-      const sql = `
+      // 1. Base del Query con los JOINs faltantes para poder filtrar/ordenar por estudiante/usuario
+      let sql = `
         SELECT 
           sec.id AS section_id, 
           s.code_subject AS subject_code,
@@ -93,16 +100,36 @@ export class Subject {
         INNER JOIN years y ON sec.id_year = y.id
         INNER JOIN load_academic la ON la.id_section = sec.id
         INNER JOIN subjects s ON la.id_subject = s.code_subject
-       LEFT JOIN evaluation_plans ep ON ep.id_load_academic = la.id AND ep.id_lapse = ?
-LEFT JOIN evaluation_plan_details epd ON epd.id_evaluation_plan = ep.id
-LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = ?
-        WHERE sec.id = ?
-        ORDER BY s.name ASC, epd.date ASC;
+        LEFT JOIN evaluation_plans ep ON ep.id_load_academic = la.id AND ep.id_lapse = ?
+        LEFT JOIN evaluation_plan_details epd ON epd.id_evaluation_plan = ep.id
+        -- Agregamos los JOINs para que existan los alias 'g', 'est' y 'u' de forma consistente
+        LEFT JOIN grades g ON g.id_evaluation = epd.id
+        LEFT JOIN students est ON g.id_student = est.id
+        LEFT JOIN users u ON est.id_user = u.id
+        WHERE sec.id = ? AND sec.SIG = ?
       `;
 
-      // execute es más rápido y seguro frente a SQL Injection en MariaDB
-      const [rows] = await db.execute(sql, [id_lapse, id_student, id_section]);
+      // 2. Mapeo inicial de parámetros estrictamente en el orden de aparición de los '?' arriba:
+      // 1er '?' -> ep.id_lapse = ?
+      // 2do '?' -> sec.id = ?
+      // 3er '?' -> sec.SIG = ?
+      const params = [id_lapse, id_section, SIG];
 
+      // 3. Condicional dinámico si se solicita un estudiante específico
+      if (id_student) {
+        sql += ` AND est.id = ?`;
+        params.push(id_student);
+      }
+
+      // 4. Un solo ORDER BY al final de la consulta (sin puntos y comas intermedios)
+      sql += ` ORDER BY s.name ASC, epd.date ASC;`;
+
+      console.log("=== DEBBUGEANDO PARÁMETROS SQL ===");
+      console.log("Valores en el array:", params);
+
+      const [rows] = await db.execute(sql, params);
+
+      // 5. Procesamiento y mapeo de la data (Tu reducción con reduce se mantiene perfecta)
       const subjectsMap = rows.reduce((acc, row) => {
         const {
           subject_code,
@@ -113,7 +140,6 @@ LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = ?
           ...evaluationData
         } = row;
 
-        // Si la materia aún no está en nuestro mapa, la inicializamos
         if (!acc[subject_code]) {
           acc[subject_code] = {
             code: subject_code,
@@ -126,14 +152,11 @@ LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = ?
           };
         }
 
-        // Si existe una evaluación real en la fila de la BD
         if (evaluationData.evaluation_id) {
-          // 🌟 EVITA DUPLICADOS: Verificamos si esta actividad ya se agregó a esta materia
           const yaExisteActividad = acc[subject_code].evaluations.some(
             (evaluacion) => evaluacion.id === evaluationData.evaluation_id,
           );
 
-          // Solo si NO existe la insertamos en el array
           if (!yaExisteActividad) {
             acc[subject_code].evaluations.push({
               id: evaluationData.evaluation_id,
@@ -152,7 +175,6 @@ LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = ?
         return acc;
       }, {});
 
-      // Convertimos el mapa de vuelta a un Array limpio
       return Object.values(subjectsMap);
     } catch (error) {
       console.error("❌ Error al obtener las materias por sección:", error);
@@ -170,14 +192,65 @@ LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = ?
    * @returns {boolean} terdadero si elimina una asignatura
    */
   static async deleteSubjects(code_subject, SIG) {
-    let db 
-    try{
-      db = await connectToDatabase()
+    let db;
+    try {
+      db = await connectToDatabase();
       const query = `DELETE FROM subjects WHERE code_subject = ? AND SIG = ?`;
-      const result = await db.query(query, [code_subject, SIG])
-      return result.affectedRows > 0
-    } catch(error){
-      throw error
+      const result = await db.query(query, [code_subject, SIG]);
+      return result.affectedRows > 0;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   ** Obtiene todas las calificaciones de una sección crudas para armar la sábana de notas en el controlador
+   * @param {Object} param0
+   * @param {string} param0.id_lapse
+   * @param {number} param0.id_section
+   * @param {string} param0.SIG
+   */
+  static async getGradesForSheetNote({ id_lapse, id_section, SIG }) {
+    let db = null;
+    try {
+      db = await connectToDatabase();
+
+      const query = `
+     SELECT 
+        u.document AS student_document,
+        u.name AS student_name,
+        u.last_name AS student_last_name,
+        s.name AS subject_name,
+        s.code_subject AS subject_code,
+        s.abbreviation,
+        epd.porcentage AS evaluation_porcentage,
+        g.grade AS evaluation_grade
+      FROM enrollments e
+      INNER JOIN students est ON e.id_student = est.id
+      INNER JOIN users u ON est.id_user = u.id
+      -- Acoplamos la sección para poder validar el SIG institucional de forma estricta
+      INNER JOIN sections sec ON e.id_section = sec.id
+      INNER JOIN load_academic la ON la.id_section = e.id_section AND la.id_period = e.id_period
+      INNER JOIN subjects s ON la.id_subject = s.code_subject
+      LEFT JOIN evaluation_plans ep ON ep.id_load_academic = la.id AND ep.id_lapse = ?
+      LEFT JOIN evaluation_plan_details epd ON epd.id_evaluation_plan = ep.id
+      LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = est.id
+      WHERE e.id_section = ? 
+        AND sec.SIG = ? -- 🔥 CORRECCIÓN: Filtramos usando la tabla de secciones (sec)
+        AND e.status IN ('Activo', 'Materia Pendiente', 'Repitiente')
+      ORDER BY u.last_name ASC, u.name ASC, s.name ASC, epd.date ASC;
+    `;
+
+      // Pasamos los parámetros de forma limpia y segura
+      const [rows] = await db.execute(query, [id_lapse, id_section, SIG]);
+      return rows;
+    } catch (error) {
+      console.error("❌ Error en getGradesForSheetNote:", error);
+      throw error;
+    } finally {
+      if (db) {
+        await closeDatabaseConnection(db);
+      }
     }
   }
 }

@@ -12,8 +12,6 @@ export class Sections {
 
   /**
    * Obtiene el ID del período académico por su nombre
-   * @param {string} periodName - Nombre del período académico
-   * @returns {Promise<number>} - ID del período académico
    */
   static async getPeriodIdByName(periodName) {
     let db;
@@ -36,14 +34,6 @@ export class Sections {
 
   /**
    * Crea una sección en la base de datos
-   * @param {object} section - Objecto con los datos de la sección
-   * @param {string} section.name - Nombre de la sección
-   * @param {string} section.SIG - SIG de la escuela
-   * @param {number} section.id_period - ID del período académico
-   * @param {number} section.id_year - ID del año académico
-   * @param {number} section.guide_id - ID del guía de la sección
-   * @param {number} section.capacity - Capacidad de la sección
-   * @returns {Promise<boolean>} - True si la sección se creó correctamente, false en caso contrario
    */
   static async createSection(section) {
     let db;
@@ -72,10 +62,7 @@ export class Sections {
   }
 
   /**
-   ** Obtiene las secciones de la escuela
-   * @param {string} SIG - SIG de la escuela
-   * @param {number} id_period id del periodo academico
-   * @returns {Promise<Array<object>>} - Array de secciones
+   * Obtiene las secciones de la escuela
    */
   static async getSections(SIG, id_period) {
     let db;
@@ -83,35 +70,30 @@ export class Sections {
       db = await connectToDatabase();
       const [rows] = await db.query(
         `SELECT 
-    sections.id, 
-    sections.name, 
-    sections.id_period, 
-    sections.id_year, 
-    sections.guide_id, 
-    sections.capacity,
-    years.name AS year_name, 
-    teachers.id AS teacher_id,
-    users.name AS teacher_name, 
-    users.last_name AS teacher_last_name,
-    
-    -- Contamos los alumnos activos inscritos en esta sección y período
-    (
-      SELECT COUNT(e.id) 
-      FROM enrollments e 
-      WHERE e.id_section = sections.id 
-        AND e.id_period = sections.id_period 
-        AND e.status IN ('Activo','Aprobado','Retirado','Materia Pendiente','Reprobado')
-    ) AS total_students
-
-FROM sections
-INNER JOIN years ON sections.id_year = years.id
-INNER JOIN academic_periods ap ON sections.id_period = ap.id
--- LEFT JOIN clave: si la sección no tiene profesor, igual se muestra
-LEFT JOIN teachers ON sections.guide_id = teachers.id
-LEFT JOIN users ON teachers.id_user = users.id
-
-WHERE sections.SIG = ? 
-  AND sections.id_period = ?;`,
+          sections.id, 
+          sections.name, 
+          sections.id_period, 
+          sections.id_year, 
+          sections.guide_id, 
+          sections.capacity,
+          years.name AS year_name, 
+          teachers.id AS teacher_id,
+          users.name AS teacher_name, 
+          users.last_name AS teacher_last_name,
+          (
+            SELECT COUNT(e.id) 
+            FROM enrollments e 
+            WHERE e.id_section = sections.id 
+              AND e.id_period = sections.id_period 
+              AND e.status IN ('Activo','Aprobado','Retirado','Materia Pendiente','Reprobado')
+          ) AS total_students
+        FROM sections
+        INNER JOIN years ON sections.id_year = years.id
+        INNER JOIN academic_periods ap ON sections.id_period = ap.id
+        LEFT JOIN teachers ON sections.guide_id = teachers.id
+        LEFT JOIN users ON teachers.id_user = users.id
+        WHERE sections.SIG = ? 
+          AND sections.id_period = ?;`,
         [SIG, id_period],
       );
       return rows;
@@ -127,42 +109,37 @@ WHERE sections.SIG = ?
 
   /**
    * Busca la sección actual de un estudiante junto a los datos del año escolar.
-   * @param {string} SIG - Código de la institución
-   * @param {number} id_student - ID del estudiante (s.id)
-   * @returns {object|null} - Datos de la sección y año, o null si no se encuentra
    */
   static async getSectionByStudent(SIG, id_student) {
-    let db = null; // Inicializamos en null para el bloque finally
+    let db = null;
     try {
       db = await connectToDatabase();
 
       const query = `
-      SELECT
-        s.id AS student_id,          -- Cambiado para evitar confusiones de ID
-        sec.id AS id_section,
-        sec.name AS section_name,
-        y.name AS year_name
-      FROM students s
-      INNER JOIN enrollments e ON s.id = e.id_student
-      INNER JOIN sections sec ON e.id_section = sec.id
-      INNER JOIN years y ON sec.id_year = y.id
-      WHERE s.id = ? 
-        AND sec.SIG = ?              -- Validamos que la sección pertenezca al colegio consultado
-        AND e.status IN ('Activo', 'Repitiente')
-      ORDER BY e.id DESC
-      LIMIT 1;
-    `;
+        SELECT
+          s.id AS student_id,
+          sec.id AS id_section,
+          sec.name AS section_name,
+          y.name AS year_name
+        FROM students s
+        INNER JOIN enrollments e ON s.id = e.id_student
+        INNER JOIN sections sec ON e.id_section = sec.id
+        INNER JOIN years y ON sec.id_year = y.id
+        WHERE s.id = ? 
+          AND sec.SIG = ? 
+          AND e.status IN ('Activo', 'Repitiente')
+        ORDER BY e.id DESC
+        LIMIT 1;
+      `;
 
-      // Se usa db.execute para aprovechar sentencias preparadas nativas de MariaDB
       const [rows] = await db.execute(query, [Number(id_student), SIG]);
-
       return rows.length > 0 ? rows[0] : null;
     } catch (error) {
       console.error(
         "❌ Error en el modelo al ejecutar getSectionByStudent:",
         error,
       );
-      throw error; // Re-lanzamos para que el controlador pueda manejar el HTTP status 500
+      throw error;
     } finally {
       if (db) {
         await closeDatabaseConnection(db);
@@ -171,41 +148,45 @@ WHERE sections.SIG = ?
   }
 
   /**
-   ** Obtiene una seccion por su id de un colegio
-   * @param {string} SIG - codigo unico del colegio
-   * @param {number} id_section - ID de la seccion
-   * @returns {<object>} La seccion
+   * Obtiene una sección por su id mapeando metadatos escolares para reportes
    */
   static async getSectionByID(SIG, id_section) {
-    let db;
+    let db = null;
     try {
       db = await connectToDatabase();
-      const query = `SELECT 
-      s.name AS section_name,        
-      y.name AS year_name,             
-      u.name AS teacher_name,         
-      u.last_name AS teacher_last_name,
-      u.document AS teacher_document,
-      sho.name AS school_name,
-      sho.SIG AS SIG,
-      sho.DEA_CODE AS school_code,
-      sho.logo_school,
-      acp.name AS period
-  FROM sections s
-  -- 1. Conectamos con el año escolar asignado a la sección
-  INNER JOIN years y ON s.id_year = y.id
-  -- 2. Conectamos con el profesor guía de la sección
-  INNER JOIN teachers t ON s.guide_id = t.id
-  INNER JOIN schools sho ON s.SIG = sho.SIG
-  INNER JOIN academic_periods acp ON s.id_period = acp.id
-  -- 3. Conectamos con los datos personales del profesor en la tabla de usuarios
-  INNER JOIN users u ON t.id_user = u.id
-  WHERE s.SIG = ? AND s.id = ?;`;
+      const query = `
+        SELECT 
+          s.name AS section_name,        
+          y.name AS year_name,             
+          u.name AS teacher_name,         
+          u.last_name AS teacher_last_name,
+          u.document AS teacher_document,
+          sho.name AS school_name,
+          sho.SIG AS SIG,
+          sho.DEA_CODE AS school_code,
+          sho.logo_school,
+          acp.name AS period
+        FROM sections s
+        INNER JOIN years y ON s.id_year = y.id
+        INNER JOIN schools sho ON s.SIG = sho.SIG
+        INNER JOIN academic_periods acp ON s.id_period = acp.id
+        -- 🔥 CORRECCIÓN: LEFT JOINs para evitar fallos si no hay un docente guía asignado aún
+        LEFT JOIN teachers t ON s.guide_id = t.id
+        LEFT JOIN users u ON t.id_user = u.id
+        WHERE s.SIG = ? AND s.id = ?;
+      `;
+      
+      const [rows] = await db.execute(query, [SIG, id_section]);
 
-      const section = await db.query(query, [SIG, id_section]);
-      return section[0];
+      // Retornamos el primer objeto encontrado o null si no existe
+      return rows.length > 0 ? rows[0] : null;
     } catch (error) {
-      console.log(error);
+      console.error("❌ Error en el modelo al ejecutar getSectionByID:", error);
+      throw error;
+    } finally {
+      if (db) {
+        await closeDatabaseConnection(db);
+      }
     }
   }
 }

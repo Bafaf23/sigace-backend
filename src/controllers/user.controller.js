@@ -8,35 +8,39 @@ export const createUser = async (req, res) => {
       return res.status(400).json({ error: "No se proporcionaron datos" });
     }
 
-    const document = req.body.typeDocuement + req.body.document;
+    const document = (req.body.typeDocuement || "") + (req.body.document || "");
 
     function formatText(text) {
-      const clearText = text.trim().toLowerCase().split(/\s+/);
-
-      if (typeof text !== "string") {
-        return text;
-      }
-      if (clearText.length === 0) {
+      // 1. Validar primero que sea un string real y que no esté vacío
+      if (typeof text !== "string" || !text.trim()) {
         return "";
       }
+
+      // 2. Limpiamos espacios extras alrededor
+      const cleanStr = text.trim();
+
+      // 3. Validamos caracteres permitidos usando el string original limpio
       const regexPermitido = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/;
-      if (!regexPermitido.test(clearText)) {
+      if (!regexPermitido.test(cleanStr)) {
         console.warn("⚠️ El texto contiene caracteres no permitidos.");
         return null;
       }
-      return clearText.charAt(0).toUpperCase() + clearText.slice(1);
+
+      // 4. Capitalizamos de forma segura (Primera letra Mayúscula, el resto minúscula)
+      return cleanStr.charAt(0).toUpperCase() + cleanStr.slice(1).toLowerCase();
     }
 
-    /* Generar una contraseña generica para el usuario esta debe ser cambiada por el usuario en el primer login  document(4)@2026*/
-    const passgeneric = req.body.document.substring(0, 4) + "@2026";
+    /* Generar una contraseña genérica para el usuario basada en la cédula */
+    const rawDocument = req.body.document ? String(req.body.document) : "";
+    const passgeneric = rawDocument.substring(0, 4) + "@2026";
 
-    console.log("passgeneric", passgeneric);
+    console.log("passgeneric:", passgeneric);
 
     const user = await Users.createUser({
       document: document.trim(),
       name: formatText(req.body.name),
       last_name: formatText(req.body.last_name),
-      email: req.body.email.trim(),
+      email: req.body.email ? req.body.email.trim() : "",
       phone: req.body.phone,
       role_id: req.body.role_id,
       SIG: req.user.SIG,
@@ -45,7 +49,6 @@ export const createUser = async (req, res) => {
 
     if (!user) {
       console.log("❌ createUser... error creating user...");
-
       return res.status(500).json({ error: "Error al crear usuario" });
     }
 
@@ -56,7 +59,7 @@ export const createUser = async (req, res) => {
       .json({ success: true, message: "Usuario creado correctamente" });
   } catch (error) {
     console.error("❌ Error al crear un usuario:", error);
-    throw error;
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 

@@ -18,7 +18,6 @@ export const createSubject = async (req, res) => {
 
     const years = await Subject.getYears(req.user.SIG);
 
-
     const yearSelet = years.find((year) => year.id == year_id);
 
     if (!yearSelet) {
@@ -29,15 +28,22 @@ export const createSubject = async (req, res) => {
       });
     }
 
-
     // Extraer el número (ej: de "1er Año" extrae "1", de "2do Año" extrae "2")
     const suffix = String(yearSelet.name).substring(0, 1).toUpperCase();
     const code_suffix = suffix.padStart(2, "0");
-    const code_subject = `${name.substring(0, 3).toUpperCase()}-${code_suffix}`;
+    const code_subject = `${name.substring(0, 3).toUpperCase()}-${code_suffix}-${req.user.SIG}`;
+
+    const abbreviation = `${name.substring(0, 3).toUpperCase()}`;
 
     console.log(`Código generado automáticamente: ${code_subject}`);
 
-    const subject = new Subject(code_subject, name, year_id, req.user.SIG);
+    const subject = new Subject(
+      code_subject,
+      name,
+      abbreviation,
+      year_id,
+      req.user.SIG,
+    );
     const subjectCreated = await Subject.createSubject(subject);
 
     if (!subjectCreated) {
@@ -111,7 +117,8 @@ export const getYears = async (req, res) => {
 export const getSubjectBySection = async (req, res) => {
   try {
     console.log(`⚠️ Buscando materias de sección...`);
-    const { id_student, SIG } = req.params;
+    const { id_student } = req.params;
+    const SIG = req.user.SIG;
 
     if (!id_student || !SIG) {
       console.log(`❌ Parámetros requeridos faltantes`);
@@ -149,11 +156,12 @@ export const getSubjectBySection = async (req, res) => {
     );
 
     // 3. Consultar modelo (Este método ya agrupa internamente por 'subject_code' vía reduce)
-    const subjectSections = await Subject.getSubjectBySection(
-      lapseActive.id,
-      id_section,
-      id_student,
-    );
+    const subjectSections = await Subject.getSubjectBySection({
+      id_lapse: lapseActive.id,
+      id_section: id_section,
+      id_student: id_student,
+      SIG: SIG,
+    });
 
     if (!subjectSections || subjectSections.length === 0) {
       console.log(

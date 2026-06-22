@@ -181,7 +181,7 @@ export class Users {
       switch (roleUser) {
         case 2:
           await connection.query(
-            "INSERT INTO students (id_user, gender, SIG, representative_id, tuition_number, allergies, medical_condition, weight, birth_date, height, shirt_size, pants_size, shoe_size, condition) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO students (id_user, gender, SIG, representative_id, tuition_number, allergies, medical_condition, weight, birth_date, height, shirt_size, pants_size, shoe_size, \`condition\`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
               idUser,
               user.gender,

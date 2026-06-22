@@ -83,12 +83,12 @@ export const createStudent = async (req, res) => {
       name: formatText(req.body.name),
       last_name: formatText(req.body.lastName),
       phone: req.body.phone,
-      representative_id: req.body.representative_id.trim(),
+      representative_id: req.body.representative_id,
       gender: req.body.gender.trim(),
-      role_id: req.body.role_id.trim() || 2, // Por defecto rol estudiante
+      role_id: req.body.role_id || 2, // Por defecto rol estudiante
       email: req.body.email.trim(),
       birth_date: req.body.birthDate.trim(),
-      isNewEntry: req.body.isNewEntry.trim(),
+      isNewEntry: req.body.isNewEntry,
       previousSchool: req.body.previousSchool.trim(),
       previousSchoolCode: req.body.previousSchoolCode.trim(),
       previousYear: req.body.previousYear.trim(),
@@ -96,15 +96,15 @@ export const createStudent = async (req, res) => {
 
       allergies: req.body.allergies.trim(),
       medical_condition: req.body.medicalCondition.trim(),
-      weight: req.body.weight.trim(),
-      height: req.body.height.trim(),
-      shirt_size: req.body.shirtSize.trim(),
-      pants_size: req.body.pantSizev.trim(),
-      shoe_size: req.body.shoeSize.trim(),
+      weight: req.body.weight,
+      height: req.body.height,
+      shirt_size: req.body.shirtSize,
+      pants_size: req.body.pantSize,
+      shoe_size: req.body.shoeSize,
 
-      year_id: req.body.year.trim(),
-      id_section: req.body.section.trim(),
-      id_period: req.user?.id_period.trim(),
+      year_id: req.body.year,
+      id_section: req.body.section,
+      id_period: req.user?.id_period,
     };
 
     /* Datos del representante */
@@ -112,7 +112,7 @@ export const createStudent = async (req, res) => {
       document: `${req.body.repdniType}${req.body.repdni}`,
       name: formatText(req.body.repName),
       last_name: formatText(req.body.repLastName),
-      phone: req.body.repPhone.trim(),
+      phone: req.body.repPhone,
       relationship: req.body.relationship.trim(),
       repEmail: req.body.repEmail.trim(),
     };

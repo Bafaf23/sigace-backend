@@ -5,7 +5,10 @@ import { boletaTemplate } from "../templates/boleta.template.js";
 import { enrollmentP } from "../templates/EnrollmetP.template.js";
 import { listSection } from "../templates/listSectio.template.js";
 import { Sections } from "../models/Section.model.js";
+import { Subject } from "../models/Subject.model.js";
+import { LapseModel } from "../models/Lapse.model.js";
 import fs from "fs";
+import { noteSheet } from "../templates/noteSheet.template.js";
 import puppeteer from "puppeteer";
 import { School } from "../models/School.model.js";
 import path from "path";
@@ -128,10 +131,11 @@ export const sectionList = async (req, res) => {
  * Genera la boleta de notas del estudiante
  */
 export const boleta = async (req, res) => {
-  const { SIG, id_student, id_section } = req.params;
+  const { id_student, id_section } = req.params;
+  const SIG = req.user.SIG;
   let browser = null;
 
-  if (!SIG || !id_student || !id_section) {
+  if (!id_student || !id_section) {
     console.log(`❌ Los datos son requeridos`);
     return res.status(400).json({
       success: false,
@@ -141,7 +145,7 @@ export const boleta = async (req, res) => {
 
   try {
     const grades = await Grade.getGradesForBoleta(SIG, id_student, id_section);
-    const [seccionInfo] = await Sections.getSectionByID(SIG, id_section);
+    const seccionInfo = await Sections.getSectionByID(SIG, id_section);
     const student = await Students.getStudentByID(id_student);
 
     if (!seccionInfo || !student) {
@@ -335,6 +339,188 @@ export const enrollmetP = async (req, res) => {
   } finally {
     if (browser) {
       await browser.close();
+    }
+  }
+};
+
+/**
+ * Genera la noteSheet de una sección (Sábana Completa o Estudiante Único)
+ */
+export const sheetNote = async (req, res) => {
+  console.log(`Generando la noteSheet...`);
+
+  const SIG = req.user?.SIG;
+  const { id_section } = req.params;
+
+  if (!SIG || !id_section) {
+    console.log(`Parámetros faltantes en la solicitud.`);
+    return res
+      .status(400)
+      .json({ success: false, message: "Los parámetros son requeridos." });
+  }
+
+  try {
+    // 1. Validar existencia del lapso escolar activo
+    const lapses = await LapseModel.getLapses(SIG);
+    const lapseActive = lapses.find((lapse) => lapse.is_active === 1);
+
+    if (!lapseActive) {
+      console.log(`No se encontró un lapso activo en el sistema.`);
+      return res.status(404).json({
+        success: false,
+        message:
+          "No es posible generar el reporte porque no existe un lapso académico activo.",
+      });
+    }
+
+    // 2. Buscar calificaciones
+    const rows = await Subject.getGradesForSheetNote({
+      id_lapse: lapseActive.id,
+      id_section: Number(id_section),
+      SIG: SIG,
+    });
+
+    console.log("Primera fila de la BD:", rows[0]);
+
+    if (!rows || rows.length === 0) {
+      console.log(`No se encontraron registros académicos.`);
+      return res.status(404).json({
+        success: false,
+        message:
+          "No se encontraron calificaciones asociadas a los parámetros proporcionados.",
+      });
+    }
+
+    // 3. Buscar datos descriptivos de la sección
+    const section = await Sections.getSectionByID(SIG, id_section);
+    if (!section) {
+      console.log(`Sección no encontrada o no preparada.`);
+      return res.status(404).json({
+        success: false,
+        message:
+          "Lo sentimos, la sección a la que quieres acceder no está preparada.",
+      });
+    }
+
+    // 4. Mapear y procesar las notas acumuladas usando 'subject_code'
+    const studentsMap = rows.reduce((acc, row) => {
+      const doc = row.student_document;
+
+      if (!acc[doc]) {
+        acc[doc] = {
+          document: doc,
+          name: row.student_name,
+          last_name: row.student_last_name,
+          _acumuladores: {},
+          definitivas: {},
+          promedio: 0,
+          status: "Aprobado",
+        };
+      }
+
+      const est = acc[doc];
+      const materia = row.subject_code; // 🔥 CORREGIDO: Antes tenías code_subject
+      const nota = parseFloat(row.evaluation_grade) || 0;
+
+      // Usamos el nombre exacto de tu BD 'evaluation_porcentage'
+      const porcentaje = parseFloat(row.evaluation_porcentage) / 100 || 0;
+
+      if (!est._acumuladores[materia]) {
+        est._acumuladores[materia] = 0;
+      }
+
+      est._acumuladores[materia] += nota * porcentaje;
+      return acc;
+    }, {});
+
+    // 5. Calcular definitivas, promedios y estatus final
+    const processedStudents = Object.values(studentsMap).map((student) => {
+      let sumaDefinitivas = 0;
+      let totalMaterias = 0;
+      let tieneAplazadas = false;
+
+      for (const materia in student._acumuladores) {
+        const notaDefinitiva = Math.round(student._acumuladores[materia]);
+        student.definitivas[materia] = notaDefinitiva; // Guardado bajo el código único
+        sumaDefinitivas += notaDefinitiva;
+        totalMaterias++;
+
+        if (notaDefinitiva < 10) {
+          tieneAplazadas = true;
+        }
+      }
+
+      student.promedio =
+        totalMaterias > 0
+          ? (sumaDefinitivas / totalMaterias).toFixed(1)
+          : "0.0";
+      student.status = tieneAplazadas ? "Pendiente" : "Aprobado";
+
+      delete student._acumuladores; // Limpieza temporal de memoria
+      return student;
+    });
+
+    // 6. Extracción limpia de asignaturas únicas usando 'subject_code' para evitar colisiones
+    const uniqueSubjects = rows.reduce((acc, row) => {
+      // 🔥 CORREGIDO: Mapeamos usando subject_code para que coincida con los alumnos
+      if (!acc.some((sub) => sub.code_subject === row.subject_code)) {
+        acc.push({
+          code_subject: row.subject_code,
+          name: row.subject_name,
+          abbreviation: row.abbreviation,
+        });
+      }
+      return acc;
+    }, []);
+
+    console.log(
+      `Estructurando sábana vertical para ${processedStudents.length} alumnos.`,
+    );
+
+    // 7. Renderizado HTML
+    const htmlContent = noteSheet(section, processedStudents, uniqueSubjects);
+
+    console.log(
+      "Compilando HTML a binario PDF con Puppeteer (Formato Vertical)...",
+    );
+
+    // 8. Lanzar Puppeteer para generar el binario PDF
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      landscape: false,
+      printBackground: true,
+      margin: { top: "0.6cm", right: "0.6cm", bottom: "0.6cm", left: "0.6cm" },
+    });
+
+    await browser.close();
+
+    // 9. Configuración y entrega de cabeceras HTTP del archivo PDF
+    const sectionName = section.section_name || "Seccion";
+    const fileName = `Sabana_Notas_${sectionName.replace(/\s+/g, "_")}.pdf`;
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+    res.setHeader("Content-Length", pdfBuffer.length);
+
+    return res.send(pdfBuffer);
+  } catch (error) {
+    console.error(`❌ Error crítico en sheetNote:`, error);
+
+    if (!res.headersSent) {
+      return res.status(500).json({
+        success: false,
+        message:
+          "Ocurrió un error interno al intentar generar la sábana de notas.",
+        error: error.message,
+      });
     }
   }
 };

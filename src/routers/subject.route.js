@@ -32,9 +32,9 @@ router.get(
   getYears,
 );
 router.get(
-  "/getSubjectSecction/student/:id_student/:SIG",
+  "/getSubjectSecction/student/:id_student",
   verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor"),
+  permitirRoles("Administrador", "Profesor", "Estudiante"),
   getSubjectBySection,
 );
 
@@ -42,7 +42,7 @@ router.delete(
   "/deleteSub/:code_subject",
   verificarAutenticacion,
   permitirRoles("Administrador"),
-  deleteSubjects
+  deleteSubjects,
 );
 
 export default router;

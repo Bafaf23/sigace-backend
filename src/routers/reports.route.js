@@ -3,11 +3,13 @@ import {
   sectionList,
   boleta,
   enrollmetP,
+  sheetNote,
 } from "../controllers/reports.controller.js";
 import {
   verificarAutenticacion,
   permitirRoles,
 } from "../middlewares/auth.middleware.js";
+import { noteSheet } from "../templates/noteSheet.template.js";
 
 const router = Router();
 
@@ -17,12 +19,14 @@ router.get(
   permitirRoles("Administrador", "Profesor"),
   sectionList,
 );
+
 router.get(
-  "/boleta/:SIG/:id_student/:id_section",
+  "/boleta/:id_student/:id_section",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor", "Estudiante"),
   boleta,
 );
+
 router.get(
   "/planillaIns/:id_student/:id_representative",
   verificarAutenticacion,
@@ -30,4 +34,10 @@ router.get(
   enrollmetP,
 );
 
+router.get(
+  "/noteSheet/:id_section",
+  verificarAutenticacion,
+  permitirRoles("Administrador"),
+  sheetNote,
+);
 export default router;

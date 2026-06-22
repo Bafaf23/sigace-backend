@@ -40,7 +40,7 @@ export class Students {
     shirt_size,
     pants_size,
     shoe_size,
-    status,
+    condition,
     created_at,
     updated_at,
   ) {
@@ -60,7 +60,7 @@ export class Students {
     this.shirt_size = shirt_size;
     this.pants_size = pants_size;
     this.shoe_size = shoe_size;
-    this.status = status;
+    this.condition = condition;
     this.created_at = created_at;
     this.updated_at = updated_at;
   }
@@ -137,7 +137,7 @@ export class Students {
     try {
       db = await connectToDatabase();
       const [result] = await db.query(
-        "INSERT INTO students (id_user, gender, SIG, representative_id, tuition_number, allergies, medical_condition, weight, height, shirt_size, pants_size, shoe_size, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO students (id_user, gender, SIG, representative_id, tuition_number, allergies, medical_condition, weight, height, shirt_size, pants_size, shoe_size, \`condition\`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           student.id_user,
           student.gender,
@@ -151,7 +151,7 @@ export class Students {
           student.shirt_size,
           student.pants_size,
           student.shoe_size,
-          student.status,
+          student.condition,
         ],
       );
       return result.affectedRows > 0;
