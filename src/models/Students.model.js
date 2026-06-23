@@ -321,11 +321,11 @@ WHERE e.id_section = ? AND s.SIG = ?`,
   }
 
   /**
-   * Recupera todo el récord académico del estudiante y lo agrupa por períodos lectivos,
+   ** Recupera todo el récord académico del estudiante y lo agrupa por períodos lectivos,
    * calculando la nota acumulativa por lapso en base al plan de evaluación real de su sección.
    * @param {number|string} id_student - ID del estudiante
    */
-  static async getRecordStudent(id_student) {
+  static async getRecordStudent(id_student, id_period) {
     let db;
     try {
       db = await connectToDatabase();
@@ -333,32 +333,31 @@ WHERE e.id_section = ? AND s.SIG = ?`,
       // SQL corregido al 100%: Filtra materias y notas limitándose estrictamente al periodo y sección inscrita
       const sql = `
         SELECT 
-          en.id AS enrollment_id,
-          ap.name AS school_year,
-          y.name AS year_level,
-          sc.name AS section,
-          sb.name AS subject_name,
-          lap.name AS lapse_name,
-          g.grade,
-          epd.porcentage
-        FROM enrollments en
-        INNER JOIN sections sc ON en.id_section = sc.id
-        INNER JOIN years y ON sc.id_year = y.id
-        INNER JOIN academic_periods ap ON en.id_period = ap.id
-        -- Unimos con la carga académica programada únicamente para la sección y periodo del alumno
-        INNER JOIN load_academic la ON la.id_section = en.id_section AND la.id_period = en.id_period
-        INNER JOIN subjects sb ON la.id_subject = sb.code_subject
-        -- Traemos el plan de evaluación de lapsos correspondiente de forma segura
-        LEFT JOIN evaluation_plans ep ON ep.id_load_academic = la.id
-        LEFT JOIN lapses lap ON ep.id_lapse = lap.id
-        LEFT JOIN evaluation_plan_details epd ON epd.id_evaluation_plan = ep.id
-        -- Hacemos left join de las notas del estudiante restringiendo a la evaluación correspondiente
-        LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = en.id_student
-        WHERE en.id_student = ?
-        ORDER BY ap.start_date DESC, sb.name ASC, lap.id ASC
+  en.id AS enrollment_id,
+  ap.name AS school_year,
+  y.name AS year_level,
+  sc.name AS section,
+  sb.name AS subject_name,
+  lap.name AS lapse_name,
+  -- 🔥 Combinamos la actividad y el referente teórico (Ej: "Examen: Las Ecuaciones")
+  CONCAT(epd.activity, ': ', epd.referent_teorical) AS evaluation_name, 
+  g.grade,
+  epd.porcentage
+FROM enrollments en
+INNER JOIN sections sc ON en.id_section = sc.id
+INNER JOIN years y ON sc.id_year = y.id
+INNER JOIN academic_periods ap ON en.id_period = ap.id
+INNER JOIN load_academic la ON la.id_section = en.id_section AND la.id_period = en.id_period
+INNER JOIN subjects sb ON la.id_subject = sb.code_subject
+LEFT JOIN evaluation_plans ep ON ep.id_load_academic = la.id
+LEFT JOIN lapses lap ON ep.id_lapse = lap.id
+LEFT JOIN evaluation_plan_details epd ON epd.id_evaluation_plan = ep.id
+LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = en.id_student
+WHERE en.id_student = ? AND en.id_period = ? -- 💡 Recuerda pasarle el ID del periodo dinámico
+ORDER BY ap.start_date DESC, sb.name ASC, lap.id ASC;
       `;
 
-      const [rows] = await db.query(sql, [id_student]);
+      const [rows] = await db.query(sql, [id_student, id_period]);
 
       // Si no hay inscripciones, retornamos un arreglo vacío
       if (!rows || rows.length === 0) {

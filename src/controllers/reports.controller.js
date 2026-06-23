@@ -7,29 +7,29 @@ import { listSection } from "../templates/listSectio.template.js";
 import { Sections } from "../models/Section.model.js";
 import { Subject } from "../models/Subject.model.js";
 import { LapseModel } from "../models/Lapse.model.js";
-import fs from "fs";
+import { School } from "../models/School.model.js";
 import { noteSheet } from "../templates/noteSheet.template.js";
 import puppeteer from "puppeteer";
-import { School } from "../models/School.model.js";
+import fs from "fs";
 import path from "path";
 
 /**
- * Genera la lista de los estudiantes por sección de un Colegio
+ * CONFIGURACIÓN REUSABLE DE LANZAMIENTO PUPPETEER
+ */
+const LAUNCH_ARGS = {
+  headless: true,
+  args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-web-security"],
+};
+
+/**
+ * ==========================================================================
+ * 1. GENERAR LISTA DE ESTUDIANTES POR SECCIÓN
+ * ==========================================================================
  */
 export const sectionList = async (req, res) => {
   const { id_section } = req.params;
-  const SIG = req.user.SIG;
+  const SIG = req.user?.SIG;
   let browser = null;
-
-  if (!SIG || !id_section) {
-    console.log(
-      "❌ No se pudo generar el PDF debido a falta de parámetros (SIG o id_section).",
-    );
-    return res.status(400).json({
-      success: false,
-      message: "No se pudo generar el PDF, faltan datos requeridos.",
-    });
-  }
 
   try {
     const [students, sectionsResult] = await Promise.all([
@@ -37,70 +37,74 @@ export const sectionList = async (req, res) => {
       Sections.getSectionByID(SIG, id_section),
     ]);
 
-    const seccionInfo = sectionsResult?.[0];
-
-    if (!seccionInfo) {
-      return res.status(404).json({
-        success: false,
-        message: "No se encontró información para la sección especificada.",
-      });
+    if (!sectionsResult) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Sección no encontrada" });
     }
 
     const filasEstudiantes = students
       .map(
         (student, index) => `
-        <tr class="${index % 2 === 1 ? "bg-slate-50" : "bg-white"} border-b border-slate-200">
-          <td class="p-3 text-xs text-slate-500 font-medium">${index + 1}</td>
-          <td class="p-3 text-xs font-bold text-blue-700">${student.tuition_number || "N/A"}</td>
-          <td class="p-3 text-xs font-bold text-slate-800">${`${student.last_name || ""}, ${student.name || ""}`.toUpperCase()}</td>
-          <td class="p-3 text-xs text-slate-600">${student.document || "N/A"}</td>
-        </tr>
-      `,
+      <tr class="border-b border-slate-200">
+        <td class="p-3 text-xs text-slate-500 font-medium">${index + 1}</td>
+        <td class="p-3 text-xs font-bold text-blue-700">${student.tuition_number || "N/A"}</td>
+        <td class="p-3 text-xs font-bold text-slate-800">${`${student.name || ""} ${student.last_name || ""}`}</td>
+        <td class="p-3 text-xs text-slate-600">${student.document || "N/A"}</td>
+      </tr>
+    `,
       )
       .join("");
 
-    const studentAcount = students.length;
-
-    // 3. Procesamiento del Logo / Marca de Agua en Base64
-    const nameLogo = seccionInfo.logo_school || "default.png";
-    const rutaDelLogo = path.join(process.cwd(), "public", "logos", nameLogo);
+    const studentCount = students.length;
+    const nameLogo = sectionsResult.logo_school;
     let logoBase64 = "";
 
-    if (fs.existsSync(rutaDelLogo)) {
-      const imagenBuffer = fs.readFileSync(rutaDelLogo);
-      let formato = path.extname(nameLogo).replace(".", "").toLowerCase();
-      if (formato === "jpg") formato = "jpeg"; // Estandarizar para el data URI
-      logoBase64 = `data:image/${formato};base64,${imagenBuffer.toString("base64")}`;
+    if (nameLogo) {
+      const rutaDelLogo = path.join(process.cwd(), "public", "logos", nameLogo);
+      if (fs.existsSync(rutaDelLogo)) {
+        const imagenBuffer = fs.readFileSync(rutaDelLogo);
+        let formato = path.extname(nameLogo).replace(".", "").toLowerCase();
+        if (formato === "jpg") formato = "jpeg";
+        logoBase64 = `data:image/${formato};base64,${imagenBuffer.toString("base64")}`;
+      }
     }
 
     const htmlContent = listSection(
-      seccionInfo,
+      sectionsResult,
       filasEstudiantes,
       logoBase64,
-      studentAcount,
+      studentCount,
+      studentCount,
     );
 
-    // 4. Generación del PDF con Puppeteer
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+    fs.writeFileSync(
+      path.join(process.cwd(), "debug-reporte.html"),
+      htmlContent,
+    );
 
+    browser = await puppeteer.launch(LAUNCH_ARGS);
     const page = await browser.newPage();
+    await page.setViewport({ width: 1200, height: 800 });
+
+    // networkidle0 obliga a esperar que cargue el CDN css tradicional
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
     const pdfBuffer = await page.pdf({
       format: "Letter",
       printBackground: true,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      preferCSSPageSize: false,
+      margin: { top: "15mm", right: "15mm", bottom: "15mm", left: "15mm" },
     });
 
     await browser.close();
     browser = null;
 
-    // 5. Formateo del nombre del archivo de descarga
-    const filenameYear = (seccionInfo.year_name || "Anio").replace(/\s+/g, "_");
-    const filenameSection = (seccionInfo.section_name || "Seccion").replace(
+    const filenameYear = (sectionsResult.year_name || "Anio").replace(
+      /\s+/g,
+      "_",
+    );
+    const filenameSection = (sectionsResult.section_name || "Seccion").replace(
       /\s+/g,
       "_",
     );
@@ -113,46 +117,49 @@ export const sectionList = async (req, res) => {
 
     return res.end(pdfBuffer);
   } catch (error) {
-    if (browser !== null) {
-      await browser.close();
-    }
-    console.error(
-      "❌ Error crítico en sectionList al compilar reporte con Puppeteer:",
-      error,
-    );
-    return res.status(500).json({
-      success: false,
-      message: "Ocurrió un error interno al procesar el documento PDF.",
-    });
+    console.error("❌ Error en sectionList:", error);
+    return res
+      .status(500)
+      .json({ success: false, error: "Error al generar PDF" });
+  } finally {
+    if (browser !== null) await browser.close();
   }
 };
 
 /**
- * Genera la boleta de notas del estudiante
+ * ==========================================================================
+ * 2. GENERAR BOLETA DE CALIFICACIONES DE ESTUDIANTE
+ * ==========================================================================
  */
 export const boleta = async (req, res) => {
   const { id_student, id_section } = req.params;
-  const SIG = req.user.SIG;
+  const SIG = req.user?.SIG;
   let browser = null;
 
   if (!id_student || !id_section) {
-    console.log(`❌ Los datos son requeridos`);
     return res.status(400).json({
       success: false,
-      message: "Faltan parámetros requeridos en la solicitud.",
+      code: "INCOMPLETE_BOLETA_PARAMS",
+      message:
+        "Faltan parámetros requeridos en la solicitud para procesar la boleta.",
     });
   }
 
   try {
-    const grades = await Grade.getGradesForBoleta(SIG, id_student, id_section);
-    const seccionInfo = await Sections.getSectionByID(SIG, id_section);
-    const student = await Students.getStudentByID(id_student);
+    const [grades, seccionInfoResult, student] = await Promise.all([
+      Grade.getGradesForBoleta(SIG, id_student, id_section),
+      Sections.getSectionByID(SIG, id_section),
+      Students.getStudentByID(id_student),
+    ]);
+
+    const seccionInfo = seccionInfoResult?.[0] || seccionInfoResult;
 
     if (!seccionInfo || !student) {
       return res.status(404).json({
         success: false,
+        code: "BOLETA_DATA_NOT_FOUND",
         message:
-          "No se encontró la información del estudiante o de la sección.",
+          "No se encontró la información del estudiante o de la sección para estructurar la boleta.",
       });
     }
 
@@ -168,17 +175,35 @@ export const boleta = async (req, res) => {
             ? "text-red-700 font-black bg-red-100"
             : "text-blue-950 font-black bg-slate-100";
 
-        if (subject.definitiva_ano > 0) {
-          totalAcumulado += parseFloat(subject.definitiva_ano);
-          materiasContadas++;
+        let notaMateriaValida = 0;
+        let lapsosActivosMateria = 0;
+
+        if (subject.momento_1 != null) {
+          notaMateriaValida += parseFloat(subject.momento_1);
+          lapsosActivosMateria++;
         }
+        if (subject.momento_2 != null) {
+          notaMateriaValida += parseFloat(subject.momento_2);
+          lapsosActivosMateria++;
+        }
+        if (subject.momento_3 != null) {
+          notaMateriaValida += parseFloat(subject.momento_3);
+          lapsosActivosMateria++;
+        }
+
+        const promedioMateria =
+          lapsosActivosMateria > 0
+            ? notaMateriaValida / lapsosActivosMateria
+            : 0;
+        totalAcumulado += promedioMateria;
+        materiasContadas++;
 
         return `
         <tr class="border-b border-slate-200">
           <td class="p-2 text-left pl-3 font-bold text-slate-700">${subject.subject_name.toUpperCase()}</td>
-          <td class="p-2 font-mono text-center ${classNota(subject.momento_1)}">${String(subject.momento_1 || 0).padStart(2, "0")}</td>
-          <td class="p-2 font-mono text-center ${classNota(subject.momento_2)}">${String(subject.momento_2 || 0).padStart(2, "0")}</td>
-          <td class="p-2 font-mono text-center ${classNota(subject.momento_3)}">${String(subject.momento_3 || 0).padStart(2, "0")}</td>
+          <td class="p-2 text-center ${classNota(subject.momento_1)}">${String(subject.momento_1 || 0).padStart(2, "0")}</td>
+          <td class="p-2 text-center ${classNota(subject.momento_2)}">${String(subject.momento_2 || 0).padStart(2, "0")}</td>
+          <td class="p-2 text-center ${classNota(subject.momento_3)}">${String(subject.momento_3 || 0).padStart(2, "0")}</td>
           <td class="p-2 font-mono text-center text-xs ${classDef(subject.definitiva_ano)}">${String(subject.definitiva_ano || 0).padStart(2, "0")}</td>
         </tr>`;
       })
@@ -193,8 +218,8 @@ export const boleta = async (req, res) => {
       promedio: promedioGeneral,
       observaciones:
         promedioGeneral >= 10
-          ? "Estudiante demuestra rendimiento satisfactorio, logrando consolidar las competencias."
-          : "Estudiante requiere asistir a los procesos de nivelación en las áreas reprobadas.",
+          ? "Estudiante demuestra rendimiento satisfactorio, logrando consolidar las competencias del nivel escolar."
+          : "Estudiante requiere asistir de forma obligatoria a los procesos de nivelación académica en las áreas reprobadas.",
     };
 
     const htmlContent = boletaTemplate(
@@ -204,18 +229,18 @@ export const boleta = async (req, res) => {
       resumen,
     );
 
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-
+    browser = await puppeteer.launch(LAUNCH_ARGS);
     const page = await browser.newPage();
+
+    // FIJAMOS EL VISOR Y ASIGNAMOS MARGENES
+    await page.setViewport({ width: 1200, height: 800 });
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
     const pdfBuffer = await page.pdf({
       format: "Letter",
       printBackground: true,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      preferCSSPageSize: false,
+      margin: { top: "15mm", right: "15mm", bottom: "15mm", left: "15mm" },
     });
 
     await browser.close();
@@ -233,40 +258,39 @@ export const boleta = async (req, res) => {
       "Content-Disposition",
       `inline; filename=Boleta_${studentDoc}_${filenameYear}_${filenameSection}.pdf`,
     );
-
     return res.end(pdfBuffer);
   } catch (error) {
-    if (browser) {
-      await browser.close();
-    }
+    if (browser) await browser.close();
     console.error("❌ Error al generar la boleta:", error);
     return res.status(500).json({
       success: false,
-      message: "Ocurrió un error al procesar la boleta de calificaciones.",
+      code: "BOLETA_GENERATION_ERROR",
+      message:
+        "Ocurrió un error de infraestructura al compilar la boleta de calificaciones.",
     });
   }
 };
 
 /**
- * Genera la planilla de inscripción
+ * ==========================================================================
+ * 3. GENERAR PLANILLA DE INSCRIPCIÓN / MATRÍCULA
+ * ==========================================================================
  */
 export const enrollmetP = async (req, res) => {
   const { id_student, id_representative } = req.params;
-
-  const SIG = req.user.SIG;
-  const id_period = req.user.id_period;
+  const SIG = req.user?.SIG;
+  const id_period = req.user?.id_period;
+  let browser = null;
 
   if (!SIG || !id_representative || !id_student) {
-    console.log(
-      `❌ Error al procesar la planilla de inscripción: faltan datos`,
-    );
     return res.status(400).json({
       success: false,
-      message: "Error al procesar la planilla, faltan datos esenciales",
+      code: "INCOMPLETE_ENROLLMENT_REPORT_PARAMS",
+      message:
+        "Error al procesar la planilla: Faltan datos esenciales en los parámetros.",
     });
   }
 
-  let browser = null;
   try {
     const [student, school, representative] = await Promise.all([
       Students.getStudentByID(id_student, id_period),
@@ -275,13 +299,11 @@ export const enrollmetP = async (req, res) => {
     ]);
 
     if (!student || !school || !representative) {
-      console.warn(
-        `⚠️ Intento de generación fallido: Información incompleta en BD`,
-      );
       return res.status(404).json({
         success: false,
+        code: "ENROLLMENT_DATA_NOT_FOUND",
         message:
-          "No se encontró la información completa del estudiante, plantel o representante para generar este documento.",
+          "No se encontró la información completa requerida para asentar la planilla de matrícula.",
       });
     }
 
@@ -291,7 +313,8 @@ export const enrollmetP = async (req, res) => {
 
     if (fs.existsSync(rutaDelLogo)) {
       const imagenBuffer = fs.readFileSync(rutaDelLogo);
-      const formato = path.extname(nameLogo).replace(".", ""); // png, jpg, etc.
+      const formato = path.extname(nameLogo).replace(".", "");
+      // CORRECCIÓN: Se agrega plantilla de string que faltaba para leer el buffer
       logoBase64 = `data:image/${formato};base64,${imagenBuffer.toString("base64")}`;
     }
 
@@ -302,107 +325,104 @@ export const enrollmetP = async (req, res) => {
       logoBase64,
     );
 
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-
+    browser = await puppeteer.launch(LAUNCH_ARGS);
     const page = await browser.newPage();
 
+    // OPTIMIZACIÓN DE AJUSTES EN HOJA DE MATRÍCULA
+    await page.setViewport({ width: 1200, height: 800 });
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
     const pdfBuffer = await page.pdf({
       format: "Letter",
       printBackground: true,
-      margin: { top: "0px", right: "0px", bottom: "0px", left: "0px" },
+      preferCSSPageSize: false,
+      margin: { top: "15mm", right: "15mm", bottom: "15mm", left: "15mm" },
     });
 
+    await browser.close();
+    browser = null;
+
     const fileName = `Planilla_${student.tuition_number || "INS"}-${student.id || "0"}.pdf`;
+
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
     res.setHeader("Content-Length", pdfBuffer.length);
-
     return res.send(pdfBuffer);
   } catch (error) {
+    if (browser) await browser.close();
     console.error(
       "❌ Error catastrófico en el controlador de la planilla:",
       error,
     );
-
-    if (!res.headersSent) {
-      return res.status(500).json({
-        success: false,
-        message:
-          "Ocurrió un error interno en el servidor al compilar el archivo PDF.",
-      });
-    }
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
+    return res.status(500).json({
+      success: false,
+      code: "ENROLLMENT_REPORT_INTERNAL_ERROR",
+      message:
+        "Ocurrió un error interno en el servidor al compilar el archivo PDF de matrícula estudiantil.",
+    });
   }
 };
 
 /**
- * Genera la noteSheet de una sección (Sábana Completa o Estudiante Único)
+ * ==========================================================================
+ * 4. GENERAR SÁBANA COMPLETA DE CALIFICACIONES DE UNA SECCIÓN
+ * ==========================================================================
  */
 export const sheetNote = async (req, res) => {
-  console.log(`Generando la noteSheet...`);
-
   const SIG = req.user?.SIG;
+  const id_period = req.user?.id_period;
   const { id_section } = req.params;
+  let browser = null;
 
   if (!SIG || !id_section) {
-    console.log(`Parámetros faltantes en la solicitud.`);
-    return res
-      .status(400)
-      .json({ success: false, message: "Los parámetros son requeridos." });
+    return res.status(400).json({
+      success: false,
+      code: "INCOMPLETE_SHEET_PARAMS",
+      message:
+        "Los parámetros institucionales de la sección son requeridos para auditar el reporte.",
+    });
   }
 
   try {
-    // 1. Validar existencia del lapso escolar activo
-    const lapses = await LapseModel.getLapses(SIG);
-    const lapseActive = lapses.find((lapse) => lapse.is_active === 1);
+    const lapses = await LapseModel.getLapses(SIG, id_period);
+    const lapseActive = lapses?.find((lapse) => lapse.is_active === 1);
 
     if (!lapseActive) {
-      console.log(`No se encontró un lapso activo en el sistema.`);
       return res.status(404).json({
         success: false,
+        code: "NO_ACTIVE_LAPSE_FOR_REPORT",
         message:
-          "No es posible generar el reporte porque no existe un lapso académico activo.",
+          "No es posible procesar la sábana debido a que no existe un lapso académico activo bajo evaluación.",
       });
     }
 
-    // 2. Buscar calificaciones
     const rows = await Subject.getGradesForSheetNote({
       id_lapse: lapseActive.id,
       id_section: Number(id_section),
       SIG: SIG,
     });
 
-    console.log("Primera fila de la BD:", rows[0]);
-
     if (!rows || rows.length === 0) {
-      console.log(`No se encontraron registros académicos.`);
       return res.status(404).json({
         success: false,
+        code: "SHEET_NOTES_EMPTY",
         message:
-          "No se encontraron calificaciones asociadas a los parámetros proporcionados.",
+          "No se localizaron calificaciones registradas en este lapso para compilar la sábana de la sección.",
       });
     }
 
-    // 3. Buscar datos descriptivos de la sección
-    const section = await Sections.getSectionByID(SIG, id_section);
+    const sectionResult = await Sections.getSectionByID(SIG, id_section);
+    const section = sectionResult?.[0] || sectionResult;
+
     if (!section) {
-      console.log(`Sección no encontrada o no preparada.`);
       return res.status(404).json({
         success: false,
+        code: "SHEET_SECTION_NOT_FOUND",
         message:
-          "Lo sentimos, la sección a la que quieres acceder no está preparada.",
+          "La sección a la que intenta acceder no se encuentra activa o configurada.",
       });
     }
 
-    // 4. Mapear y procesar las notas acumuladas usando 'subject_code'
     const studentsMap = rows.reduce((acc, row) => {
       const doc = row.student_document;
 
@@ -419,10 +439,8 @@ export const sheetNote = async (req, res) => {
       }
 
       const est = acc[doc];
-      const materia = row.subject_code; // 🔥 CORREGIDO: Antes tenías code_subject
+      const materia = row.subject_code;
       const nota = parseFloat(row.evaluation_grade) || 0;
-
-      // Usamos el nombre exacto de tu BD 'evaluation_porcentage'
       const porcentaje = parseFloat(row.evaluation_porcentage) / 100 || 0;
 
       if (!est._acumuladores[materia]) {
@@ -433,20 +451,19 @@ export const sheetNote = async (req, res) => {
       return acc;
     }, {});
 
-    // 5. Calcular definitivas, promedios y estatus final
     const processedStudents = Object.values(studentsMap).map((student) => {
       let sumaDefinitivas = 0;
       let totalMaterias = 0;
-      let tieneAplazadas = false;
+      let materiasReprobadas = 0;
 
       for (const materia in student._acumuladores) {
         const notaDefinitiva = Math.round(student._acumuladores[materia]);
-        student.definitivas[materia] = notaDefinitiva; // Guardado bajo el código único
+        student.definitivas[materia] = notaDefinitiva;
         sumaDefinitivas += notaDefinitiva;
         totalMaterias++;
 
         if (notaDefinitiva < 10) {
-          tieneAplazadas = true;
+          materiasReprobadas++;
         }
       }
 
@@ -454,15 +471,20 @@ export const sheetNote = async (req, res) => {
         totalMaterias > 0
           ? (sumaDefinitivas / totalMaterias).toFixed(1)
           : "0.0";
-      student.status = tieneAplazadas ? "Pendiente" : "Aprobado";
 
-      delete student._acumuladores; // Limpieza temporal de memoria
+      if (materiasReprobadas > 3) {
+        student.status = "Reprobado";
+      } else if (materiasReprobadas >= 1) {
+        student.status = "Pendiente";
+      } else {
+        student.status = "Aprobado";
+      }
+
+      delete student._acumuladores;
       return student;
     });
 
-    // 6. Extracción limpia de asignaturas únicas usando 'subject_code' para evitar colisiones
     const uniqueSubjects = rows.reduce((acc, row) => {
-      // 🔥 CORREGIDO: Mapeamos usando subject_code para que coincida con los alumnos
       if (!acc.some((sub) => sub.code_subject === row.subject_code)) {
         acc.push({
           code_subject: row.subject_code,
@@ -473,54 +495,46 @@ export const sheetNote = async (req, res) => {
       return acc;
     }, []);
 
-    console.log(
-      `Estructurando sábana vertical para ${processedStudents.length} alumnos.`,
+    const htmlContent = noteSheet(
+      section,
+      processedStudents,
+      uniqueSubjects,
+      lapseActive,
     );
 
-    // 7. Renderizado HTML
-    const htmlContent = noteSheet(section, processedStudents, uniqueSubjects);
-
-    console.log(
-      "Compilando HTML a binario PDF con Puppeteer (Formato Vertical)...",
-    );
-
-    // 8. Lanzar Puppeteer para generar el binario PDF
-    const browser = await puppeteer.launch({
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-
+    browser = await puppeteer.launch(LAUNCH_ARGS);
     const page = await browser.newPage();
+
+    // CONFIGURACIÓN CLAVE PARA SÁBANA DE NOTAS (FORMATO A4 COMPLETO)
+    await page.setViewport({ width: 1400, height: 900 });
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
     const pdfBuffer = await page.pdf({
       format: "A4",
-      landscape: false,
+      landscape: true, // Cambiado a true por las dimensiones de la tabla de una sábana escolar
       printBackground: true,
-      margin: { top: "0.6cm", right: "0.6cm", bottom: "0.6cm", left: "0.6cm" },
+      preferCSSPageSize: false,
+      margin: { top: "10mm", right: "10mm", bottom: "10mm", left: "10mm" },
     });
 
     await browser.close();
+    browser = null;
 
-    // 9. Configuración y entrega de cabeceras HTTP del archivo PDF
     const sectionName = section.section_name || "Seccion";
     const fileName = `Sabana_Notas_${sectionName.replace(/\s+/g, "_")}.pdf`;
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
     res.setHeader("Content-Length", pdfBuffer.length);
-
     return res.send(pdfBuffer);
   } catch (error) {
+    if (browser !== null) await browser.close();
     console.error(`❌ Error crítico en sheetNote:`, error);
-
-    if (!res.headersSent) {
-      return res.status(500).json({
-        success: false,
-        message:
-          "Ocurrió un error interno al intentar generar la sábana de notas.",
-        error: error.message,
-      });
-    }
+    return res.status(500).json({
+      success: false,
+      code: "NOTE_SHEET_INTERNAL_ERROR",
+      message:
+        "Ocurrió un error interno al intentar estructurar la sábana de notas consolidada.",
+    });
   }
 };

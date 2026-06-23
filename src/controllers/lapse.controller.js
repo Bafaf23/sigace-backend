@@ -1,78 +1,138 @@
 import { LapseModel } from "../models/Lapse.model.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
 
+/**
+ * ==========================================================================
+ * 1. OBTENER TODOS LOS LAPSOS DEL PERÍODO LECTIVO
+ * ==========================================================================
+ */
 export const getLapses = async (req, res) => {
   try {
-    console.log(`⚠️ Getting lapses...`);
+    console.log(
+      `🔍 [SIGACE API]: Solicitando el histórico de lapsos del período...`,
+    );
+    const { SIG, id_period } = req.user ?? {};
 
-    const lapses = await LapseModel.getLapses(req.user.SIG, req.user.id_period);
+    const lapses = await LapseModel.getLapses(SIG, id_period);
 
-    console.log(`✅ Lapses obtenidos correctamente`);
+    if (!lapses || lapses.length === 0) {
+      return res.status(204).json({
+        success: true,
+        code: "LAPSES_EMPTY",
+        message:
+          "No se registran lapsos planificados o creados para este período.",
+        data: [],
+      });
+    }
 
-    res.status(200).json(lapses);
+    return res.status(200).json({
+      success: true,
+      code: "LAPSES_FETCHED",
+      message: "Lapsos recuperados correctamente.",
+      data: lapses,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al obtener los lapsos" });
+    console.error("❌ Error en getLapses:", error);
+    return res.status(500).json({
+      success: false,
+      code: "GET_LAPSES_INTERNAL_ERROR",
+      message: "Error interno en el servidor al obtener el listado de lapsos.",
+      error: error.message,
+    });
   }
 };
 
+/**
+ * ==========================================================================
+ * 2. OBTENER EL LAPSO ACTIVO ACTUAL
+ * ==========================================================================
+ */
 export const getLapseActive = async (req, res) => {
   try {
-
-    console.log(`⚠️ Getting Lapse Acive`);
-
-    const  SIG  = req.user.SIG;
+    console.log(`🔍 [SIGACE API]: Consultando lapso en curso...`);
+    const { SIG, id_period } = req.user ?? {};
 
     if (!SIG) {
-      return res.status(400).json({ message: "SIG es requerido" });
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_SCHOOL_SIG",
+        message: "El código SIG de la institución es requerido en la sesión.",
+      });
     }
-    console.log(`🔃 Obteniando el lapso...`);
-    const lapses = await LapseModel.getLapses(SIG);
-    console.log(`🔃 Obteniando el lapso.......`);
-    const lapseActive = lapses.find((lapse) => lapse.is_active === 1);
-    console.log(lapseActive);
-    return res.status(200).json(lapseActive);
+
+    const lapses = await LapseModel.getLapses(SIG, id_period);
+    const lapseActive = lapses?.find((lapse) => lapse.is_active === 1);
+
+    if (!lapseActive) {
+      return res.status(200).json({
+        success: true,
+        code: "NO_ACTIVE_LAPSE",
+        message: "No hay ningún lapso activo en el período actual.",
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      code: "ACTIVE_LAPSE_FETCHED",
+      message: "Lapso activo recuperado con éxito.",
+      data: lapseActive,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al obtener el lapso activo" });
+    console.error("❌ Error en getLapseActive:", error);
+    return res.status(500).json({
+      success: false,
+      code: "GET_ACTIVE_LAPSE_INTERNAL_ERROR",
+      message: "Error interno del servidor al recuperar el lapso activo.",
+      error: error.message,
+    });
   }
 };
 
+/**
+ * ==========================================================================
+ * 3. PLANIFICAR / CREAR UN NUEVO LAPSO
+ * ==========================================================================
+ */
 export const createLapse = async (req, res) => {
   try {
-    console.log(`⚠️ Creating lapse...`);
-    const SIG  = req.user.SIG;
+    console.log(`⚠️ [SIGACE API]: Registrando nueva planificación de lapso...`);
+    const SIG = req.user?.SIG;
 
     const body = req.body || {};
     const { nameLapse, dateStart, dateEnd } = body;
 
     if (!SIG) {
-      return res
-        .status(400)
-        .json({ message: "SIG es requerido en los parámetros" });
-    }
-
-    if (!nameLapse || !dateStart || !dateEnd) {
-      console.log(`⚠️ Todos los campos son requeridos`);
-      return res
-        .status(400)
-        .json({ message: "Todos los campos son requeridos" });
-    }
-
-    const periods = await Academic_periods.getAcademicPeriods(SIG);
-    console.log(`✅ Periodos académicos obtenidos`);
-    const periodActive = periods.find((item) => item.is_active === 1);
-
-    if (!periodActive) {
-      console.log(
-        `⚠️ No existe un periodo académico activo para esta institución`,
-      );
       return res.status(400).json({
-        message: "No existe un periodo académico activo para esta institución",
+        success: false,
+        code: "MISSING_SCHOOL_SIG",
+        message: "El código SIG es requerido en las credenciales de sesión.",
       });
     }
 
-    console.log(`✅ Periodo académico activo encontrado: ${periodActive.name}`);
+    if (!nameLapse || !dateStart || !dateEnd) {
+      return res.status(400).json({
+        success: false,
+        code: "INCOMPLETE_LAPSE_DATA",
+        message:
+          "Todos los campos (nombre, fecha de inicio y de cierre) son requeridos.",
+      });
+    }
+
+    const periods = await Academic_periods.getAcademicPeriods(SIG);
+    const periodActive = periods?.find((item) => item.is_active === 1);
+
+    if (!periodActive) {
+      console.log(
+        `⚠️ [SIGACE API]: Intento de creación de lapso sin año escolar activo.`,
+      );
+      return res.status(400).json({
+        success: false,
+        code: "NO_ACTIVE_PERIOD",
+        message:
+          "No es posible estructurar lapsos porque no existe un año escolar activo actualmente en el plantel.",
+      });
+    }
 
     const lapse = await LapseModel.createLapses({
       id_period: periodActive.id,
@@ -82,67 +142,113 @@ export const createLapse = async (req, res) => {
       is_active: false,
     });
 
-    console.log(lapse);
-    console.log(`✅ EL ${lapse.name} fueron creados exitosamente`);
     return res.status(201).json({
       success: true,
-      message:
-        "Año escolar inicializado: Se crearon los 3 Lapsos automáticamente.",
-      lapses: lapse,
+      code: "LAPSE_CREATED",
+      message: `El lapso educativo "${nameLapse}" ha sido registrado con éxito de forma planificada.`,
+      data: lapse,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al crear el lapso" });
+    console.error("❌ Error en createLapse:", error);
+    return res.status(500).json({
+      success: false,
+      code: "CREATE_LAPSE_INTERNAL_ERROR",
+      message:
+        "Error de consistencia en el servidor al intentar registrar el lapso.",
+      error: error.message,
+    });
   }
 };
 
+/**
+ * ==========================================================================
+ * 4. CLAUSURAR / FINALIZAR LAPSO DOCENTE
+ * ==========================================================================
+ */
 export const endLapse = async (req, res) => {
   try {
-    console.log(`⚠️ Ending lapse...`);
-
+    console.log(`⚠️ [SIGACE API]: Clausurando actividades del lapso...`);
     const idLapse = req.params.id;
 
     if (!idLapse) {
-      return res.status(400).json({ message: "ID del lapso es requerido" });
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_LAPSE_ID",
+        message:
+          "El identificador del lapso específico es requerido para efectuar el cierre.",
+      });
     }
 
-    const lapse = await LapseModel.endLapse(idLapse);
+    await LapseModel.endLapse(idLapse);
 
-    console.log(`✅ Lapso finalizado correctamente`);
-
-    return res
-      .status(200)
-      .json({ success: true, message: "Lapso finalizado correctamente" });
+    return res.status(200).json({
+      success: true,
+      code: "LAPSE_CLOSED",
+      message:
+        "El lapso académico ha sido cerrado formalmente y las notas asociadas han sido consolidadas.",
+    });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Error al finalizar el lapso" });
+    console.error("❌ Error en endLapse:", error);
+    return res.status(500).json({
+      success: false,
+      code: "END_LAPSE_INTERNAL_ERROR",
+      message:
+        "Ocurrió un error técnico al intentar finalizar el lapso escolar.",
+      error: error.message,
+    });
   }
 };
 
+/**
+ * ==========================================================================
+ * 5. APERTURAR / APUNTAR LAPSO EN EJECUCIÓN (CON VALIDADOR DE CONCURRENCIA)
+ * ==========================================================================
+ */
 export const startLapse = async (req, res) => {
   try {
-    console.log(`⚠️ Starting lapse...`);
+    console.log(
+      `⚠️ [SIGACE API]: Abriendo período de carga de actividades del lapso...`,
+    );
     const { id } = req.params;
+    const id_period = req.user?.id_period;
+
     if (!id) {
-      return res.status(400).json({ message: "ID del lapso es requerido" });
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_LAPSE_ID",
+        message:
+          "El identificador del lapso es requerido para iniciar actividades.",
+      });
     }
-    const success = await LapseModel.startLapse(id);
+
+    const success = await LapseModel.startLapse(id, id_period);
+
     if (success) {
-      console.log(`✅ Lapso iniciado correctamente`);
-      res
-        .status(200)
-        .json({ success: true, message: "Lapso iniciado correctamente" });
+      return res.status(200).json({
+        success: true,
+        code: "LAPSE_STARTED",
+        message:
+          "El lapso académico ha sido iniciado de forma exitosa. Sistema listo para la recepción de notas.",
+      });
     } else {
       console.log(
-        `⚠️ Ya existe un lapso activo, finaliza el lapso anterior para iniciar uno nuevo`,
+        `⚠️ [SIGACE API]: Conflicto. Intento de inicio con un lapso paralelo activo.`,
       );
       return res.status(409).json({
-        error:
-          "Ya existe un lapso activo, finaliza el lapso anterior para iniciar uno nuevo",
+        success: false,
+        code: "ACTIVE_LAPSE_CONFLICT",
+        message:
+          "Conflicto de operaciones: Ya existe un lapso en ejecución. Es obligatorio finalizar el lapso previo para poder aperturar uno nuevo.",
       });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al iniciar el lapso" });
+    console.error("❌ Error en startLapse:", error);
+    return res.status(500).json({
+      success: false,
+      code: "START_LAPSE_INTERNAL_ERROR",
+      message:
+        "Error interno en el servidor al intentar dar inicio al lapso académico.",
+      error: error.message,
+    });
   }
 };

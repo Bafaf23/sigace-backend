@@ -5,17 +5,22 @@
  * @param {Array<object>} subjects - asignaturas únicas de esa sección
  * @returns {string} Código HTML listo para ser procesado por Puppeteer
  */
-export function noteSheet(section, students, subjects) {
+export function noteSheet(section, students, subjects, laspseActive) {
   // Blinda las variables locales contra valores nulos o tipos de datos incorrectos
   const validSubjects = Array.isArray(subjects) ? subjects : [];
   const validStudents = Array.isArray(students) ? students : [];
 
   // 📈 CÁLCULO DE ESTADÍSTICAS REALES DE LA SECCIÓN
-  const totalAlumnos = validStudents.length;
+  const totalEstudiantes = validStudents.length;
   const aprobados = validStudents.filter((s) => s.status === "Aprobado").length;
-  const aplazados = totalAlumnos - aprobados;
+  const aplazados = totalEstudiantes - aprobados;
+  const reprobados = validStudents.filter(
+    (s) => s.status === "Reprobado",
+  ).length;
   const eficiencia =
-    totalAlumnos > 0 ? ((aprobados / totalAlumnos) * 100).toFixed(2) : "0.00";
+    totalEstudiantes > 0
+      ? ((aprobados / totalEstudiantes) * 100).toFixed(2)
+      : "0.00";
 
   return `<!DOCTYPE html>
                 <html lang="es" class="bg-white h-full">
@@ -56,6 +61,7 @@ export function noteSheet(section, students, subjects) {
                                     <h2 class="text-sm font-black text-slate-950 tracking-tight mt-0.5">Acta Consolidada de Calificaciones</h2>
                                 </div>
                                 <div class="text-right text-xs font-medium text-slate-600 space-y-0.5">
+                                    <p><strong class="text-slate-900">Momento academico:</strong> ${laspseActive?.name || ""}</p>
                                     <p><strong class="text-slate-900">Año / Sección:</strong> ${section?.year_name || ""} "${section?.section_name || ""}"</p>
                                     <p><strong class="text-slate-900">Periodo Escolar:</strong> ${section?.period || ""}</p>
                                 </div>
@@ -86,7 +92,7 @@ export function noteSheet(section, students, subjects) {
                                           .map(
                                             (student) => `
                                             <tr class="h-7 odd:bg-slate-50/50">
-                                                <td class="p-1.5 border-r border-slate-200 font-medium text-slate-500 font-mono">${student.document}</td>
+                                                <td class="p-1.5 border-r border-slate-200 font-medium text-slate-500 ">${student.document}</td>
                                                 <td class="text-left p-1.5 pl-3 font-bold text-slate-900 border-r border-slate-200 uppercase truncate">
                                                     ${student.last_name}, ${student.name}
                                                 </td>
@@ -106,14 +112,14 @@ export function noteSheet(section, students, subjects) {
                                                     const esAplazado =
                                                       nota < 10;
                                                     return `
-                                                        <td class="p-1.5 border-r font-mono ${esAplazado ? "text-red-600 font-bold bg-red-50/40" : ""}">
+                                                        <td class="p-1.5 border-r  ${esAplazado ? "text-red-600 font-bold bg-red-50/40" : ""}">
                                                             ${notaFormateada}
                                                         </td>
                                                     `;
                                                   })
                                                   .join("")}
                                                 
-                                                <td class="p-1.5 border-r font-bold bg-slate-50 text-slate-900 font-mono">${student.promedio}</td>
+                                                <td class="p-1.5 border-r font-bold bg-slate-50 text-slate-900 ">${student.promedio}</td>
                                                 <td class="p-1.5 font-bold uppercase text-[9px] ${student.status === "Aprobado" ? "text-emerald-700 bg-emerald-50/30" : "text-amber-700 bg-amber-50/30"}">
                                                     ${student.status}
                                                 </td>
@@ -126,18 +132,22 @@ export function noteSheet(section, students, subjects) {
                                 </table>
                             </div>
         
-                            <section class="mt-3 grid grid-cols-3 gap-3 text-center text-[10px]">
+                            <section class="mt-3 grid grid-cols-3 gap-3 text-center text-[12px]">
                                 <div class="bg-slate-50 border border-slate-200/60 p-2 rounded-xl">
                                     <p class="font-bold text-slate-400 uppercase tracking-wider">Eficiencia de Sección</p>
                                     <p class="text-xs font-black text-slate-800 mt-0.5">${eficiencia}%</p>
                                 </div>
                                 <div class="bg-indigo-50/30 border border-indigo-100 p-2 rounded-xl">
-                                    <p class="font-bold text-indigo-500 uppercase tracking-wider">Aprobados Directos</p>
-                                    <p class="text-xs font-black text-indigo-950 mt-0.5">${aprobados} Alumnos</p>
+                                    <p class="font-bold text-indigo-500 uppercase tracking-wider">Aprobados</p>
+                                    <p class="text-xs font-black text-indigo-950 mt-0.5">${aprobados} Estudiantes</p>
                                 </div>
                                 <div class="bg-amber-50/30 border border-amber-100 p-2 rounded-xl">
                                     <p class="font-bold text-amber-600 uppercase tracking-wider">Estrategia de Evaluación (EE)</p>
-                                    <p class="text-xs font-black text-amber-950 mt-0.5">${aplazados} Alumnos</p>
+                                    <p class="text-xs font-black text-amber-950 mt-0.5">${aplazados} Estudiantes</p>
+                                </div>
+                                <div class="bg-red-50/30 border border-red-100 p-2 rounded-xl col-span-3">
+                                    <p class="font-bold text-red-600 uppercase tracking-wider">Reprobados</p>
+                                    <p class="text-xs font-black text-red-950 mt-0.5">${reprobados} Estudiantes</p>
                                 </div>
                             </section>
                         </div>

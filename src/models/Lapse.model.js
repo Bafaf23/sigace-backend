@@ -17,15 +17,15 @@ export class LapseModel {
    * @param {number} id_period id del period activo
    * @returns {Promise<Array<object>>}
    */
-  static async getLapses(SIG) {
+  static async getLapses(SIG, id_period) {
     let db;
     try {
       db = await connectToDatabase();
       const [rows] = await db.query(
         `SELECT l.id, l.name, l.start_date, l.end_date, l.is_active FROM lapses l
           JOIN academic_periods ap ON l.id_period = ap.id
-          WHERE ap.SIG = ? AND ap.is_active = 1`,
-        [SIG],
+          WHERE ap.SIG = ? AND ap.is_active = 1 AND l.id_period = ?`,
+        [SIG, id_period],
       );
       return rows;
     } catch (error) {
@@ -95,12 +95,13 @@ export class LapseModel {
    * @param {string} idLapse
    * @returns {Promise<boolean>} success
    */
-  static async startLapse(idLapse) {
+  static async startLapse(idLapse, id_period) {
     let db;
     try {
       db = await connectToDatabase();
       const [lapseActive] = await db.query(
-        "SELECT * FROM lapses WHERE is_active = 1",
+        "SELECT * FROM lapses WHERE is_active = 1 AND id_period = ?",
+        [id_period],
       );
       if (lapseActive.length > 0) {
         return false;

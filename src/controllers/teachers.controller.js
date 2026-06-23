@@ -1,108 +1,134 @@
 import { Teachers } from "../models/Teachers.model.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
 
+/**
+ * ==========================================================================
+ * 1. OBTENER CATÁLOGO GENERAL DE PROFESORES
+ * ==========================================================================
+ */
 export const getTeachers = async (req, res) => {
   try {
-    console.log("🔍 getTeachers");
+    console.log("🔍 [SIGACE API]: Solicitando nómina de personal docente...");
 
     const SIG = req.user.SIG;
     const id_period = req.user.id_period;
 
     if (!SIG) {
-      console.log("❌ SIG es requerido");
-      return res.status(400).json({ message: "SIG es requerido" });
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_SCHOOL_SIG",
+        message:
+          "Identificador institucional ausente. Es obligatorio indicar el código SIG del plantel.",
+      });
     }
 
     let targetPeriodId = id_period;
 
     if (!targetPeriodId) {
       console.log(
-        "📅 No se especificó id_period, buscando el periodo activo...",
+        "📅 [SIGACE API]: Buscando período lectivo activo por defecto...",
       );
       const periods = await Academic_periods.getAcademicPeriods(SIG);
 
-      // Validamos que existan periodos registrados
       if (!periods || periods.length === 0) {
-        console.log("❌ No se encontraron periodos registrados para este SIG");
         return res.status(404).json({
+          success: false,
+          code: "ACADEMIC_PERIODS_EMPTY",
           message:
-            "No se encontró ningún periodo académico registrado para esta institución.",
+            "No se encontró ningún período académico configurado en el sistema para esta institución.",
         });
       }
 
       const activePeriod = periods.find((item) => item.is_active === 1);
 
       if (!activePeriod) {
-        console.log("❌ no active period found");
         return res.status(404).json({
+          success: false,
+          code: "ACTIVE_PERIOD_NOT_FOUND",
           message:
-            "No se encontró ningún periodo académico activo para esta institución.",
+            "No se localizó ningún período académico activo en este momento.",
         });
       }
       targetPeriodId = activePeriod.id;
     }
 
     console.log(
-      `🔄 Buscando profesores para SIG: ${SIG} | Periodo: ${targetPeriodId}`,
+      `🔄 [SIGACE API]: Consultando docentes para SIG: ${SIG} | Período: ${targetPeriodId}`,
     );
-
-    // Ejecutamos la consulta pasándole las propiedades limpias
-    const teachers = await Teachers.getAllTeachersWithLoad({
-      SIG: SIG,
-    });
+    const teachers = await Teachers.getAllTeachersWithLoad({ SIG });
 
     if (!teachers || teachers.length === 0) {
-      console.log("⚠️ No se encontraron profesores registrados");
-      return res
-        .status(404)
-        .json({ message: "Esta escuela no tiene profesores registrados" });
+      return res.status(404).json({
+        success: false,
+        code: "TEACHERS_NOT_FOUND",
+        message:
+          "Nómina vacía: El plantel no cuenta con profesores registrados para el ciclo escolar.",
+      });
     }
 
-    console.log("✅ Profesores obtenidos con éxito");
-    return res.status(200).json(teachers);
+    return res.status(200).json({
+      success: true,
+      message: "Nómina del personal docente recuperada con éxito.",
+      data: teachers,
+    });
   } catch (error) {
     console.error("❌ Error en getTeachers:", error);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      success: false,
+      code: "GET_TEACHERS_INTERNAL_ERROR",
+      message:
+        "Ocurrió un contratiempo interno al intentar compilar la lista de docentes.",
+      error: error.message,
+    });
   }
 };
 
+/**
+ * ==========================================================================
+ * 2. OBTENER CARGA ACADÉMICA / ASIGNATURAS DE UN DOCENTE
+ * ==========================================================================
+ */
 export const getLoadAcademicTeacher = async (req, res) => {
   try {
-    console.log("🔍 Iniciando getLoadAcademicTeacher");
+    console.log("🔍 [SIGACE API]: Extrayendo carga horaria del docente...");
 
     const SIG = req.user.SIG;
-    const id = req.user.id;
+    const id = req.user.id; // ID del docente autenticado en la sesión
 
-    // 1. Validación de parámetros con el HTTP Status correcto (400)
     if (!id || !SIG) {
-      console.log(
-        `❌ Error: El ID del profesor y el SIG son totalmente requeridos.`,
-      );
       return res.status(400).json({
         success: false,
-        error: "Faltan parámetros obligatorios (ID o SIG).",
+        code: "MISSING_TEACHER_PARAMS",
+        message:
+          "Faltan parámetros obligatorios de sesión (ID de usuario o código SIG) para validar el acceso.",
       });
     }
 
-    // 2. Ejecutamos la consulta en el Modelo
     const teacherData = await Teachers.getTeacherWithLoadByID(SIG, id);
-    console.log("✅ Resultado del modelo loadAcademicTeacher:", teacherData);
+    console.log("✅ [SIGACE API]: Carga recuperada del modelo.");
 
-    // 3. Si el modelo devuelve null, respondemos de forma controlada con un 404
     if (!teacherData) {
       return res.status(404).json({
         success: false,
-        error:
-          "No se encontró ningún profesor con el ID suministrado en este período activo.",
+        code: "TEACHER_LOAD_NOT_FOUND",
+        message:
+          "No se encontró el perfil docente solicitado o carece de asignaciones en el período lectivo actual.",
       });
     }
 
-    // 4. Respondemos con éxito pasándole directamente el array que tu frontend mapea
-    // Si tu frontend espera el objeto completo del profesor, manda 'teacherData'
-    // Si espera solo las materias, manda 'teacherData.academic_load'
-    return res.status(200).json(teacherData.academic_load || []);
+    return res.status(200).json({
+      success: true,
+      message: "Planificación de carga académica y secciones consolidada.",
+      data: teacherData.academic_load || [],
+    });
   } catch (error) {
-    console.error("❌ Error catastrófico en getLoadAcademicTeacher:", error);
-    return res.status(500).json({ error: error.message });
+    console.error("❌ Error en getLoadAcademicTeacher:", error);
+    return res.status(500).json({
+      success: false,
+      code: "GET_TEACHER_LOAD_INTERNAL_ERROR",
+      message:
+        "Fallo del servidor al intentar estructurar el horario y materias asignadas.",
+      error: error.message,
+    });
   }
 };

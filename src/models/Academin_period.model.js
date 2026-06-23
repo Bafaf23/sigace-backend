@@ -105,4 +105,35 @@ export class Academic_periods {
       }
     }
   }
+
+  /**
+   ** En lista todo los periodos academicos de un estudiante
+   * @param {number} id_student - id del estudiante
+   * @param {object}
+   */
+  static async getPeriodEnrollmentStudent(id_student) {
+    let db;
+    try {
+      db = await connectToDatabase();
+      const sql = `SELECT 
+        ap.id AS id_period,
+        ap.name AS school_year,        -- Ej: "Año Escolar 2025 - 2026"
+        y.name AS year_level,          -- Ej: "4to Año"
+        sc.name AS section_name,       -- Ej: "A"
+        en.status AS enrollment_status -- Ej: "Inscrito"
+  FROM enrollments en
+  INNER JOIN academic_periods ap ON en.id_period = ap.id
+  INNER JOIN sections sc ON en.id_section = sc.id
+  INNER JOIN years y ON sc.id_year = y.id
+  WHERE en.id_student = ?          -- El ID del alumno que consultas
+  ORDER BY ap.start_date DESC;     -- Trae el más reciente primero`;
+
+      const params = [id_student];
+
+      const row = await db.execute(sql, params);
+      return row;
+    } catch (error) {
+      throw error;
+    }
+  }
 }

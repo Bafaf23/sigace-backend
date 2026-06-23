@@ -77,51 +77,63 @@ export class Subject {
    * @param {number} id_student - ID del estudiante
    * @returns {Promise<Array<object>>} - Array de materias con sus evaluaciones agrupadas
    */
+  /**
+   * Obtiene todas las materias de una sección con sus respectivas evaluaciones y notas de un estudiante
+   * @param {number} id_lapse - ID del lapso/momento educativo
+   * @param {number} id_section - ID de la sección
+   * @param {number} id_student - ID del estudiante (Opcional)
+   * @returns {Promise<Array<object>>} - Array de materias con sus evaluaciones agrupadas
+   */
   static async getSubjectBySection({ id_lapse, id_section, id_student, SIG }) {
     let db = null;
     try {
       db = await connectToDatabase();
 
-      // 1. Base del Query con los JOINs faltantes para poder filtrar/ordenar por estudiante/usuario
-      let sql = `
-        SELECT 
-          sec.id AS section_id, 
-          s.code_subject AS subject_code,
-          s.name AS subject_name,  
-          sec.name AS section_name,
-          y.name AS year_name,
-          epd.id AS evaluation_id,
-          epd.activity AS activity_name,
-          epd.referent_teorical,
-          epd.porcentage AS evaluation_porcentage,
-          epd.date AS evaluation_date,
-          g.grade AS evaluation_grade
-        FROM sections sec
-        INNER JOIN years y ON sec.id_year = y.id
-        INNER JOIN load_academic la ON la.id_section = sec.id
-        INNER JOIN subjects s ON la.id_subject = s.code_subject
-        LEFT JOIN evaluation_plans ep ON ep.id_load_academic = la.id AND ep.id_lapse = ?
-        LEFT JOIN evaluation_plan_details epd ON epd.id_evaluation_plan = ep.id
-        -- Agregamos los JOINs para que existan los alias 'g', 'est' y 'u' de forma consistente
-        LEFT JOIN grades g ON g.id_evaluation = epd.id
-        LEFT JOIN students est ON g.id_student = est.id
-        LEFT JOIN users u ON est.id_user = u.id
-        WHERE sec.id = ? AND sec.SIG = ?
-      `;
+      // 1. Mapeo dinámico inicial de parámetros para el JOIN
+      const joinParams = [];
+      let studentJoinCondition = "";
 
-      // 2. Mapeo inicial de parámetros estrictamente en el orden de aparición de los '?' arriba:
-      // 1er '?' -> ep.id_lapse = ?
-      // 2do '?' -> sec.id = ?
-      // 3er '?' -> sec.SIG = ?
-      const params = [id_lapse, id_section, SIG];
-
-      // 3. Condicional dinámico si se solicita un estudiante específico
+      // Si viene id_student, lo filtramos directamente en la unión de la tabla 'grades'
       if (id_student) {
-        sql += ` AND est.id = ?`;
-        params.push(id_student);
+        studentJoinCondition = " AND g.id_student = ?";
+        joinParams.push(id_student);
       }
 
-      // 4. Un solo ORDER BY al final de la consulta (sin puntos y comas intermedios)
+      // 2. Base del Query (Filtro de estudiante inyectado de forma segura en el LEFT JOIN)
+      let sql = `
+      SELECT 
+        sec.id AS section_id, 
+        s.code_subject AS subject_code,
+        s.name AS subject_name,  
+        sec.name AS section_name,
+        y.name AS year_name,
+        epd.id AS evaluation_id,
+        epd.activity AS activity_name,
+        epd.referent_teorical,
+        epd.porcentage AS evaluation_porcentage,
+        epd.date AS evaluation_date,
+        g.grade AS evaluation_grade
+      FROM sections sec
+      INNER JOIN years y ON sec.id_year = y.id
+      INNER JOIN load_academic la ON la.id_section = sec.id
+      INNER JOIN subjects s ON la.id_subject = s.code_subject
+      LEFT JOIN evaluation_plans ep ON ep.id_load_academic = la.id AND ep.id_lapse = ?
+      LEFT JOIN evaluation_plan_details epd ON epd.id_evaluation_plan = ep.id
+      -- Aquí inyectamos la condición del estudiante de manera segura si existe
+      LEFT JOIN grades g ON g.id_evaluation = epd.id ${studentJoinCondition}
+      LEFT JOIN students est ON g.id_student = est.id
+      LEFT JOIN users u ON est.id_user = u.id
+      WHERE sec.id = ? AND sec.SIG = ?
+    `;
+
+      // 3. Consolidamos los parámetros respetando el estricto orden de los '?'
+      // 1er '?' -> ep.id_lapse = ?
+      // 2do '?' -> g.id_student = ? (Si aplica, controlado por joinParams)
+      // 3er '?' -> sec.id = ?
+      // 4to '?' -> sec.SIG = ?
+      const params = [id_lapse, ...joinParams, id_section, SIG];
+
+      // 4. Un solo ORDER BY al final de la consulta
       sql += ` ORDER BY s.name ASC, epd.date ASC;`;
 
       console.log("=== DEBBUGEANDO PARÁMETROS SQL ===");
@@ -129,7 +141,7 @@ export class Subject {
 
       const [rows] = await db.execute(sql, params);
 
-      // 5. Procesamiento y mapeo de la data (Tu reducción con reduce se mantiene perfecta)
+      // 5. Procesamiento y mapeo de la data
       const subjectsMap = rows.reduce((acc, row) => {
         const {
           subject_code,

@@ -1,7 +1,7 @@
 /**
  * Plantilla lista de secciones
  * @param {object} seccionInfo - indormacion de la seccion
- * @param {string} filasEstudiantes - filas ya prcesadas en el controlador de los estudantes de la seccion
+ * @param {string} filasEstudiantes - filas ya procesadas en el controlador de los estudantes de la seccion
  * @param {string} logoSchool - logo del colegio
  * @returns {string}
  */

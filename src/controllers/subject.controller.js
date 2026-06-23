@@ -3,256 +3,344 @@ import { LapseModel } from "../models/Lapse.model.js";
 import { Sections } from "../models/Section.model.js";
 
 /**
- * Registra una nueva materia autogenerando su código único por nivel
+ * ==========================================================================
+ * 1. REGISTRAR UNA NUEVA MATERIA
+ * ==========================================================================
  */
 export const createSubject = async (req, res) => {
   try {
-    console.log("⚠️ createSubject");
+    console.log("⚠️ [SIGACE API]: Validando creación de asignatura...");
     const { name, year_id } = req.body ?? {};
+    const SIG = req.user?.SIG;
 
     if (!name || !year_id) {
-      return res
-        .status(400)
-        .json({ message: "Todos los campos son requeridos" });
-    }
-
-    const years = await Subject.getYears(req.user.SIG);
-
-    const yearSelet = years.find((year) => year.id == year_id);
-
-    if (!yearSelet) {
-      console.log(`❌ No se encontró ningún año escolar con el ID: ${year_id}`);
       return res.status(400).json({
+        success: false,
+        code: "INCOMPLETE_SUBJECT_DATA",
         message:
-          "El año escolar seleccionado no es válido para esta institución.",
+          "No se pudo procesar: El nombre de la asignatura y el año escolar son obligatorios.",
       });
     }
 
-    // Extraer el número (ej: de "1er Año" extrae "1", de "2do Año" extrae "2")
-    const suffix = String(yearSelet.name).substring(0, 1).toUpperCase();
-    const code_suffix = suffix.padStart(2, "0");
-    const code_subject = `${name.substring(0, 3).toUpperCase()}-${code_suffix}-${req.user.SIG}`;
+    const years = await Subject.getYears(SIG);
+    const yearSelect = years.find((year) => year.id == year_id);
 
+    if (!yearSelect) {
+      console.log(
+        `❌ Año escolar con ID [${year_id}] inválido para el SIG: ${SIG}`,
+      );
+      return res.status(400).json({
+        success: false,
+        code: "INVALID_YEAR_LEVEL",
+        message:
+          "El año escolar seleccionado no corresponde a la configuración de esta institución.",
+      });
+    }
+
+    // Extraer el prefijo (ej: de "1er Año" extrae "1")
+    const suffix = String(yearSelect.name).substring(0, 1).toUpperCase();
+    const code_suffix = suffix.padStart(2, "0");
+    const code_subject = `${name.substring(0, 3).toUpperCase()}-${code_suffix}-${SIG}`;
     const abbreviation = `${name.substring(0, 3).toUpperCase()}`;
 
-    console.log(`Código generado automáticamente: ${code_subject}`);
-
-    const subject = new Subject(
-      code_subject,
-      name,
-      abbreviation,
-      year_id,
-      req.user.SIG,
+    console.log(
+      `[SIGACE API]: Código autogenerado consecutivo: ${code_subject}`,
     );
+
+    const subject = new Subject(code_subject, name, abbreviation, year_id, SIG);
     const subjectCreated = await Subject.createSubject(subject);
 
     if (!subjectCreated) {
-      return res.status(400).json({ message: "Error al crear la materia" });
+      return res.status(400).json({
+        success: false,
+        code: "SUBJECT_CREATION_FAILED",
+        message:
+          "No se pudieron guardar los parámetros de la asignatura en el sistema.",
+      });
     }
 
-    console.log("✅ Subject created successfully");
-    return res.status(201).json({ message: "Materia creada correctamente" });
+    return res.status(201).json({
+      success: true,
+      message: `¡Asignatura registrada! "${name}" ha sido dada de alta bajo el código institucional [${code_subject}].`,
+    });
   } catch (error) {
     console.error("❌ Error en createSubject:", error);
-    return res.status(500).json({ message: "Error al crear la materia" });
+
+    if (
+      error.code === "ER_DUP_ENTRY" ||
+      error.sqlMessage?.includes("Duplicate entry")
+    ) {
+      return res.status(409).json({
+        success: false,
+        code: "DUPLICATE_SUBJECT",
+        message:
+          "Operación cancelada: Ya existe una asignatura con este nombre o código para el año escolar seleccionado.",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      code: "CREATE_SUBJECT_INTERNAL_ERROR",
+      message:
+        "Fallo de infraestructura al procesar el registro de la nueva materia.",
+      error: error.message,
+    });
   }
 };
 
 /**
- * Obtiene todas las materias asociadas a un colegio (SIG)
+ * ==========================================================================
+ * 2. OBTENER TODAS LAS MATERIAS (CATÁLOGO GENERAL)
+ * ==========================================================================
  */
 export const getSubjects = async (req, res) => {
   try {
-    console.log("⚠️ getSubjects");
-    const SIG = req.user.SIG;
+    console.log("⚠️ [SIGACE API]: Extrayendo catálogo de materias...");
+    const SIG = req.user?.SIG;
 
     if (!SIG) {
-      return res.status(400).json({ message: "SIG es requerido" });
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_SCHOOL_SIG",
+        message:
+          "Autenticación ambigua: El identificador SIG de la escuela es requerido.",
+      });
     }
 
     const subjects = await Subject.getSubjects(SIG);
 
     if (!subjects || subjects.length === 0) {
-      return res.status(404).json({ message: "No se encontraron materias" });
+      return res.status(404).json({
+        success: false,
+        code: "SUBJECTS_NOT_FOUND",
+        message:
+          "No se registran asignaturas académicas configuradas en el pensum del plantel.",
+      });
     }
 
-    console.log("✅ Subjects found successfully");
-    return res.status(200).json(subjects);
+    return res.status(200).json({
+      success: true,
+      message: "Plan de estudios y materias recuperados con éxito.",
+      data: subjects,
+    });
   } catch (error) {
     console.error("❌ Error en getSubjects:", error);
-    return res.status(500).json({ message: "Error al obtener las materias" });
+    return res.status(500).json({
+      success: false,
+      code: "GET_SUBJECTS_INTERNAL_ERROR",
+      message:
+        "Error de red al intentar sincronizar el catálogo de asignaturas.",
+      error: error.message,
+    });
   }
 };
 
 /**
- * Obtiene la lista de años académicos disponibles por institución
+ * ==========================================================================
+ * 3. OBTENER AÑOS ACADÉMICOS CONFIGURADOS
+ * ==========================================================================
  */
 export const getYears = async (req, res) => {
   try {
-    console.log("⚠️ getYears");
-    const SIG = req.user.SIG;
+    console.log(
+      "⚠️ [SIGACE API]: Buscando niveles/años académicos habilitados...",
+    );
+    const SIG = req.user?.SIG;
 
     if (!SIG) {
-      return res.status(400).json({ message: "SIG es requerido" });
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_SCHOOL_SIG",
+        message:
+          "Código SIG ausente al solicitar la configuración institucional.",
+      });
     }
 
     const years = await Subject.getYears(SIG);
 
     if (!years || years.length === 0) {
-      return res.status(404).json({ message: "No se encontraron años" });
+      return res.status(404).json({
+        success: false,
+        code: "YEARS_NOT_FOUND",
+        message:
+          "No se encontraron años o niveles académicos inicializados para este plantel.",
+      });
     }
 
-    console.log("✅ Years found successfully");
-    return res.status(200).json(years);
+    return res.status(200).json({
+      success: true,
+      message: "Niveles educativos institucionales obtenidos con éxito.",
+      data: years,
+    });
   } catch (error) {
     console.error("❌ Error en getYears:", error);
-    return res.status(500).json({ message: "Error al obtener los años" });
+    return res.status(500).json({
+      success: false,
+      code: "GET_YEARS_INTERNAL_ERROR",
+      message:
+        "Inconveniente del servidor al consultar la estructura de años escolares.",
+      error: error.message,
+    });
   }
 };
 
 /**
- * 🧠 CONTROLADOR CRÍTICO: Obtiene la carga académica de un estudiante
- * mapeando evaluaciones y procesando su nota final acumulada sin duplicados.
+ * ==========================================================================
+ * 4. OBTENER CARGA ACADÉMICA / NOTAS DE SECCIÓN POR ESTUDIANTE
+ * ==========================================================================
  */
 export const getSubjectBySection = async (req, res) => {
   try {
-    console.log(`⚠️ Buscando materias de sección...`);
+    console.log(
+      `⚠️ [SIGACE API]: Consolidando carga y plan evaluativo del estudiante...`,
+    );
     const { id_student } = req.params;
-    const SIG = req.user.SIG;
+    const SIG = req.user?.SIG;
+    const id_period = req.user?.id_period;
 
     if (!id_student || !SIG) {
-      console.log(`❌ Parámetros requeridos faltantes`);
       return res.status(400).json({
-        error: true,
-        message: "El ID del estudiante y el SIG son requeridos",
+        success: false,
+        code: "MISSING_ACADEMIC_PARAMS",
+        message:
+          "Es requerido suministrar el identificador del estudiante y las credenciales del plantel.",
       });
     }
 
-    // 1. Validar existencia del lapso escolar activo
-    const lapses = await LapseModel.getLapses(SIG);
-    const lapseActive = lapses.find((lapse) => lapse.is_active);
+    const lapses = await LapseModel.getLapses(SIG, id_period);
+    const lapseActive = lapses.find((lapse) => lapse.is_active == 1);
 
     if (!lapseActive) {
-      console.log(`❌ No hay lapso activo para el SIG: ${SIG}`);
-      return res
-        .status(404)
-        .json({ error: true, message: "No hay un lapso académico activo" });
+      return res.status(404).json({
+        success: false,
+        code: "ACTIVE_LAPSE_NOT_FOUND",
+        message:
+          "Calendario escolar inactivo: No existe ningún lapso académico abierto para procesar notas.",
+      });
     }
 
-    // 2. Extraer la sección actual a la que pertenece el estudiante
     const getSection = await Sections.getSectionByStudent(SIG, id_student);
-    if (!getSection || !getSection.id_section) {
-      console.log(`❌ El estudiante ${id_student} no posee sección asignada`);
+
+    if (!getSection) {
       return res.status(404).json({
-        error: true,
-        message: "El estudiante no está inscrito en ninguna sección",
+        success: false,
+        code: "STUDENT_WITHOUT_SECTION",
+        message:
+          "El estudiante seleccionado no se encuentra asignado a ninguna sección en este período.",
       });
     }
 
     const id_section = getSection.id_section;
 
-    console.log(
-      `🔃 Cargando asignaturas desde el modelo para Sección ID: ${id_section}...`,
-    );
-
-    // 3. Consultar modelo (Este método ya agrupa internamente por 'subject_code' vía reduce)
     const subjectSections = await Subject.getSubjectBySection({
       id_lapse: lapseActive.id,
       id_section: id_section,
-      id_student: id_student,
       SIG: SIG,
+      id_student,
     });
 
+    console.log(subjectSections);
+
     if (!subjectSections || subjectSections.length === 0) {
-      console.log(
-        `❌ Aún no hay registros de materias configurados en este nivel`,
-      );
       return res.status(404).json({
-        error: true,
-        message: "Aún no hay materias asignadas en tu sección",
+        success: false,
+        code: "EMPTY_ACADEMIC_LOAD",
+        message:
+          "Aulas vacías: No hay materias ni planes de evaluación asignados a la sección del estudiante.",
       });
     }
 
-    // Extraemos de la primera fila estructurada los metadatos globales de la sección
     const year = subjectSections[0].year_name;
     const section = subjectSections[0].section_name;
 
-    // 4. 🧠 Cálculo dinámico de notas definitivas sobre la data limpia agrupada
-    const cleanSubjects = subjectSections.map((subject) => {
+    // Cálculo dinámico impecable de promedios
+    const cleanSubjects = subjectSections.map((subj) => {
       let finalGradeAccumulator = 0;
 
-      // El modelo ya inyectó un array nativo 'evaluations' para cada materia
-      if (subject.evaluations && Array.isArray(subject.evaluations)) {
-        subject.evaluations.forEach((evalItem) => {
+      if (subj.evaluations && Array.isArray(subj.evaluations)) {
+        subj.evaluations.forEach((evalItem) => {
           if (evalItem.grade !== null && evalItem.grade !== undefined) {
             const grade = parseFloat(evalItem.grade);
-            const percentage = parseFloat(evalItem.porcentage); // Viene formateado desde el modelo
-
-            // Fórmula estándar ponderada: (Nota * Porcentaje) / 100
+            const percentage = parseFloat(evalItem.porcentage);
             finalGradeAccumulator += (grade * percentage) / 100;
           }
         });
       }
 
       return {
-        id: subject.code, // Usamos el código único (ej: MAT-01) como id de fila para Next.js (Evita el Key Error)
-        subject_name: subject.subject_name,
-        evaluations: subject.evaluations || [], // Se despacha limpio a la tabla del cliente
-        final_grade: finalGradeAccumulator.toFixed(2), // Clampeamos decimales infinitos de coma flotante
+        id: subj.code, // Ideal para Next.js / React keys
+        subject_name: subj.subject_name,
+        evaluations: subj.evaluations || [],
+        final_grade: Math.round(finalGradeAccumulator), // Redondeo legal aproximado para boletines oficiales
       };
     });
 
-    console.log(
-      `✅ Materias y planes de evaluación despachados con éxito para: ${year} - ${section}`,
-    );
-
     return res.status(200).json({
-      status: "success",
-      year: year,
-      section_id: id_section,
-      section: section,
-      subjects: cleanSubjects,
+      success: true,
+      message: "Carga académica e historial de corte de notas estructurado.",
+      data: {
+        year,
+        section_id: id_section,
+        section,
+        subjects: cleanSubjects,
+      },
     });
   } catch (error) {
     console.error("❌ Error crítico en getSubjectBySection:", error);
     return res.status(500).json({
-      error: true,
-      message: "Error interno del servidor al procesar la carga académica",
+      success: false,
+      code: "ACADEMIC_LOAD_INTERNAL_ERROR",
+      message:
+        "Inconsistencia interna al calcular el rendimiento de las asignaturas.",
+      error: error.message,
     });
   }
 };
 
+/**
+ * ==========================================================================
+ * 5. ELIMINAR UNA ASIGNATURA
+ * ==========================================================================
+ */
 export const deleteSubjects = async (req, res) => {
   try {
-    console.log(`⚠️ Eliminando Asignatura`);
-
+    console.log(`⚠️ [SIGACE API]: Ejecutando baja de asignatura...`);
     const { code_subject } = req.params;
+    const SIG = req.user?.SIG;
 
     if (!code_subject) {
-      console.log(`El id de la asignatura es requerido`);
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
+        code: "MISSING_DELETE_SUBJECT_CODE",
         message:
-          "Upss... No se puedo eliminar la asigantura, intenta de nuevo.",
+          "No se especificó el código de la asignatura que se desea purgar.",
       });
     }
 
-    const del = await Subject.deleteSubjects(code_subject, req.user.SIG);
+    const del = await Subject.deleteSubjects(code_subject, SIG);
 
     if (del === false) {
-      console.log(`La asignatura ya fue eliminada del sistema`);
-      return res.status(500).json({
+      return res.status(404).json({
         success: false,
+        code: "SUBJECT_ALREADY_DELETED",
         message:
-          "Upss... No se puedo eliminar la asigantura, intenta de nuevo.",
+          "La asignatura solicitada no existe o ya fue removida previamente del sistema.",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "La asignatura fue eliminada con exito.",
+      message:
+        "La asignatura fue retirada del pensum de estudios de la institución con éxito.",
     });
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error en deleteSubjects:", error);
+    return res.status(500).json({
+      success: false,
+      code: "DELETE_SUBJECT_INTERNAL_ERROR",
+      message:
+        "Seguridad del sistema: No se puede eliminar la materia debido a que posee calificaciones de alumnos vinculadas.",
+      error: error.message,
+    });
   }
 };
