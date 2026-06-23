@@ -150,7 +150,6 @@ export class Users {
   /**
    * Crea un nuevo usuario en la base de datos y relaciona el usuario con la tabla correspondiente
    * @param {Users} user - Objeto de la clase Users
-   * @returns {number} El id del usuario creado
    * @returns {boolean} False si ocurre un error al crear el usuario
    */
   static async createUser(user) {
