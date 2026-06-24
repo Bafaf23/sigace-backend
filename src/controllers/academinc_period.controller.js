@@ -104,7 +104,7 @@ export const endAcademicPeriod = async (req, res) => {
       `📊 [SIGACE CORE]: Ejecutando proceso batch de rendimientos finales para el Período ID: ${currentPeriodActive.id}...`,
     );
     // Consolida los estados de aprobación/reprobación antes de romper el ciclo
-    await Enrollments.processFinalStates(currentPeriodActive.id);
+    Enrollments.processFinalStates(currentPeriodActive.id);
 
     const academicPeriod = await Academic_periods.endAcademicPeriod(SIG);
 

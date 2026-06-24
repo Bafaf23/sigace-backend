@@ -270,6 +270,20 @@ CREATE TABLE IF NOT EXISTS grades (
     CONSTRAINT unique_student_evaluation UNIQUE (id_student, id_evaluation)
 );
 
+
+CREATE TABLE IF NOT EXISTS pending_subjects (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_student INT NOT NULL,
+    id_subject VARCHAR(10) NOT NULL,
+    id_period_origin INT NOT NULL,
+    status ENUM("Aprobada", "Reprobado"),
+
+    FOREIGN KEY (id_student) REFERENCES students (id),
+    FOREIGN KEY (id_subject) REFERENCES subjects (code_subject),
+    FOREIGN KEY (id_period_origin) REFERENCES academic_periods (id)
+);
+
+
 -- =========================================================================
 -- 5. INSERCIONES DE DATOS INICIALES (Data Semilla Corregida)
 -- =========================================================================

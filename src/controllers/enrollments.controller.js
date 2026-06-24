@@ -83,9 +83,7 @@ export const getApprovedStudents = async (req, res) => {
     console.log(
       `🔄 [SIGACE API]: Analizando rendimiento acumulado para el Período ID: ${id_period}`,
     );
-    const studentApproved =
-      await Enrollments.getApprovedForPromotion(id_period);
-
+    const studentApproved = await Enrollments.getApprovedForPromotion(id_period);
     if (!studentApproved || studentApproved.length === 0) {
       return res.status(200).json({
         success: true,
