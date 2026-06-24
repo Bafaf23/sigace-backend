@@ -353,22 +353,18 @@ export const getStudentsBySection = async (req, res) => {
     const SIG = req.user.SIG;
 
     if (!id_section) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          code: "MISSING_SECTION_ID",
-          message: "El ID identificador de la sección es mandatorio.",
-        });
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_SECTION_ID",
+        message: "El ID identificador de la sección es mandatorio.",
+      });
     }
     if (!SIG) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          code: "MISSING_SIG",
-          message: "Código institucional no suministrado.",
-        });
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_SIG",
+        message: "Código institucional no suministrado.",
+      });
     }
 
     const students = await Students.getStudentsBySection({ id_section, SIG });
@@ -448,9 +444,9 @@ export const getStudentByID = async (req, res) => {
    ========================================================================== */
 export const getRecordStudent = async (req, res) => {
   const id_student = req.params.id_student;
-  const id_period = req.params.id_period || 7;
+  const id_period = req.params.id_period;
 
-  if (!id_student) {
+  if (!id_student || !id_period) {
     return res.status(400).json({
       success: false,
       code: "RECORD_STUDENT_ID_REQUIRED",
@@ -461,7 +457,7 @@ export const getRecordStudent = async (req, res) => {
 
   try {
     console.log(
-      `🔄 [SIGACE API]: Estructurando historial para estudiante ID: ${id_student}`,
+      `🔄 [SIGACE API]: Estructurando historial para estudiante ID: ${id_student} en el period: ${id_period}`,
     );
     const record = await Students.getRecordStudent(id_student, id_period);
 
@@ -474,7 +470,7 @@ export const getRecordStudent = async (req, res) => {
       });
     }
 
-    const periodsMap = {};
+    /*   const periodsMap = {};
 
     record.forEach((row) => {
       const pKey = row.school_year;
@@ -543,13 +539,13 @@ export const getRecordStudent = async (req, res) => {
         section: period.section,
         subjects: subjects,
       };
-    });
+    }); */
 
     return res.status(200).json({
       success: true,
       message:
         "Expediente de calificaciones consolidado e indexado correctamente.",
-      data: finalResult,
+      data: record,
     });
   } catch (error) {
     console.error("❌ Error en getRecordStudent:", error);

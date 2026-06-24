@@ -136,9 +136,6 @@ export class Subject {
       // 4. Un solo ORDER BY al final de la consulta
       sql += ` ORDER BY s.name ASC, epd.date ASC;`;
 
-      console.log("=== DEBBUGEANDO PARÁMETROS SQL ===");
-      console.log("Valores en el array:", params);
-
       const [rows] = await db.execute(sql, params);
 
       // 5. Procesamiento y mapeo de la data
