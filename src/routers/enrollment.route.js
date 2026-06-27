@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createEnrollment,
   getApprovedStudents,
+  processStartStates,
 } from "../controllers/enrollments.controller.js";
 import {
   verificarAutenticacion,
@@ -21,6 +22,13 @@ router.get(
   verificarAutenticacion,
   permitirRoles("Administrador"),
   getApprovedStudents,
+);
+
+router.post(
+  "/processStart",
+  verificarAutenticacion,
+  permitirRoles("Administrador"),
+  processStartStates,
 );
 
 export default router;

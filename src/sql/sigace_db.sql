@@ -102,14 +102,18 @@ CREATE TABLE IF NOT EXISTS users (
     FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
+
+--TODO: Actulizar la colum order_yeard a un INIT
 CREATE TABLE IF NOT EXISTS years (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL, -- Ej: "1er Año"
     SIG VARCHAR(10) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    order_year VARCHAR(1),
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (SIG) REFERENCES schools (SIG) ON DELETE CASCADE
 );
+
 
 -- =========================================================================
 -- 3. ENTIDADES DE CARGOS (Profesores y Administradores)
@@ -210,14 +214,17 @@ CREATE TABLE IF NOT EXISTS enrollments (
         'Materia Pendiente',
         'Reprobado'
     ) DEFAULT 'Activo',
+    id_year INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_student_period (id_student, id_period),
     FOREIGN KEY (id_student) REFERENCES students (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_section) REFERENCES sections (id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_year) REFERENCES years (id) ON DELETE RESTRICT,
     FOREIGN KEY (id_period) REFERENCES academic_periods (id) ON DELETE RESTRICT
 );
 
+ALTER TABLE enrollments ADD COLUMN ;
 CREATE TABLE IF NOT EXISTS load_academic (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_teacher INT NOT NULL,
@@ -274,7 +281,7 @@ CREATE TABLE IF NOT EXISTS grades (
 CREATE TABLE IF NOT EXISTS pending_subjects (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_student INT NOT NULL,
-    id_subject VARCHAR(10) NOT NULL,
+    id_subject VARCHAR(20) NOT NULL,
     id_period_origin INT NOT NULL,
     status ENUM("Aprobada", "Reprobado"),
 
@@ -282,7 +289,6 @@ CREATE TABLE IF NOT EXISTS pending_subjects (
     FOREIGN KEY (id_subject) REFERENCES subjects (code_subject),
     FOREIGN KEY (id_period_origin) REFERENCES academic_periods (id)
 );
-
 
 -- =========================================================================
 -- 5. INSERCIONES DE DATOS INICIALES (Data Semilla Corregida)

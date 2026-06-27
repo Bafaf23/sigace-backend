@@ -83,7 +83,8 @@ export const getApprovedStudents = async (req, res) => {
     console.log(
       `🔄 [SIGACE API]: Analizando rendimiento acumulado para el Período ID: ${id_period}`,
     );
-    const studentApproved = await Enrollments.getApprovedForPromotion(id_period);
+    const studentApproved =
+      await Enrollments.getApprovedForPromotion(id_period);
     if (!studentApproved || studentApproved.length === 0) {
       return res.status(200).json({
         success: true,
@@ -108,6 +109,53 @@ export const getApprovedStudents = async (req, res) => {
       code: "GET_APPROVED_INTERNAL_ERROR",
       message:
         "Contratiempo interno en el servidor al intentar auditar los alumnos promovidos.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * ==========================================================================
+ * 3. PROCESAR CIERRE ACADÉMICO Y PROMOCIÓN MASIVA
+ * ==========================================================================
+ * Recibe el período actual, calcula el rendimiento final de los alumnos,
+ * registra materias pendientes y los deja pre-inscritos (id_next_year)
+ * con estatus 'Culminado' en el año viejo.
+ */
+export const processStartStates = async (req, res) => {
+  const id_period_actual = req.user.id_period || req.params;
+
+  if (!id_period_actual) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "El ID del período académico actual es obligatorio para procesar el cierre.",
+    });
+  }
+
+  try {
+    const proccessed = await Enrollments.processStartStates(id_period_actual);
+
+    if (proccessed === false) {
+      return res.status(200).json({
+        success: false,
+        message:
+          "No se encontraron estudiantes en estatus 'Activo' para procesar en este período.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "¡Cierre académico completado con éxito! Los estudiantes elegibles han sido promovidos y las materias pendientes fueron registradas.",
+    });
+  } catch (error) {
+    console.error("❌ Error en el controlador processStartStates:", error);
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Fallo crítico en el servidor al intentar procesar las promociones masivas.",
       error: error.message,
     });
   }
