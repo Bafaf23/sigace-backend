@@ -3,6 +3,7 @@ import {
   createEnrollment,
   getApprovedStudents,
   processStartStates,
+  updatePreInscrip,
 } from "../controllers/enrollments.controller.js";
 import {
   verificarAutenticacion,
@@ -29,6 +30,13 @@ router.post(
   verificarAutenticacion,
   permitirRoles("Administrador"),
   processStartStates,
+);
+
+router.post(
+  "/updateInscrip",
+  verificarAutenticacion,
+  permitirRoles("Administrador"),
+  updatePreInscrip,
 );
 
 export default router;

@@ -1,4 +1,5 @@
 import { Enrollments } from "../models/Enrollments.model.js";
+import { Academic_periods } from "../models/Academin_period.model.js";
 
 /**
  * ==========================================================================
@@ -61,13 +62,13 @@ export const createEnrollment = async (req, res) => {
 
 /**
  * ==========================================================================
- * 2. OBTENER ALUMNOS APROBADOS LISTOS PARA PROMOCIÓN
+ * 2. OBTENER estudiantes APROBADOS LISTOS PARA PROMOCIÓN
  * ==========================================================================
  */
 export const getApprovedStudents = async (req, res) => {
   try {
     console.log(
-      "🔍 [SIGACE API]: Consultando alumnos aptos para promoción de nivel...",
+      "🔍 [SIGACE API]: Consultando estudiantes aptos para promoción de nivel...",
     );
     const { id_period } = req.query;
 
@@ -99,7 +100,7 @@ export const getApprovedStudents = async (req, res) => {
       success: true,
       code: "APPROVED_STUDENTS_FETCHED",
       message:
-        "Listado de alumnos aprobados consolidado para el proceso de promoción.",
+        "Listado de estudiantes aprobados consolidado para el proceso de promoción.",
       data: studentApproved,
     });
   } catch (error) {
@@ -108,7 +109,7 @@ export const getApprovedStudents = async (req, res) => {
       success: false,
       code: "GET_APPROVED_INTERNAL_ERROR",
       message:
-        "Contratiempo interno en el servidor al intentar auditar los alumnos promovidos.",
+        "Contratiempo interno en el servidor al intentar auditar los estudiantes promovidos.",
       error: error.message,
     });
   }
@@ -118,7 +119,7 @@ export const getApprovedStudents = async (req, res) => {
  * ==========================================================================
  * 3. PROCESAR CIERRE ACADÉMICO Y PROMOCIÓN MASIVA
  * ==========================================================================
- * Recibe el período actual, calcula el rendimiento final de los alumnos,
+ * Recibe el período actual, calcula el rendimiento final de los estudiantes,
  * registra materias pendientes y los deja pre-inscritos (id_next_year)
  * con estatus 'Culminado' en el año viejo.
  */
@@ -156,6 +157,69 @@ export const processStartStates = async (req, res) => {
       success: false,
       message:
         "Fallo crítico en el servidor al intentar procesar las promociones masivas.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * ==========================================================================
+ * 4. ACTUALIZA UNA INSCRIPCIÓN / MATRÍCULA
+ * ==========================================================================
+ */
+export const updatePreInscrip = async (req, res) => {
+  try {
+    console.log(
+      "⚠️ [SIGACE API]: Iniciando proceso de pos matriculación estudiantil...",
+    );
+
+    const { id_student, id_section, id_period } = req.body;
+
+    if (!id_student || !id_section || !id_period) {
+      console.log("❌ [SIGACE API]: Parámetros de inscripción incompletos.");
+      return res.status(400).json({
+        success: false,
+        code: "INCOMPLETE_ENROLLMENT_DATA",
+        message:
+          "No se pudo procesar la matrícula: El alumno, período, sección y estado son obligatorios.",
+      });
+    }
+
+    const enrollmentData = { id_student, id_section, id_period };
+    console.log(
+      `🔄 [SIGACE API]: Asignando estudiante [${id_student}] a la sección [${id_section}]... ${id_period}`,
+    );
+
+    const result = await Enrollments.UpdatePreInscrip(
+      id_student,
+      id_section,
+      id_period,
+    );
+    if (result === true) {
+      console.log(
+        "✅ [SIGACE API]: Matrícula formalizada en la base de datos.",
+      );
+      return res.status(201).json({
+        success: true,
+        code: "ENROLLMENT_CREATED",
+        message:
+          "El estudiante ha sido inscrito y asignado a su sección de forma exitosa.",
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      code: "ENROLLMENT_FAILED",
+      message:
+        "No se pudo procesar la inscripción. Verifique que el alumno no esté ya matriculado en este ciclo.",
+    });
+  } catch (error) {
+    console.error("❌ Error crítico en createEnrollment:", error);
+    return res.status(500).json({
+      success: false,
+      code: "CREATE_ENROLLMENT_INTERNAL_ERROR",
+      message:
+        "Fallo de infraestructura al asentar el registro de matrícula en el sistema.",
       error: error.message,
     });
   }

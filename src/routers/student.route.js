@@ -7,6 +7,7 @@ import {
   getStudentsBySection,
   getStudentByID,
   getRecordStudent,
+  getPreinscription,
 } from "../controllers/student.controller.js";
 import {
   verificarAutenticacion,
@@ -50,22 +51,33 @@ router.get(
   permitirRoles("Administrador"),
   getStudentNotEnrolled,
 );
+
 router.get(
   "/getStudentsBySection/:id_section",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor"),
   getStudentsBySection,
 );
+
 router.get(
   "/getStudentByID/:id_student",
   verificarAutenticacion,
   permitirRoles("Administrador"),
   getStudentByID,
 );
+
 router.get(
   "/getRecordStudent/:id_student/:id_period",
   verificarAutenticacion,
   permitirRoles("Administrador", "Estudiante"),
   getRecordStudent,
 );
+
+router.get(
+  "/getPreinscription/:id_period",
+  verificarAutenticacion,
+  permitirRoles("Administrador"),
+  getPreinscription,
+);
+
 export default router;

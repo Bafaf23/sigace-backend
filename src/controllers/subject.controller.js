@@ -339,7 +339,7 @@ export const deleteSubjects = async (req, res) => {
       success: false,
       code: "DELETE_SUBJECT_INTERNAL_ERROR",
       message:
-        "Seguridad del sistema: No se puede eliminar la materia debido a que posee calificaciones de alumnos vinculadas.",
+        "Seguridad del sistema: No se puede eliminar la materia debido a que posee calificaciones de estudiantes vinculadas.",
       error: error.message,
     });
   }

@@ -48,11 +48,13 @@ export const createAcademicPeriod = async (req, res) => {
       SIG,
     });
 
+    const migrateStudent = await Enrollments.activateNewPeriod(academicPeriod);
+
     return res.status(201).json({
       success: true,
       code: "ACADEMIC_PERIOD_CREATED",
       message: `¡Ciclo escolar inicializado! El período "${namePeriod}" ha sido dado de alta en el sistema.`,
-      data: academicPeriod,
+      data: { academicPeriod, migrateStudent },
     });
   } catch (error) {
     console.error("❌ Error en createAcademicPeriod:", error);
@@ -109,7 +111,7 @@ export const endAcademicPeriod = async (req, res) => {
     const academicPeriod = await Academic_periods.endAcademicPeriod(SIG);
 
     console.log(
-      `✅ [SIGACE API]: Período finalizado y estados de alumnos archivados.`,
+      `✅ [SIGACE API]: Período finalizado y estados de estudiantes archivados.`,
     );
     return res.status(200).json({
       success: true,
