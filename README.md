@@ -44,7 +44,29 @@ Antes de comenzar, asegúrate de tener instalado lo siguiente:
 
 ## ⚠️ Variables de Entorno
 
-Este proyecto utiliza variables de entorno, consultalas en el archivo *.env.example*
+Este proyecto utiliza variables de entorno, consultalas en el archivo _.env.example_.
+
+---
+
+## 🦺 Estructura del proyecto
+
+```bash
+sigace-backend/
+├── src/
+│   ├── app.js            # Configuración de Express, middlewares, sesiones y rutas
+│   ├── db.js             # Configuración del pool de conexión a SQL Server
+│   ├── controllers/      # Controladores (lógica de negocio y queries SQL)
+│   ├── middlewares/      # Valicadion de credenciales de inicio de session
+│   ├── models/           # Modelos y logica sql
+│   ├── sql/              # SQL esquema de la base de datos
+│   ├── utils/            # Codigo util para el flujo, (crateSIG, tuitoinNumbre)
+│   ├── templates/        # Plantilla de los reportes (boletas, lista de secciones, planilla de inscripcion)
+│   └── routers/          # Definición de rutas y endpoints de la API
+│       └── user.router.js
+├── .env                  # Variables de entorno locales
+├── package.json          # Dependencias, metadatos y scripts del proyecto
+└── README.md
+```
 
 ---
 
@@ -64,3 +86,9 @@ npm install
 # 4. Levantar el servidor en modo desarrollo (con recarga automática nativa)
 npm run dev
 ```
+
+---
+
+## 📄 Licencia y autor
+- **Autor:** Bryant Facenda — [bafaf23@gmail.com](mailto:bafaf23@gmail.com)
+
