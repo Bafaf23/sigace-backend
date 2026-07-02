@@ -5,6 +5,7 @@ import {
   getSubjectBySection,
   getYears,
   deleteSubjects,
+  getSubjectPending,
 } from "../controllers/subject.controller.js";
 import {
   verificarAutenticacion,
@@ -43,6 +44,13 @@ router.delete(
   verificarAutenticacion,
   permitirRoles("Administrador"),
   deleteSubjects,
+);
+
+router.get(
+  "/getSubjectPending/:id_student",
+  verificarAutenticacion,
+  permitirRoles("Administrador", "Profesor", "Estudiante"),
+  getSubjectPending,
 );
 
 export default router;

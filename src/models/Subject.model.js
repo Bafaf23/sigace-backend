@@ -70,13 +70,7 @@ export class Subject {
       }
     }
   }
-  /**
-   * Obtiene todas las materias de una sección con sus respectivas evaluaciones y notas de un estudiante
-   * @param {number} id_lapse - ID del lapso/momento educativo
-   * @param {number} id_section - ID de la sección
-   * @param {number} id_student - ID del estudiante
-   * @returns {Promise<Array<object>>} - Array de materias con sus evaluaciones agrupadas
-   */
+
   /**
    * Obtiene todas las materias de una sección con sus respectivas evaluaciones y notas de un estudiante
    * @param {number} id_lapse - ID del lapso/momento educativo
@@ -260,6 +254,28 @@ export class Subject {
       if (db) {
         await closeDatabaseConnection(db);
       }
+    }
+  }
+
+  /**
+   * Obtiene las asignaturas pendientes de un estudiante
+   * @param {number} id_student
+   * @return {Array<object>}
+   */
+  static async getPendingSubject(id_student) {
+    let db;
+    try {
+      db = await connectToDatabase();
+     
+      const sql = `SELECT ps.id_subject, ps.status, su.name, su.abbreviation 
+                 FROM pending_subjects ps 
+                 LEFT JOIN subjects su ON ps.id_subject = su.code_subject 
+                 WHERE ps.id_student = ?`;
+
+      const result = await db.query(sql, [id_student]);
+      return result;
+    } catch (error) {
+      throw error;
     }
   }
 }
