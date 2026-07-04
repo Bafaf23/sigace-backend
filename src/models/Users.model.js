@@ -29,6 +29,51 @@ export class Users {
     this.SIG = SIG;
   }
 
+  static async getUserToken(token) {
+    let db;
+    try {
+      db = await connectToDatabase();
+      const sql = `SELECT id_user FROM auth_tokens
+       WHERE token = ? AND expires_at > NOW() 
+       LIMIT 1`;
+      const value = [token];
+
+      const [rows] = await db.query(sql, value);
+
+      return rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   ** Perserva el token de cambio de contrasena solicitado por el usuario
+   * @param {number} id_user - id del solicitante
+   * @param {string} token
+   * @param {Date} expires_at - fecha de expiracion del token
+   */
+  static async saveToken(id_user, token, expires_at) {
+    let db;
+    try {
+      db = await connectToDatabase();
+      const [result] = await db.query(
+        "INSERT INTO auth_tokens (id_user, token, expires_at) VALUES (?, ?, ?)",
+        [id_user, token, expires_at],
+      );
+      return result.insertId;
+    } catch (error) {
+      console.error(
+        "Error al guardar el token de cambio de contraseña:",
+        error,
+      );
+      return null;
+    } finally {
+      if (db) {
+        await closeDatabaseConnection(db);
+      }
+    }
+  }
+
   /**
    * Obtiene todos los usuarios de la base de datos o un usuario por su email
    * @param {string} email - El email del usuario a buscar

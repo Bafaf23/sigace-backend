@@ -285,6 +285,15 @@ CREATE TABLE IF NOT EXISTS pending_subjects (
     FOREIGN KEY (id_period_origin) REFERENCES academic_periods (id)
 );
 
+CREATE TABLE IF NOT EXISTS auth_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_user INT NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_user) REFERENCES users (id) ON DELETE CASCADE
+);
+
 -- =========================================================================
 -- 5. INSERCIONES DE DATOS INICIALES (Data Semilla Corregida)
 -- =========================================================================

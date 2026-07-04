@@ -1,0 +1,240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bienvenido a SIGACE</title>
+    <style>
+      /* Estilos específicos para clientes que soportan Dark Mode */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #0f172a !important;
+        }
+        .card {
+          background-color: #1e293b !important;
+          border-color: #334155 !important;
+        }
+        .info-box {
+          background-color: #0f172a !important;
+        }
+        .title {
+          color: #818cf8 !important;
+        }
+        .text-main {
+          color: #cbd5e1 !important;
+        }
+        .text-muted {
+          color: #94a3b8 !important;
+        }
+      }
+    </style>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      background-color: #f8fafc;
+      font-family:
+        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto,
+        Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    "
+  >
+    <table
+      align="center"
+      border="0"
+      cellpadding="0"
+      cellspacing="0"
+      width="100%"
+      style="max-width: 600px; margin: 0 auto; padding: 40px 20px"
+    >
+      <tr>
+        <td align="center">
+          <!-- Contenedor Principal (Tarjeta) -->
+          <table
+            border="0"
+            cellpadding="0"
+            cellspacing="0"
+            width="100%"
+            class="card"
+            style="
+              background-color: #ffffff;
+              border: 1px solid #e2e8f0;
+              border-radius: 24px;
+              padding: 40px;
+              box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.05);
+            "
+          >
+            <!-- Logo / Encabezado del Sistema -->
+            <tr>
+              <td align="center" style="padding-bottom: 32px">
+                <h1
+                  style="
+                    margin: 0;
+                    font-size: 28px;
+                    font-weight: 900;
+                    color: #312e81;
+                    letter-spacing: -0.05em;
+                  "
+                >
+                  SIGACE<span style="color: #06b6d4">.</span>
+                </h1>
+                <p
+                  style="
+                    margin: 4px 0 0 0;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                  "
+                >
+                  Control de Estudios Inteligente
+                </p>
+              </td>
+            </tr>
+
+            <!-- Título de Bienvenida -->
+            <tr>
+              <td align="left" style="padding-bottom: 16px">
+                <h2
+                  class="title"
+                  style="
+                    margin: 0;
+                    font-size: 24px;
+                    font-weight: 800;
+                    color: #1e293b;
+                    letter-spacing: -0.03em;
+                  "
+                >
+                  ¡Hola, {{userName}}!
+                </h2>
+              </td>
+            </tr>
+
+            <!-- Mensaje Central -->
+            <tr>
+              <td
+                align="left"
+                class="text-main"
+                style="
+                  font-size: 15px;
+                  line-height: 24px;
+                  color: #475569;
+                  font-weight: 500;
+                  padding-bottom: 24px;
+                "
+              >
+                <p style="margin: 0">
+                  Tenemos excelentes noticias para ti: tu cuenta ha sido
+                  habilitada exitosamente en la plataforma. Ya puedes iniciar
+                  sesión de forma segura y comenzar a gestionar toda tu
+                  información académica.
+                  <span style="font-weight: 700; color: #4f46e5"
+                    >¿Qué esperas?</span
+                  >
+                </p>
+              </td>
+            </tr>
+
+            <!-- Bloque de Credenciales Informativo (Garantiza lectura en cualquier cliente) -->
+            <tr>
+              <td style="padding-bottom: 32px">
+                <table
+                  border="0"
+                  cellpadding="0"
+                  cellspacing="0"
+                  width="100%"
+                  class="info-box"
+                  style="
+                    background-color: #f8fafc;
+                    border-radius: 16px;
+                    padding: 16px 20px;
+                  "
+                >
+                  <tr>
+                    <td>
+                      <p
+                        class="text-muted"
+                        style="
+                          margin: 0;
+                          font-size: 13px;
+                          font-weight: 600;
+                          color: #64748b;
+                          text-transform: uppercase;
+                          letter-spacing: 0.05em;
+                        "
+                      >
+                        Tu identificador de acceso:
+                      </p>
+                      <p
+                        class="text-main"
+                        style="
+                          margin: 6px 0 0 0;
+                          font-size: 15px;
+                          font-weight: 700;
+                          color: #312e81;
+                          word-break: break-all;
+                        "
+                      >
+                        {{userEmail}}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Botón Call to Action -->
+            <tr>
+              <td align="center" style="padding-bottom: 24px">
+                <a
+                  href="https://s.com"
+                  target="_blank"
+                  style="
+                    display: inline-block;
+                    background-color: #4f46e5;
+                    color: #ffffff;
+                    font-size: 15px;
+                    font-weight: 700;
+                    text-decoration: none;
+                    padding: 14px 32px;
+                    border-radius: 14px;
+                    box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+                    transition: background-color 0.2s;
+                  "
+                >
+                  Iniciar sesión ahora
+                </a>
+              </td>
+            </tr>
+
+            <!-- Footer de la Tarjeta -->
+            <tr>
+              <td
+                align="left"
+                class="text-muted"
+                style="
+                  border-top: 1px dashed #e2e8f0;
+                  padding-top: 24px;
+                  font-size: 13px;
+                  line-height: 18px;
+                  color: #94a3b8;
+                "
+              >
+                <p style="margin: 0">
+                  Por razones de seguridad, recuerda no compartir tus
+                  credenciales de acceso con terceros.
+                </p>
+                <p style="margin: 12px 0 0 0; font-weight: 700; color: #4f46e5">
+                  El Equipo de SIGACE
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

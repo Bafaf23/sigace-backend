@@ -1,8 +1,9 @@
 import { Users } from "../models/Users.model.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import jsonwebtoken from "jsonwebtoken";
-
+import { sendResetPasswordEmail } from "../services/resend.service.js";
 const { sign } = jsonwebtoken;
 
 export const login = async (req, res) => {
@@ -157,5 +158,118 @@ export const logout = async (req, res) => {
   } catch (error) {
     console.error("Error en el proceso de logout:", error);
     return res.status(500).json({ error: "Error interno al cerrar sesión" });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  console.log("⚠️ Iniciando proceso de restablecimiento de contraseña...");
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: "El email es obligatorio" });
+    }
+
+    const user = await Users.getUserByEmail(email);
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        code: "USER_NOT_FOUND",
+        message:
+          "Si el correo electrónico proporcionado está asociado a una cuenta de usuario, se enviará un correo electrónico con instrucciones para restablecer la contraseña.",
+      });
+    }
+    const code = crypto.randomBytes(32).toString("hex");
+    const hashedCode = crypto.createHash("sha256").update(code).digest("hex");
+
+    const tokenId = await Users.saveToken(
+      user.id_user,
+      hashedCode,
+      new Date(Date.now() + 15 * 60 * 1000),
+    );
+
+    const resetUrl = `${process.env.URL_FRONTEND}/resetpass?token=${code}`;
+
+    if (!tokenId) {
+      return res.status(500).json({
+        success: false,
+        code: "TOKEN_SAVE_ERROR",
+        message: "Error al guardar el token de cambio de contraseña.",
+      });
+    }
+
+    await sendResetPasswordEmail(user.name, user.email, resetUrl).catch(
+      (error) => {
+        console.error(
+          "Error al enviar el correo de restablecimiento de contraseña:",
+          error,
+        );
+      },
+    );
+
+    return res.status(200).json({
+      success: true,
+      code: "RESET_PASSWORD_CODE_SENT",
+      message:
+        "Si el correo electrónico proporcionado está asociado a una cuenta de usuario, se enviará un correo electrónico con instrucciones para restablecer la contraseña.",
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  console.log("⚠️ Iniciando proceso de restablecimiento de contraseña...");
+  try {
+    const { token, password } = req.body;
+    console.log(token, password);
+
+    if (!token || !password) {
+      return res.status(400).json({
+        success: false,
+        code: "TOKEN_AND_PASS_REQUERID",
+        message: "El token y la contraseña son requeridos.",
+      });
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await Users.getUserToken(hashedToken);
+    console.log(user);
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        code: "USER_NOT_FOUND",
+        message:
+          "El enlace es inválido o ha expirado. Por favor, solicita uno nuevo.",
+      });
+    }
+    const changePassword = await Users.changePassword(user.id_user, password);
+    console.log(changePassword);
+
+    if (changePassword === false) {
+      return res.status(400).json({
+        success: false,
+        code: "PASSWORD_CHANGE_FAILED", // Cambiado para que tenga coherencia con el error
+        message: "No pudimos cambiar la Contraseña, intenta nuevamente.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      code: "CHANGE_SUCCESS",
+      message:
+        "Contraseña restablecida correctamente. Ya puedes iniciar sesión.",
+    });
+  } catch (error) {
+    console.error("Error en resetPassword:", error);
+    // 3. Recomendación: Devolver un estado 500 si la base de datos se cae o algo crashea
+    return res.status(500).json({
+      success: false,
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Hubo un error interno en el servidor.",
+    });
   }
 };

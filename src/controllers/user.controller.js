@@ -1,4 +1,5 @@
 import { Users } from "../models/Users.model.js";
+import { welcomeEmail } from "../services/resend.service.js";
 
 function formatText(text) {
   if (typeof text !== "string" || !text.trim()) {
@@ -36,6 +37,8 @@ export const createUser = async (req, res) => {
     const rawDocument = req.body.document ? String(req.body.document) : "";
     const passgeneric = rawDocument.substring(0, 4) + "@2026";
 
+    const formattedName = formatText(req.body.name);
+
     const user = await Users.createUser({
       document,
       name: formatText(req.body.name),
@@ -55,6 +58,17 @@ export const createUser = async (req, res) => {
           "No se pudo procesar la inserción del usuario. Verifica los campos duplicados.",
       });
     }
+
+    console.log(`Enviando correo... ${req.body.email}`);
+    welcomeEmail(
+      formattedName,
+      /*req.body.email*/ "bryantffacen@gmail.com",
+    ).catch((error) => {
+      console.error(
+        "❌ [Background Task Error]: Falló el envío del correo de bienvenida:",
+        error,
+      );
+    });
 
     return res.status(201).json({
       success: true,
