@@ -6,6 +6,9 @@ import jsonwebtoken from "jsonwebtoken";
 import { sendResetPasswordEmail } from "../services/resend.service.js";
 const { sign } = jsonwebtoken;
 
+/**
+ ** Porcesa el login de un usuario
+ */
 export const login = async (req, res) => {
   try {
     console.log("⚠️ Iniciando proceso de login...");
@@ -147,6 +150,9 @@ export const login = async (req, res) => {
   }
 };
 
+/**
+ ** cierra la sesion del usuario
+ */
 export const logout = async (req, res) => {
   try {
     res.clearCookie("auth_token");
@@ -161,6 +167,9 @@ export const logout = async (req, res) => {
   }
 };
 
+/**
+ ** Solicitud de cambio de contraseña por parte del usuario
+ */
 export const forgotPassword = async (req, res) => {
   console.log("⚠️ Iniciando proceso de restablecimiento de contraseña...");
   try {
@@ -219,6 +228,9 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
+/**
+ ** Cambio de contraseña via link de email
+ */
 export const resetPassword = async (req, res) => {
   console.log("⚠️ Iniciando proceso de restablecimiento de contraseña...");
   try {

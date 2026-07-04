@@ -1,7 +1,8 @@
 import { Students } from "../models/Students.model.js";
 import { Representative } from "../models/Representative.model.js";
 import { Users } from "../models/Users.model.js";
-import { generateTuitionNumber } from "../utils/tuitoinNumber.js"; // Mantén tu ruta actual
+import { generateTuitionNumber } from "../utils/tuitoinNumber.js";
+import { welcomeEmail } from "../services/resend.service.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
 
 function formatText(text) {
@@ -181,6 +182,12 @@ export const createStudent = async (req, res) => {
           "Error de credenciales: No se pudo instanciar la cuenta de acceso del estudiante.",
       });
     }
+    //cambia el correo por el del usuario en producion
+    await welcomeEmail(studentObject.name, "bryantffacen@gmail.com").catch(
+      (error) => {
+        console.error(error);
+      },
+    );
 
     return res.status(201).json({
       success: true,
