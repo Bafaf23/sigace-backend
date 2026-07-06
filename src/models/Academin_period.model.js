@@ -11,6 +11,7 @@ export class Academic_periods {
   /**
    * crea un nuevo periodo académico
    * @param {{ name: string, start_date: string, end_date: string, is_active?: boolean }} academicPeriodModel
+   * @returns id del nuevo perido
    */
   static async createAcademicPeriod(academicPeriodModel) {
     let db;
@@ -26,6 +27,7 @@ export class Academic_periods {
           academicPeriodModel.SIG,
         ],
       );
+
       return result.insertId;
     } catch (error) {
       console.error(error);

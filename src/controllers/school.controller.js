@@ -139,7 +139,7 @@ export const deleteSchool = async (req, res) => {
       success: false,
       code: "DELETE_SCHOOL_INTERNAL_ERROR",
       message:
-        "Restricción de seguridad: No se pudo eliminar la escuela debido a dependencias activas (alumnos o profesores matriculados).",
+        "Restricción de seguridad: No se pudo eliminar la escuela debido a dependencias activas (estudiantes o profesores matriculados).",
       error: error.message,
     });
   }

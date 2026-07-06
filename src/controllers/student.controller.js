@@ -1,7 +1,8 @@
 import { Students } from "../models/Students.model.js";
 import { Representative } from "../models/Representative.model.js";
 import { Users } from "../models/Users.model.js";
-import { generateTuitionNumber } from "../utils/tuitoinNumber.js"; // Mantén tu ruta actual
+import { generateTuitionNumber } from "../utils/tuitoinNumber.js";
+import { welcomeEmail } from "../services/resend.service.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
 
 function formatText(text) {
@@ -181,6 +182,12 @@ export const createStudent = async (req, res) => {
           "Error de credenciales: No se pudo instanciar la cuenta de acceso del estudiante.",
       });
     }
+    //cambia el correo por el del usuario en producion
+    await welcomeEmail(studentObject.name, "bryantffacen@gmail.com").catch(
+      (error) => {
+        console.error(error);
+      },
+    );
 
     return res.status(201).json({
       success: true,
@@ -290,7 +297,7 @@ export const updateStudent = async (req, res) => {
 export const getStudentNotEnrolled = async (req, res) => {
   try {
     console.log(
-      "⚠️ [SIGACE API]: Buscando alumnos pendientes por asignación de aula...",
+      "⚠️ [SIGACE API]: Buscando estudiantes pendientes por asignación de aula...",
     );
     const SIG = req.user?.SIG;
     const id_period = req.params.id_period || req.query.id_period;
@@ -300,7 +307,7 @@ export const getStudentNotEnrolled = async (req, res) => {
         success: false,
         code: "MISSING_SIG",
         message:
-          "El código SIG institucional es requerido para filtrar los alumnos.",
+          "El código SIG institucional es requerido para filtrar los estudiantes.",
       });
     }
 
@@ -374,14 +381,14 @@ export const getStudentsBySection = async (req, res) => {
         success: false,
         code: "SECTION_EMPTY",
         message:
-          "Aula disponible: Esta sección no cuenta con alumnos inscritos actualmente.",
+          "Aula disponible: Esta sección no cuenta con estudiantes inscritos actualmente.",
       });
     }
 
     return res.status(200).json({
       success: true,
       message:
-        "Nómina de alumnos asignados a la sección recuperada de forma exitosa.",
+        "Nómina de estudiantes asignados a la sección recuperada de forma exitosa.",
       data: students,
     });
   } catch (error) {
@@ -554,6 +561,63 @@ export const getRecordStudent = async (req, res) => {
       code: "ACADEMIC_RECORD_INTERNAL_ERROR",
       message:
         "Imposible armar el historial de notas debido a una inconsistencia técnica.",
+      error: error.message,
+    });
+  }
+};
+
+/* ==========================================================================
+   8. OBTENER ESTUDIANTES PREINSCRITOS 
+   ========================================================================== */
+export const getPreinscription = async (req, res) => {
+  try {
+    console.log(
+      "⚠️ [SIGACE API]: Buscando estudiantes pre-inscritos pendientes por asignación de aula...",
+    );
+    const SIG = req.user?.SIG;
+    const id_period = req.params.id_period || req.query.id_period;
+
+    if (!SIG) {
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_SIG",
+        message:
+          "El código SIG institucional es requerido para filtrar los estudiantes.",
+      });
+    }
+
+    if (!id_period || isNaN(parseInt(id_period))) {
+      return res.status(400).json({
+        success: false,
+        code: "INVALID_PERIOD_ID",
+        message:
+          "Debe proporcionar un identificador de período escolar válido.",
+      });
+    }
+
+    const students = await Students.getPreinscription(SIG, parseInt(id_period));
+
+    if (!students || students.length === 0) {
+      return res.status(404).json({
+        success: false,
+        code: "ALL_STUDENTS_ENROLLED",
+        message:
+          "Organización completa: Todos los estudiantes registrados ya cuentan con un aula asignada en este lapso.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Listado de estudiantes pre-inscritos (sin sección asignada) recuperado.",
+      data: students,
+    });
+  } catch (error) {
+    console.error("❌ Error en getStudentNotEnrolled:", error);
+    return res.status(500).json({
+      success: false,
+      code: "NOT_ENROLLED_INTERNAL_ERROR",
+      message: "Error de base de datos al buscar estudiantes desvinculados.",
       error: error.message,
     });
   }

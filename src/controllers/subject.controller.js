@@ -339,7 +339,55 @@ export const deleteSubjects = async (req, res) => {
       success: false,
       code: "DELETE_SUBJECT_INTERNAL_ERROR",
       message:
-        "Seguridad del sistema: No se puede eliminar la materia debido a que posee calificaciones de alumnos vinculadas.",
+        "Seguridad del sistema: No se puede eliminar la materia debido a que posee calificaciones de estudiantes vinculadas.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * ==========================================================================
+ * 6. Obtiene las materias pendietes de un estudiante
+ * ==========================================================================
+ */
+export const getSubjectPending = async (req, res) => {
+  try {
+    console.log(
+      `⚠️ [SIGACE API]: Ejecutando obtiencion de asignatura pendientes...`,
+    );
+    const { id_student } = req.params;
+
+    if (!id_student) {
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_DELETE_SUBJECT_CODE",
+        message: "No se especificó el ID del estudiante.",
+      });
+    }
+
+    const pending = await Subject.getPendingSubject(id_student);
+
+    if (!pending) {
+      return res.status(404).json({
+        success: false,
+        code: "SUBJECT_ALREADY_DELETED",
+        message: "Este estudante no tiene materia pendientes.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        pending,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error en getSubejctPending:", error);
+    return res.status(500).json({
+      success: false,
+      code: "DELETE_SUBJECT_INTERNAL_ERROR",
+      message:
+        "Error en el servidor, no se pudo estraer la informacion, intenta nuevamente.",
       error: error.message,
     });
   }

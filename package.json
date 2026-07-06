@@ -1,6 +1,6 @@
 {
   "name": "sigace-backend",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "API REST del sistema **SIGACE**",
   "main": "src/app.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "url": "git+https://github.com/Bafaf23/sigace-backend.git"
   },
   "keywords": [],
-  "author": "Bryant Facenda <bafaf23@gmail.com>",
+  "author": "Bryant Facenda <bryantffacen@gmail.com>",
   "license": "ISC",
   "type": "module",
   "bugs": {
@@ -29,7 +29,9 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "jsonwebtoken": "^9.0.3",
+    "juice": "^12.1.1",
     "mysql2": "^3.22.3",
-    "puppeteer": "^25.1.0"
+    "puppeteer": "^25.1.0",
+    "resend": "^6.17.0"
   }
 }

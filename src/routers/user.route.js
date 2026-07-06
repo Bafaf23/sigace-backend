@@ -30,12 +30,14 @@ router.get("/", (_req, res) => {
     },
   });
 });
+
 router.get(
   "/getUser",
   verificarAutenticacion,
   permitirRoles("SuperAdmin"),
   getUsers,
 );
+
 router.post(
   "/createUser",
   verificarAutenticacion,
@@ -61,6 +63,6 @@ router.put(
   updateUser,
 );
 
-router.get("/profile", verificarAutenticacion, getProfile)
+router.get("/profile", verificarAutenticacion, getProfile);
 
 export default router;

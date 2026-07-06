@@ -115,7 +115,7 @@ export const RFRE = async () => {
         <p><span class="font-bold text-slate-500">Plan de Estudio:</span> <br>Educación Media General</p>
         <p><span class="font-bold text-slate-500">Código de Plan:</span> <br>31059</p>
         <p><span class="font-bold text-slate-500">Año / Sección:</span> <br>${seccionInfo.year_name || "QUINTO"} - "${(seccionInfo.section_name || "A").toUpperCase()}"</p>
-        <p><span class="font-bold text-slate-500">Total Sección:</span> <br>${students.length} Alumnos</p>
+        <p><span class="font-bold text-slate-500">Total Sección:</span> <br>${students.length} estudiantes</p>
       </div>
     </div>
 

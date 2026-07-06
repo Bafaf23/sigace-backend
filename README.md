@@ -4,12 +4,6 @@ API REST del sistema **SIGACE** (Sistema de Gestión Académica y Control de Est
 
 ---
 
-## 🚨 En construcción 🏗️👷🚧
-
-El proyecto se encuentra en un proceso de **migración activa desde Python hacia JavaScript**. Algunos módulos, endpoints y la lógica de persistencia se están implementando de forma progresiva.
-
----
-
 ## 🛠️ Stack tecnológico
 
 ### Core y Base de Datos
@@ -29,6 +23,8 @@ El proyecto se encuentra en un proceso de **migración activa desde Python hacia
 - **puppeteer**: Generación de reportes y PDFs.
 - **axios**: Cliente HTTP para realizar peticiones externas.
 - **dotenv**: Gestión de variables de entorno seguras.
+- **Resend**: Gestion de envio de correos transaccionales. 
+> Resend en su servidores gratuitos no permite enviar correos a terceros, solo al correo de la cuenta de la API key asociada.
 
 ---
 
@@ -36,9 +32,8 @@ El proyecto se encuentra en un proceso de **migración activa desde Python hacia
 
 Antes de comenzar, asegúrate de tener instalado lo siguiente:
 
-- [Node.js](https://nodejs.org/) (v18.11.0 o superior requerido para soporte nativo de `--watch`)
-- [SQL Server](https://www.microsoft.com/sql-server) (instancia local o remota accesible)
-- Gestor de paquetes `npm` (incluido con Node.js)
+- [Node.js](https://nodejs.org/)
+- [SQL Server](https://www.microsoft.com/sql-server)
 
 ---
 
@@ -58,6 +53,7 @@ sigace-backend/
 │   ├── controllers/      # Controladores (lógica de negocio y queries SQL)
 │   ├── middlewares/      # Valicadion de credenciales de inicio de session
 │   ├── models/           # Modelos y logica sql
+│   ├── service/          # Envio de correos.
 │   ├── sql/              # SQL esquema de la base de datos
 │   ├── utils/            # Codigo util para el flujo, (crateSIG, tuitoinNumbre)
 │   ├── templates/        # Plantilla de los reportes (boletas, lista de secciones, planilla de inscripcion)

@@ -5,6 +5,7 @@ USE sigace_db;
 -- =========================================================================
 -- 1. TABLAS MAESTRAS (Reordenadas por dependencias estrictas)
 -- =========================================================================
+ALTER TABLE enrollments MODIFY id_period INT NULL;
 
 CREATE TABLE IF NOT EXISTS roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -205,15 +206,9 @@ CREATE TABLE IF NOT EXISTS students (
 CREATE TABLE IF NOT EXISTS enrollments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_student INT NOT NULL,
-    id_section INT NOT NULL,
-    id_period INT NOT NULL,
-    status ENUM(
-        'Activo',
-        'Aprobado',
-        'Retirado',
-        'Materia Pendiente',
-        'Reprobado'
-    ) DEFAULT 'Activo',
+    id_section INT,
+    id_period INT,
+    status ENUM('Activo', 'Aprobado', 'Retirado', 'Materia Pendiente', 'Reprobado', 'Pre-inscrito') DEFAULT 'Activo',
     id_year INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -288,6 +283,15 @@ CREATE TABLE IF NOT EXISTS pending_subjects (
     FOREIGN KEY (id_student) REFERENCES students (id),
     FOREIGN KEY (id_subject) REFERENCES subjects (code_subject),
     FOREIGN KEY (id_period_origin) REFERENCES academic_periods (id)
+);
+
+CREATE TABLE IF NOT EXISTS auth_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_user INT NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_user) REFERENCES users (id) ON DELETE CASCADE
 );
 
 -- =========================================================================
