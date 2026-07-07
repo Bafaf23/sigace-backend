@@ -112,13 +112,13 @@ export class Students {
           SELECT id 
           FROM enrollments 
           WHERE id_student = students.id AND id_period = ?
-          ORDER BY FIELD(status, 'Pre-inscrito', 'Inscrito', 'Activo') ASC, id DESC
+          ORDER BY FIELD(status, 'Pre-inscrito', 'Inscrito', 'Activo') DESC, id DESC
           LIMIT 1
       )
       -- Conexión directa a la sección vinculada a la matrícula obtenida
       LEFT JOIN sections sec ON en.id_section = sec.id
       -- Conexión directa para extraer el año real de esa sección pre-inscrita o activa
-      LEFT JOIN years yer ON en.id_year = yer.id 
+      LEFT JOIN years yer ON sec.id_year = yer.id 
 
       WHERE students.SIG = ?
       

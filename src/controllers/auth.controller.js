@@ -24,8 +24,6 @@ export const login = async (req, res) => {
     // 2. Buscar usuario
     const user = await Users.getUserByEmail(email);
 
-    console.log(user);
-
     if (!user) {
       console.log(`usuario no encontrado`);
       return res.status(401).json({ error: "Usuario no encontrado" });
