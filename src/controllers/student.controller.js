@@ -183,7 +183,7 @@ export const createStudent = async (req, res) => {
       });
     }
     //cambia el correo por el del usuario en producion
-    await welcomeEmail(studentObject.name, "bryantffacen@gmail.com").catch(
+    await welcomeEmail(studentObject.name, studentObject.email).catch(
       (error) => {
         console.error(error);
       },
