@@ -30,7 +30,9 @@ const isProduction = process.env.NODE_ENV === "production";
 
 const MySQLStore = MySQLStoreFactory(session);
 const sessionStore = new MySQLStore({}, pool);
-
+if (isProduction) {
+  app.set("trust proxy", 1);
+}
 app.use(
   cors({
     origin: [
