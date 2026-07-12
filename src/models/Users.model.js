@@ -362,7 +362,7 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
         case 3:
           await pool.query("DELETE FROM teachers WHERE id_user = ?", [id]);
           break;
-        case 4:
+        case 5:
           await pool.query("DELETE FROM administrators WHERE id_user = ?", [
             id,
           ]);
@@ -374,7 +374,6 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
           break;
       }
       const [result] = await pool.query("DELETE FROM users WHERE id = ?", [id]);
-      await pool.commit();
       return result.affectedRows > 0;
     } catch (error) {
       console.error("Error al eliminar usuario:", error);

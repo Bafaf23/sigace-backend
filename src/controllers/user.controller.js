@@ -198,18 +198,8 @@ export const deleteUser = async (req, res) => {
       "⚠️ [SIGACE API]: Evaluando revocación de cuenta de usuario...",
     );
 
-    const authHeader = req.headers.authorization;
     const idUser = req.params.id;
-    const role_id = req.body.roleId;
-
-    if (!authHeader) {
-      return res.status(401).json({
-        success: false,
-        code: "UNAUTHORIZED_ACTION",
-        message:
-          "Acceso restringido: No se detectó una firma de autorización válida.",
-      });
-    }
+    const role_id = req.params.role_id;
 
     if (!idUser) {
       return res.status(400).json({

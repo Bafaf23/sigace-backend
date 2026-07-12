@@ -51,7 +51,7 @@ router.post(
   changePassword,
 );
 router.delete(
-  "/deleteUser/:id",
+  "/deleteUser/:id/:role_id",
   verificarAutenticacion,
   permitirRoles("SuperAdmin"),
   deleteUser,
