@@ -28,7 +28,11 @@ const isProduction = process.env.NODE_ENV === "production";
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: [
+      "https://sigace.xyz",
+      "https://www.sigace.xyz",
+      "http://localhost:3000",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -42,6 +46,7 @@ app.use(
     cookie: {
       secure: isProduction,
       httpOnly: true, // Impide que el frontend acceda a la cookie vía JS (Seguridad)
+      sameSite: "none",
       maxAge: 1000 * 60 * 60 * 2, // Duración de la sesión: 2 horas
     },
   }),
