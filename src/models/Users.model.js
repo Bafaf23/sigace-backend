@@ -1,4 +1,4 @@
-import { connectToDatabase, closeDatabaseConnection } from "../db.js";
+import { pool } from "../db.js";
 import bcrypt from "bcryptjs";
 import { getCurrentPeriod } from "../utils/periodAc.js";
 
@@ -30,15 +30,13 @@ export class Users {
   }
 
   static async getUserToken(token) {
-    let db;
     try {
-      db = await connectToDatabase();
       const sql = `SELECT id_user FROM auth_tokens
        WHERE token = ? AND expires_at > NOW() 
        LIMIT 1`;
       const value = [token];
 
-      const [rows] = await db.query(sql, value);
+      const [rows] = await pool.query(sql, value);
 
       return rows.length > 0 ? rows[0] : null;
     } catch (error) {
@@ -53,10 +51,8 @@ export class Users {
    * @param {Date} expires_at - fecha de expiracion del token
    */
   static async saveToken(id_user, token, expires_at) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "INSERT INTO auth_tokens (id_user, token, expires_at) VALUES (?, ?, ?)",
         [id_user, token, expires_at],
       );
@@ -67,10 +63,6 @@ export class Users {
         error,
       );
       return null;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -82,10 +74,7 @@ export class Users {
    * @returns {boolean} False si ocurre un error al obtener los usuarios
    */
   static async getUsers(email) {
-    let db;
     try {
-      db = await connectToDatabase();
-
       let queryEmail = `SELECT 
         u.id, u.document, u.name, u.last_name, u.email, u.phone, u.role_id,
         u.is_first_login, u.is_active,
@@ -128,7 +117,7 @@ export class Users {
 
       let query = email ? queryEmail : queryAll;
 
-      const [rows] = await db.query(query, email ? [email] : []);
+      const [rows] = await pool.query(query, email ? [email] : []);
 
       return rows.map((row) => {
         const user = {
@@ -187,8 +176,6 @@ export class Users {
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
       return [];
-    } finally {
-      await closeDatabaseConnection(db);
     }
   }
 
@@ -198,15 +185,9 @@ export class Users {
    * @returns {boolean} False si ocurre un error al crear el usuario
    */
   static async createUser(user) {
-    let db;
-    let connection;
     try {
-      db = await connectToDatabase();
-      connection = await db.getConnection();
-      await connection.beginTransaction();
-
       const hashedPassword = await bcrypt.hash(user.password, 10);
-      const [result] = await connection.query(
+      const [result] = await pool.query(
         "INSERT INTO users (document, name, last_name, email, phone, role_id, pass) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
           user.document,
@@ -224,7 +205,7 @@ export class Users {
 
       switch (roleUser) {
         case 2:
-          await connection.query(
+          await pool.query(
             "INSERT INTO students (id_user, gender, SIG, representative_id, tuition_number, allergies, medical_condition, weight, birth_date, height, shirt_size, pants_size, shoe_size, \`condition\`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
               idUser,
@@ -245,19 +226,19 @@ export class Users {
           );
           break;
         case 3:
-          await connection.query(
+          await pool.query(
             "INSERT INTO teachers (id_user, SIG) VALUES (?, ?)",
             [idUser, user.SIG],
           );
           break;
         case 4:
-          await connection.query(
+          await pool.query(
             "INSERT INTO directors (id_user, SIG) VALUES (?, ?)",
             [idUser, user.SIG],
           );
           break;
         case 5:
-          await connection.query(
+          await pool.query(
             "INSERT INTO administrators (id_user, SIG) VALUES (?, ?)",
             [idUser, user.SIG],
           );
@@ -268,18 +249,13 @@ export class Users {
           );
           break;
       }
-      await connection.commit();
+      await pool.commit();
       return idUser;
     } catch (error) {
-      if (connection) {
-        await connection.rollback();
-      }
+      await pool.rollback();
+
       console.error("Error al crear usuario:", error);
       return false;
-    } finally {
-      if (connection) {
-        connection.release();
-      }
     }
   }
 
@@ -290,11 +266,8 @@ export class Users {
    * @returns {null} Null si no se encuentra el usuario
    */
   static async getUserByEmail(email) {
-    let db;
     try {
-      db = await connectToDatabase();
-
-      const [result] = await db.query(
+      const [result] = await pool.query(
         `SELECT 
     u.id AS id_user,                       
     COALESCE(s.id, t.id, a.id) AS id,     
@@ -326,8 +299,6 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
     } catch (error) {
       console.error("Error al obtener usuario por email:", error);
       return null;
-    } finally {
-      await closeDatabaseConnection(db);
     }
   }
 
@@ -338,12 +309,10 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
    * @returns {boolean} True si la contraseña se cambió correctamente, false si no se pudo cambiar
    */
   static async changePassword(id, newPassword) {
-    let db;
     try {
-      db = await connectToDatabase();
       const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "UPDATE users SET pass = ?, is_first_login = ? WHERE id = ?",
         [hashedPassword, 0, id],
       );
@@ -352,7 +321,7 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
         return false;
       }
 
-      const [users] = await db.query("SELECT pass FROM users WHERE id = ?", [
+      const [users] = await pool.query("SELECT pass FROM users WHERE id = ?", [
         id,
       ]);
 
@@ -362,10 +331,6 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
     } catch (error) {
       console.error("Error al cambiar la contraseña:", error);
       return false;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -376,28 +341,18 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
    * @returns {boolean} True si el usuario se eliminó correctamente, false si no se pudo eliminar
    */
   static async deleteUser(id, role_id) {
-    let db;
-    let connection;
     try {
-      db = await connectToDatabase();
-      connection = await db.getConnection();
-      await connection.beginTransaction();
       switch (role_id) {
         case 2:
-          await connection.query("DELETE FROM students WHERE id_user = ?", [
-            id,
-          ]);
+          await pool.query("DELETE FROM students WHERE id_user = ?", [id]);
           break;
         case 3:
-          await connection.query("DELETE FROM teachers WHERE id_user = ?", [
-            id,
-          ]);
+          await pool.query("DELETE FROM teachers WHERE id_user = ?", [id]);
           break;
         case 4:
-          await connection.query(
-            "DELETE FROM administrators WHERE id_user = ?",
-            [id],
-          );
+          await pool.query("DELETE FROM administrators WHERE id_user = ?", [
+            id,
+          ]);
           break;
         default:
           console.error(
@@ -405,19 +360,12 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
           );
           break;
       }
-      const [result] = await connection.query(
-        "DELETE FROM users WHERE id = ?",
-        [id],
-      );
-      await connection.commit();
+      const [result] = await pool.query("DELETE FROM users WHERE id = ?", [id]);
+      await pool.commit();
       return result.affectedRows > 0;
     } catch (error) {
       console.error("Error al eliminar usuario:", error);
       return false;
-    } finally {
-      if (connection) {
-        connection.release();
-      }
     }
   }
 
@@ -427,10 +375,8 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
    * @returns {boolean} True si el usuario se actualizó correctamente, false si no se pudo actualizar
    */
   static async updateUser(user) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "UPDATE users SET document = ?, name = ?, last_name = ?, email = ?, phone = ?, role_id = ? WHERE id = ?",
         [
           user.document,
@@ -457,7 +403,7 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
 
         const sigQuery = sigQueries[roleId];
         if (sigQuery) {
-          await db.query(sigQuery, [user.SIG, user.id]);
+          await pool.query(sigQuery, [user.SIG, user.id]);
         }
       }
 
@@ -465,10 +411,6 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
     } catch (error) {
       console.error("Error al actualizar usuario:", error);
       return false;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 }

@@ -1,4 +1,4 @@
-import { connectToDatabase, closeDatabaseConnection } from "../db.js";
+import { pool } from "../db.js";
 export class Teachers {
   constructor(id, id_user, SIG, is_active) {
     this.id = id;
@@ -12,15 +12,13 @@ export class Teachers {
    * del periodo activo inyectada en un array.
    */
   static async getAllTeachersWithLoad({ SIG }) {
-    let db;
+   
     try {
-      db = await connectToDatabase();
+     
+      await pool.query("SET SESSION group_concat_max_len = 1000000;");
 
-      // 🌟 1. Blindaje: Ampliamos el límite de caracteres de GROUP_CONCAT para evitar strings recortados
-      await db.query("SET SESSION group_concat_max_len = 1000000;");
 
-      // 🌟 2. Consulta corregida con SEPARATOR
-      const [rows] = await db.query(
+      const [rows] = await pool.query(
         `SELECT 
           t.id AS id_teacher, 
           t.id_user, 
@@ -93,10 +91,6 @@ export class Teachers {
         error,
       );
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -108,9 +102,8 @@ export class Teachers {
    * @returns {Promise<object|null>} - Datos del profesor con su carga o null
    */
   static async getTeacherWithLoadByID(SIG, id_teacher) {
-    let db = null;
+    
     try {
-      db = await connectToDatabase();
 
       const sql = `
         SELECT 
@@ -142,7 +135,7 @@ export class Teachers {
         WHERE t.SIG = ? AND t.id_user = ?;
       `;
 
-      const [rows] = await db.execute(sql, [SIG, Number(id_teacher)]);
+      const [rows] = await pool.execute(sql, [SIG, Number(id_teacher)]);
 
       // Si no devolvió filas, es porque el profesor no existe en ese colegio
       if (rows.length === 0) return null;
@@ -185,10 +178,6 @@ export class Teachers {
         error,
       );
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
-    }
+    } 
   }
 }

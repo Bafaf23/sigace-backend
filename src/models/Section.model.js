@@ -1,4 +1,4 @@
-import { connectToDatabase, closeDatabaseConnection } from "../db.js";
+import { pool } from "../db.js";
 
 export class Sections {
   constructor(name, SIG, id_period, id_year, guide_id, capacity) {
@@ -14,10 +14,8 @@ export class Sections {
    * Obtiene el ID del período académico por su nombre
    */
   static async getPeriodIdByName(periodName) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [rows] = await db.query(
+      const [rows] = await pool.query(
         "SELECT id FROM academic_periods WHERE name = ? LIMIT 1",
         [periodName],
       );
@@ -25,10 +23,6 @@ export class Sections {
     } catch (error) {
       console.error("Error al obtener el período académico:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -36,10 +30,8 @@ export class Sections {
    * Crea una sección en la base de datos
    */
   static async createSection(section) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "INSERT INTO sections (name, SIG, id_period, id_year, guide_id, capacity) VALUES (?, ?, ?, ?, ?, ?)",
         [
           section.name,
@@ -54,10 +46,6 @@ export class Sections {
     } catch (error) {
       console.error("Error al crear la sección:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -65,10 +53,8 @@ export class Sections {
    * Obtiene las secciones de la escuela
    */
   static async getSections(SIG, id_period) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [rows] = await db.query(
+      const [rows] = await pool.query(
         `SELECT 
           sections.id, 
           sections.name, 
@@ -100,10 +86,6 @@ export class Sections {
     } catch (error) {
       console.error("Error al obtener las secciones:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -111,10 +93,7 @@ export class Sections {
    * Busca la sección actual de un estudiante junto a los datos del año escolar.
    */
   static async getSectionByStudent(SIG, id_student) {
-    let db = null;
     try {
-      db = await connectToDatabase();
-
       const query = `
         SELECT
           s.id AS student_id,
@@ -132,7 +111,7 @@ export class Sections {
         LIMIT 1;
       `;
 
-      const [rows] = await db.execute(query, [Number(id_student), SIG]);
+      const [rows] = await pool.execute(query, [Number(id_student), SIG]);
       return rows.length > 0 ? rows[0] : null;
     } catch (error) {
       console.error(
@@ -140,10 +119,6 @@ export class Sections {
         error,
       );
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -151,9 +126,7 @@ export class Sections {
    * Obtiene una sección por su id mapeando metadatos escolares para reportes
    */
   static async getSectionByID(SIG, id_section) {
-    let db = null;
     try {
-      db = await connectToDatabase();
       const query = `
         SELECT 
           s.name AS section_name,        
@@ -176,17 +149,12 @@ export class Sections {
         WHERE s.SIG = ? AND s.id = ?;
       `;
 
-      const [rows] = await db.execute(query, [SIG, id_section]);
+      const [rows] = await pool.execute(query, [SIG, id_section]);
 
-      // Retornamos el primer objeto encontrado o null si no existe
       return rows.length > 0 ? rows[0] : null;
     } catch (error) {
       console.error("❌ Error en el modelo al ejecutar getSectionByID:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 }

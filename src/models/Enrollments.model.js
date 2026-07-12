@@ -1,4 +1,4 @@
-import { connectToDatabase, closeDatabaseConnection } from "../db.js";
+import { pool } from "../db.js";
 export class Enrollments {
   constructor(id_student, id_period, id_section, status) {
     this.id_student = id_student;
@@ -6,11 +6,12 @@ export class Enrollments {
     this.id_section = id_section;
     this.status = status;
   }
+  /**
+   * Crea la inscripsion del estudiante en el sistema
+   */
   static async createEnrollment(enrollment) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "INSERT INTO enrollments (id_student, id_period, id_section, status) VALUES (?, ?, ?, ?)",
         [
           enrollment.id_student,
@@ -23,10 +24,6 @@ export class Enrollments {
     } catch (error) {
       console.error("Error al crear el registro de matrícula:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -36,9 +33,7 @@ export class Enrollments {
    * @returns {Array<object>} - students con estado aprovados
    */
   static async getApprovedForPromotion(id_period) {
-    let db;
     try {
-      db = await connectToDatabase();
       const sql = `SELECT 
           e.id AS enrollment_id,
           e.id_student,
@@ -60,14 +55,10 @@ export class Enrollments {
       AND e.status IN ('Aprobado', 'Materia Pendiente')
       ORDER BY sec.name ASC, u.last_name ASC`;
 
-      const [rows] = await db.query(sql, [id_period]);
+      const [rows] = await pool.query(sql, [id_period]);
       return rows;
     } catch (error) {
       console.log(error);
-    } finally {
-      if (db) {
-        closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -78,10 +69,8 @@ export class Enrollments {
    * @returns {Promise<boolean>} Devuelve true si se procesó y actualizó al menos un estudiante
    */
   static async processFinalStates(id_period) {
-    let db;
     try {
-      db = await connectToDatabase();
-      await db.query("START TRANSACTION");
+      await pool.query("START TRANSACTION");
 
       const sql = `SELECT 
     e.id_student,
@@ -121,7 +110,7 @@ LEFT JOIN (
 WHERE e.id_period = ? AND e.status = 'Activo'
 GROUP BY e.id_student`;
 
-      const [result] = await db.query(sql, [id_period, id_period]);
+      const [result] = await pool.query(sql, [id_period, id_period]);
 
       let totalActualizados = 0;
 
@@ -131,7 +120,7 @@ GROUP BY e.id_student`;
 
         if (reprobadas >= 1 && reprobadas <= 2) {
           nuevoEstatus = "Materia Pendiente";
-          const [materiasReprobadasDetalle] = await db.query(
+          const [materiasReprobadasDetalle] = await pool.query(
             `   SELECT la_total.id_subject 
   FROM load_academic la_total
   INNER JOIN enrollments e ON e.id_period = la_total.id_period
@@ -156,7 +145,7 @@ GROUP BY e.id_student`;
             [id_period, student.id_student],
           );
           for (const materia of materiasReprobadasDetalle) {
-            await db.query(
+            await pool.query(
               `INSERT INTO pending_subjects (id_student, id_subject, id_period_origin, status) 
                VALUES (?, ?, ?, 'Pendiente')`,
               [student.id_student, materia.id_subject, id_period],
@@ -166,7 +155,7 @@ GROUP BY e.id_student`;
           nuevoEstatus = "Reprobado";
         }
 
-        const [updateResult] = await db.query(
+        const [updateResult] = await pool.query(
           `UPDATE enrollments 
          SET status = ? 
          WHERE id_student = ? AND id_period = ? AND status = 'Activo'`,
@@ -178,22 +167,15 @@ GROUP BY e.id_student`;
         }
       }
 
-      await db.query("COMMIT");
+      await pool.query("COMMIT");
 
       return totalActualizados > 0;
     } catch (error) {
-      if (db) {
-        await db.query("ROLLBACK");
-      }
       console.error(
         "Error al procesar cierre de año y materias pendientes:",
         error,
       );
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -202,11 +184,7 @@ GROUP BY e.id_student`;
    * limpia su sección y lo deja listo (Pre-inscrito) para el futuro período.
    */
   static async processStartStates(id_period_actual) {
-    let db;
     try {
-      db = await connectToDatabase();
-      console.log(`Iniciando cierre del periodo:`, id_period_actual);
-
       const queryBuscarMateriasReprobadas = `
         SELECT la_total.id_subject 
         FROM load_academic la_total
@@ -275,7 +253,7 @@ GROUP BY e.id_student`;
         WHERE e.id_period = ?
         GROUP BY e.id_student, sec.id_year`;
 
-      const [students] = await db.query(queryRendimientoDefinitivo, [
+      const [students] = await pool.query(queryRendimientoDefinitivo, [
         id_period_actual,
         id_period_actual,
       ]);
@@ -293,7 +271,7 @@ GROUP BY e.id_student`;
           }
 
           // Calculamos el año siguiente basándonos en el orden
-          const [nextYear] = await db.query(
+          const [nextYear] = await pool.query(
             `SELECT id FROM years WHERE CAST(order_year AS UNSIGNED) = (SELECT CAST(order_year AS UNSIGNED) + 1 FROM years WHERE id = ?)`,
             [student.id_year_actual],
           );
@@ -305,13 +283,13 @@ GROUP BY e.id_student`;
 
           // Guardamos las materias pendientes en su historial si aplica
           if (reprobadas >= 1) {
-            const [materiasAArrastrar] = await db.query(
+            const [materiasAArrastrar] = await pool.query(
               queryBuscarMateriasReprobadas,
               [id_period_actual, id_period_actual, student.id_student],
             );
 
             for (const materia of materiasAArrastrar) {
-              await db.query(
+              await pool.query(
                 `INSERT INTO pending_subjects (id_student, id_subject, id_period_origin, status) 
                  VALUES (?, ?, ?, 'Pendiente')`,
                 [student.id_student, materia.id_subject, id_period_actual],
@@ -323,13 +301,13 @@ GROUP BY e.id_student`;
         }
 
         // 1. Actualizamos SOLO la condición en la tabla students (ya que no tiene id_year)
-        await db.query(`UPDATE students SET \`condition\` = ? WHERE id = ?`, [
+        await pool.query(`UPDATE students SET \`condition\` = ? WHERE id = ?`, [
           condicionEstudiante,
           student.id_student,
         ]);
 
         // 2. [CIERRE] Congelamos la inscripción del período que termina como 'Activo'
-        await db.query(
+        await pool.query(
           `UPDATE enrollments 
            SET status = 'Activo'
            WHERE id_student = ? AND id_period = ?`,
@@ -339,7 +317,7 @@ GROUP BY e.id_student`;
         // 3. [PROMOCIÓN FUTURA] Creamos su fila de inscripción para el futuro
         // Ponemos id_period = NULL e id_section = NULL porque aún no inició el nuevo ciclo,
         // pero guardamos su id_year destino para saber a qué año va.
-        await db.query(
+        await pool.query(
           `INSERT INTO enrollments (id_student, id_year, id_period, id_section, status) 
            VALUES (?, ?, NULL, NULL, 'Pre-inscrito')`,
           [student.id_student, id_year_destino],
@@ -359,12 +337,9 @@ GROUP BY e.id_student`;
    * @param {number} id_period_nuevo - El ID del período que está comenzando
    */
   static async activateNewPeriod(id_period_nuevo) {
-    let db;
     try {
-      db = await connectToDatabase();
-
       // 1. Obtenemos la lista de estudiantes únicos que están pre-inscritos
-      const [preInscritos] = await db.query(
+      const [preInscritos] = await pool.query(
         `SELECT DISTINCT id_student FROM enrollments WHERE id_period IS NULL AND status = 'Pre-inscrito'`,
       );
 
@@ -373,14 +348,14 @@ GROUP BY e.id_student`;
       // 2. Procesamos a cada estudiante uno por uno de forma segura
       for (const alumno of preInscritos) {
         // Verificamos si por si acaso ya tiene una matrícula real en el periodo nuevo
-        const [existe] = await db.query(
+        const [existe] = await pool.query(
           `SELECT id FROM enrollments WHERE id_student = ? AND id_period = ? LIMIT 1`,
           [alumno.id_student, id_period_nuevo],
         );
 
         if (existe.length === 0) {
           // Tomamos solo UNA de sus filas del limbo (la más nueva) y le asignamos el período nuevo
-          await db.query(
+          await pool.query(
             `UPDATE enrollments 
              SET id_period = ?, status = 'Activo' 
              WHERE id_period IS NULL AND status = 'Pre-inscrito' AND id_student = ?
@@ -396,7 +371,7 @@ GROUP BY e.id_student`;
       );
 
       // 3. ¡LIMPIEZA CRÍTICA!: Borramos cualquier otra fila vieja o duplicada que haya quedado en el limbo
-      await db.query(
+      await pool.query(
         `DELETE FROM enrollments WHERE id_period IS NULL AND status = 'Pre-inscrito'`,
       );
 
@@ -407,10 +382,6 @@ GROUP BY e.id_student`;
         error,
       );
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -421,22 +392,19 @@ GROUP BY e.id_student`;
    * @param {Number} id_period - id del período activo
    */
   static async UpdatePreInscrip(id_student, id_section, id_period) {
-    let db;
     try {
-      db = await connectToDatabase();
-
       const sql = `UPDATE enrollments SET id_section = ? WHERE id_student = ? AND id_period = ?`;
 
-      const [result] = await db.query(sql, [id_section, id_student, id_period]);
+      const [result] = await pool.query(sql, [
+        id_section,
+        id_student,
+        id_period,
+      ]);
 
       return result.affectedRows > 0;
     } catch (error) {
       console.error("❌ Error en UpdatePreInscrip:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 }

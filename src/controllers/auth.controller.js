@@ -76,7 +76,11 @@ export const login = async (req, res) => {
       : "Sin Periodo Activo";
     const mustChangePassword = user.is_first_login === 1;
 
-    // 🌟 CORREGIDO: 6. Generación del JWT Token (Subido de posición en el flujo)
+    req.session.userId = user.id_user;
+    req.session.role = user.role;
+    req.session.SIG = user.SIG;
+    req.session.id_period = currentPeriodId;
+
     const token = sign(
       {
         email: user.email,
@@ -88,21 +92,18 @@ export const login = async (req, res) => {
         mustChangePassword,
       },
       process.env.JWT_SECRET,
-      {
-        expiresIn: mustChangePassword ? "15m" : "1h",
-      },
+      { expiresIn: mustChangePassword ? "15m" : "1h" },
     );
 
-    // 🌟 CORREGIDO: 7. Establecimiento de las Cookies (Ahora la variable 'token' ya existe)
     const cookieOptionsBase = {
-      secure: process.env.NODE_ENV === "production", // true en producción (HTTPS)
-      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 'none' en producción con HTTPS, 'lax' en local
     };
 
     res.cookie("auth_token", token, {
       ...cookieOptionsBase,
       httpOnly: true,
-      maxAge: mustChangePassword ? 15 * 60 * 1000 : 60 * 60 * 1000, // 15m o 1h
+      maxAge: mustChangePassword ? 15 * 60 * 1000 : 60 * 60 * 1000,
     });
 
     res.cookie("user_name", encodeURIComponent(user.name), {
@@ -126,19 +127,27 @@ export const login = async (req, res) => {
       });
     }
 
-    console.log(
-      `✅ Sesión iniciada y cookies establecidas para: ${user.email}`,
-    );
-    return res.status(200).json({
-      mustChangePassword: false,
-      user: {
-        id: user.id,
-        role: user.role,
-        id_period: currentPeriodId,
-        period: currentPeriodName,
-        name: user.name,
-        last_name: user.last_name,
-      },
+    // 🌟 FORZAR EL GUARDADO en la BD antes de responder al cliente
+    req.session.save((err) => {
+      if (err) {
+        console.error("Error al guardar la sesión en MySQL:", err);
+        return res
+          .status(500)
+          .json({ error: "Error al registrar la sesión en la base de datos" });
+      }
+
+      console.log(`✅ Sesión iniciada y guardada en MySQL para: ${user.email}`);
+      return res.status(200).json({
+        mustChangePassword: false,
+        user: {
+          id: user.id_user, // Corregido: usabas user.id y arriba tienes user.id_user
+          role: user.role,
+          id_period: currentPeriodId,
+          period: currentPeriodName,
+          name: user.name,
+          last_name: user.last_name,
+        },
+      });
     });
   } catch (error) {
     console.error("Error al iniciar sesión:", error);

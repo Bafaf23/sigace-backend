@@ -1,4 +1,4 @@
-import { connectToDatabase, closeDatabaseConnection } from "../db.js";
+import { pool } from "../db.js";
 import { createSIG } from "../utils/createSIG.js";
 
 const emptyToNull = (value) => {
@@ -24,48 +24,34 @@ export class School {
    * @returns
    */
   static async getAllSchools() {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [rows] = await db.query("SELECT * FROM schools");
+      const [rows] = await pool.query("SELECT * FROM schools");
       return rows;
     } catch (error) {
       console.error("Error al obtener las escuelas:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
   static async getSchoolBySIG(SIG) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [rows] = await db.query("SELECT * FROM schools WHERE SIG = ?", [
+      const [rows] = await pool.query("SELECT * FROM schools WHERE SIG = ?", [
         SIG,
       ]);
       return rows[0] || null;
     } catch (error) {
       console.error("Error al obtener la escuela:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
   static async createSchool(school) {
-    let db;
     try {
-      db = await connectToDatabase();
       const SIG = createSIG();
       const rif = emptyToNull(school.RIF);
       const DEA_CODE = emptyToNull(school.DEA_CODE);
       const company_name = emptyToNull(school.company_name);
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "INSERT INTO schools (SIG, name, company_name, address, phone, email, type, RIF, DEA_CODE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           SIG,
@@ -83,46 +69,32 @@ export class School {
     } catch (error) {
       console.error("Error al crear la escuela:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
   static async deleteSchool(SIG) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query("DELETE FROM schools WHERE SIG = ?", [
+      const [result] = await pool.query("DELETE FROM schools WHERE SIG = ?", [
         SIG,
       ]);
       if (result.affectedRows === 0) {
-        await closeDatabaseConnection(db);
         return false;
       }
-      await closeDatabaseConnection(db);
+
       return result.affectedRows > 0;
     } catch (error) {
       console.error("Error al eliminar la escuela:", error);
-      await closeDatabaseConnection(db);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
   static async updateSchool(school) {
-    let db;
     try {
-      db = await connectToDatabase();
       const RIF = emptyToNull(school.RIF);
       const DEA_CODE = emptyToNull(school.DEA_CODE);
       const company_name = emptyToNull(school.company_name);
 
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "UPDATE schools SET name = ?, company_name = ?, address = ?, phone = ?, email = ?, type = ?, RIF = ?, DEA_CODE = ? WHERE SIG = ?",
         [
           school.name,
@@ -140,26 +112,16 @@ export class School {
     } catch (error) {
       console.error("Error al actualizar la escuela:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
   static async getRole() {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query("SELECT id, name FROM roles");
+      const [result] = await pool.query("SELECT id, name FROM roles");
       return result;
     } catch (error) {
       console.error("Error al obtener roles:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 }

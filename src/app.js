@@ -1,5 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
+import MySQLStoreFactory from "express-mysql-session";
+import { pool } from "./db.js";
 import userRouter from "./routers/user.route.js";
 import cors from "cors";
 import session from "express-session";
@@ -26,6 +28,9 @@ app.use(cookieParser());
 
 const isProduction = process.env.NODE_ENV === "production";
 
+const MySQLStore = MySQLStoreFactory(session);
+const sessionStore = new MySQLStore({}, pool);
+
 app.use(
   cors({
     origin: [
@@ -38,15 +43,18 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
 app.use(
   session({
+    key: "sigace_session_cookie",
     secret: process.env.SESSION_SECRET, // Clave para firmar la cookie de sesión
     resave: false, // Evita guardar la sesión si no hubo cambios
+    store: sessionStore,
     saveUninitialized: false, // No crea una sesión vacía para usuarios no logueados
     cookie: {
       secure: isProduction,
       httpOnly: true, // Impide que el frontend acceda a la cookie vía JS (Seguridad)
-      sameSite: "none",
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 1000 * 60 * 60 * 2, // Duración de la sesión: 2 horas
     },
   }),

@@ -1,4 +1,4 @@
-import { connectToDatabase, closeDatabaseConnection } from "../db.js";
+import { pool } from "../db.js";
 
 /**
  * @class Student
@@ -74,10 +74,8 @@ export class Students {
    * @returns {Promise<Array<object>>}
    */
   static async getAllStudents({ SIG, id_period }) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [rows] = await db.query(
+      const [rows] = await pool.query(
         `SELECT 
           students.id, 
           students.id_user, 
@@ -133,18 +131,12 @@ export class Students {
     } catch (error) {
       console.error("❌ Error al obtener los estudiantes:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
   static async createStudent(student) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "INSERT INTO students (id_user, gender, SIG, representative_id, tuition_number, allergies, medical_condition, weight, height, shirt_size, pants_size, shoe_size, \`condition\`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           student.id_user,
@@ -166,10 +158,6 @@ export class Students {
     } catch (error) {
       console.error("Error al crear el estudiante:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -180,10 +168,8 @@ export class Students {
    * @returns {boolean}
    */
   static async updateStudent(id, student) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "UPDATE students SET gender = ?, birth_date = ?, height = ?, allergies = ?, medical_condition = ?, weight = ?, shirt_size = ?, pants_size = ?, shoe_size = ? WHERE id = ?",
         [
           student.gender,
@@ -202,10 +188,6 @@ export class Students {
     } catch (error) {
       console.error("Error al actualizar el estudiante:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
   /**
@@ -216,10 +198,8 @@ export class Students {
    * @returns {Array<object>} - Array de estudiantes no matriculados
    */
   static async getStudentNotEnrolled({ id_period, SIG }) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [rows] = await db.query(
+      const [rows] = await pool.query(
         "SELECT u.name, u.last_name, u.document, s.id FROM students s INNER JOIN users u ON s.id_user = u.id LEFT JOIN enrollments e ON s.id = e.id_student AND e.id_period = ? WHERE e.id IS NULL AND s.SIG = ?",
         [id_period, SIG],
       );
@@ -227,10 +207,6 @@ export class Students {
     } catch (error) {
       console.error("Error al obtener los estudiantes no matriculados:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -242,10 +218,8 @@ export class Students {
    * @returns {Array<object>} - Array de estudiantes
    */
   static async getStudentsBySection({ id_section, SIG }) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [rows] = await db.query(
+      const [rows] = await pool.query(
         `SELECT 
     s.id, 
     s.id_user, 
@@ -264,10 +238,6 @@ WHERE e.id_section = ? AND s.SIG = ?`,
     } catch (error) {
       console.error("Error al obtener los estudiantes de la sección:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -277,10 +247,7 @@ WHERE e.id_section = ? AND s.SIG = ?`,
    * @return {object|null} - info del estudiante o null si no existe
    */
   static async getStudentByID(id_student, id_period) {
-    let db = null;
     try {
-      db = await connectToDatabase();
-
       const sql = `
       SELECT 
         st.id AS id_student,
@@ -315,16 +282,12 @@ WHERE e.id_section = ? AND s.SIG = ?`,
 
       LIMIT 1
     `;
-      const [rows] = await db.query(sql, [id_period, id_student]);
+      const [rows] = await pool.query(sql, [id_period, id_student]);
 
       return rows.length > 0 ? rows[0] : null;
     } catch (error) {
       console.log(`Error en getStudentByID: ${error}`);
       return null;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -335,11 +298,7 @@ WHERE e.id_section = ? AND s.SIG = ?`,
    * @param {number|string} id_period - ID del periodo
    */
   static async getRecordStudent(id_student, id_period) {
-    let db;
     try {
-      db = await connectToDatabase();
-
-      // SQL corregido al 100%: Filtra materias y notas limitándose estrictamente al periodo y sección inscrita
       const sql = `
         SELECT 
         en.id AS enrollment_id,
@@ -365,7 +324,7 @@ WHERE e.id_section = ? AND s.SIG = ?`,
       ORDER BY ap.start_date DESC, sb.name ASC, lap.id ASC LIMIT 100
       `;
 
-      const [rows] = await db.query(sql, [id_student, id_period]);
+      const [rows] = await pool.query(sql, [id_student, id_period]);
 
       if (!rows || rows.length === 0) {
         return [];
@@ -509,13 +468,13 @@ WHERE e.id_section = ? AND s.SIG = ?`,
    * @returns {Array<object>} - lista de estudiantes
    */
   static async getPreinscription(SIG, id_period) {
-    let db;
+    
     try {
-      db = await connectToDatabase();
+     
 
       const sql = `SELECT u.name, u.last_name, u.document, s.id FROM students s INNER JOIN users u ON s.id_user = u.id LEFT JOIN enrollments e ON s.id = e.id_student AND e.id_period = ? WHERE e.id_section IS NULL AND s.SIG = ? `;
 
-      const studentn = await db.query(sql, [id_period, SIG]);
+      const studentn = await pool.query(sql, [id_period, SIG]);
 
       return studentn;
     } catch (error) {
