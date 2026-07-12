@@ -69,7 +69,7 @@ app.get("/", (_req, res) => {
     description:
       "Sistema Inteligente de Control de Estudios. Backend para la gestión de matrículas, notas y reportes académicos.",
     version: "1.0.0",
-    environment: "production",
+    environment: isProduction ? "Producion" : "Rivisar",
     status: "operational",
     timestamp: "2026-05-24T13:00:00Z",
     links: {
