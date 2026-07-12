@@ -57,6 +57,7 @@ app.use(
       secure: isProduction,
       httpOnly: true, // Impide que el frontend acceda a la cookie vía JS (Seguridad)
       sameSite: isProduction ? "none" : "lax",
+      domain: isProduction ? ".sigace.xyz" : undefined,
       maxAge: 1000 * 60 * 60 * 2, // Duración de la sesión: 2 horas
     },
   }),
