@@ -22,11 +22,13 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use(cookieParser())
+app.use(cookieParser());
+
+const isProduction = process.env.NODE_ENV === "production";
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -38,7 +40,7 @@ app.use(
     resave: false, // Evita guardar la sesión si no hubo cambios
     saveUninitialized: false, // No crea una sesión vacía para usuarios no logueados
     cookie: {
-      secure: false, // Ponlo en 'true' solo si usas HTTPS (producción)
+      secure: isProduction,
       httpOnly: true, // Impide que el frontend acceda a la cookie vía JS (Seguridad)
       maxAge: 1000 * 60 * 60 * 2, // Duración de la sesión: 2 horas
     },
@@ -70,7 +72,6 @@ app.get("/", (_req, res) => {
     environment: "production",
     status: "operational",
     timestamp: "2026-05-24T13:00:00Z",
-    documentation: "https://api.sigace.com/docs",
     links: {
       users: `${process.env.API_URL}/users`,
       auth: `${process.env.API_URL}/auth`,
@@ -83,5 +84,5 @@ app.get("/", (_req, res) => {
 const port = process.env.PORT || 3004;
 
 app.listen(port, () => {
-  console.log(`Escuchando en el puerto http://localhost:${port}`);
+  console.log(`Escuchando en el puerto ${port}`);
 });

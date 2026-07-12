@@ -219,7 +219,11 @@ export const getSubjectBySection = async (req, res) => {
       });
     }
 
-    const getSection = await Sections.getSectionByStudent(SIG, id_student);
+    const getSection = await Sections.getSectionByStudent(
+      SIG,
+      id_student,
+      id_period,
+    );
 
     if (!getSection) {
       return res.status(404).json({

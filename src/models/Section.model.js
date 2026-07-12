@@ -175,7 +175,7 @@ export class Sections {
         LEFT JOIN users u ON t.id_user = u.id
         WHERE s.SIG = ? AND s.id = ?;
       `;
-      
+
       const [rows] = await db.execute(query, [SIG, id_section]);
 
       // Retornamos el primer objeto encontrado o null si no existe

@@ -20,21 +20,46 @@ export function listSection(
     @page { size: letter; margin: 0; }
     body { font-family: 'Helvetica' }
     
-    .watermark {
-      position: absolute; 
-      top: 50%; 
-      left: 50%; 
+   .watermark-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -10; /* Va al fondo por detrás de la tabla */
+      pointer-events: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .watermark-img {
       width: 60%;
       opacity: 0.03; 
-      z-index: -1; 
-      transform: translate(-50%, -50%);
-      transform-origin: center;
     }
+
+    tr {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+      thead {
+  display: table-header-group;
+}
+
+.tabla-separador-salto {
+  height: 25px; /* Ajusta este valor si quieres más o menos espacio arriba en la pág 2 */
+}
   </style>
 </head>
 <body class="bg-white p-12 text-slate-700 relative min-h-screen flex flex-col justify-between">
-  <div class="absolute top-0 left-0 right-0 h-2 bg-[#04C4D9]"></div>
-  ${logoSchool ? `<img class="watermark" src="${logoSchool}">` : ``}
+${
+  logoSchool
+    ? `
+  <div class="watermark-container">
+    <img class="watermark-img" src="${logoSchool}">
+  </div>
+  `
+    : ``
+}
   <div>
     <div class="flex justify-between items-center border-b-2 border-slate-100 pb-4 relative">
       <div>
@@ -52,8 +77,11 @@ export function listSection(
       </div>
     </div>
 
-    <table class="w-full mt-6 text-left border-collapse">
+    <table class="w-full text-left border-collapse">
       <thead>
+        <tr class="tabla-separador-salto">
+          <td colspan="4"></td>
+        </tr>
         <tr class="bg-slate-800 text-white uppercase text-[10px] font-bold tracking-wider">
           <th class="p-3 rounded-l w-[8%]">N°</th>
           <th class="p-3 w-[22%]">Matrícula</th>
@@ -67,7 +95,7 @@ export function listSection(
     </table>
   </div>
 
-  <div class="mt-auto">
+  <div class="mt-20">
     <div class="flex justify-around items-center pt-12">
       <div class="w-[35%] border-t border-slate-300 text-center pt-2">
         <p class="text-[12px] font-bold text-slate-800">Docente / Guía</p>

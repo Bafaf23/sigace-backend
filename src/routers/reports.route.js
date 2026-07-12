@@ -9,7 +9,6 @@ import {
   verificarAutenticacion,
   permitirRoles,
 } from "../middlewares/auth.middleware.js";
-import { noteSheet } from "../templates/noteSheet.template.js";
 
 const router = Router();
 

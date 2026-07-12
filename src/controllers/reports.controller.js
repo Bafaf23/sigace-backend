@@ -372,6 +372,7 @@ export const sheetNote = async (req, res) => {
   const SIG = req.user?.SIG;
   const id_period = req.user?.id_period;
   const { id_section } = req.params;
+  
   let browser = null;
 
   if (!SIG || !id_section) {

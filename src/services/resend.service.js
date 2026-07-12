@@ -48,7 +48,7 @@ export const welcomeEmail = async (userName, userEmail) => {
       "📬 [Servicio Correo]: Conectando con la API de Resend para el envío...",
     );
     const response = await resend.emails.send({
-      from: "SIGACE <onboarding@resend.dev>",
+      from: "SIGACE <no-replay@sigace.xyz>",
       to: cleanToField,
       subject: "¡Bienvenido a bordo!",
       html: htmlWithInlineStyles,
@@ -108,7 +108,7 @@ export const sendResetPasswordEmail = async (userName, userEmail, resetUrl) => {
 
     // 4. Enviamos usando la API de Resend
     const response = await resend.emails.send({
-      from: "SIGACE <onboarding@resend.dev>", // Recuerda cambiar esto cuando tengas dominio propio
+      from: "SIGACE <no-replay@sigace.xyz>",
       to: cleanToField,
       subject: "Restablecimiento de contraseña",
       html: htmlWithInlineStyles,
@@ -133,4 +133,3 @@ export const sendResetPasswordEmail = async (userName, userEmail, resetUrl) => {
     return { success: false, error: error.message || error };
   }
 };
-

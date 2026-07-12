@@ -60,10 +60,7 @@ export const createUser = async (req, res) => {
     }
 
     console.log(`Enviando correo... ${req.body.email}`);
-    welcomeEmail(
-      formattedName,
-      /*req.body.email*/ "bryantffacen@gmail.com",
-    ).catch((error) => {
+    welcomeEmail(formattedName, req.body.email).catch((error) => {
       console.error(
         "❌ [Background Task Error]: Falló el envío del correo de bienvenida:",
         error,
