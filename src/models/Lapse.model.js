@@ -1,4 +1,4 @@
-import { connectToDatabase, closeDatabaseConnection } from "../db.js";
+import { pool } from "../db.js";
 
 export class LapseModel {
   constructor(id, name, start_date, end_date, is_active, createdAt, updatedAt) {
@@ -18,10 +18,8 @@ export class LapseModel {
    * @returns {Promise<Array<object>>}
    */
   static async getLapses(SIG, id_period) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [rows] = await db.query(
+      const [rows] = await pool.query(
         `SELECT l.id, l.name, l.start_date, l.end_date, l.is_active FROM lapses l
           JOIN academic_periods ap ON l.id_period = ap.id
           WHERE ap.SIG = ? AND ap.is_active = 1 AND l.id_period = ?`,
@@ -31,8 +29,6 @@ export class LapseModel {
     } catch (error) {
       console.error(error);
       throw error;
-    } finally {
-      if (db) await closeDatabaseConnection(db);
     }
   }
 
@@ -41,10 +37,8 @@ export class LapseModel {
    * @param {{ id_period: number, name: string, start_date: string, end_date: string, is_active?: boolean }} lapse
    */
   static async createLapses(lapse) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "INSERT INTO lapses (id_period, name, start_date, end_date, is_active) VALUES (?, ?, ?, ?, ?)",
         [
           lapse.id_period,
@@ -65,8 +59,6 @@ export class LapseModel {
     } catch (error) {
       console.error(error);
       throw error;
-    } finally {
-      if (db) await closeDatabaseConnection(db);
     }
   }
 
@@ -74,10 +66,8 @@ export class LapseModel {
    * Desactiva un lapso (lo finaliza)
    */
   static async endLapse(id) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "UPDATE lapses SET is_active = 0 WHERE id = ?",
         [id],
       );
@@ -85,8 +75,6 @@ export class LapseModel {
     } catch (error) {
       console.error(error);
       throw error;
-    } finally {
-      if (db) await closeDatabaseConnection(db);
     }
   }
 
@@ -96,17 +84,15 @@ export class LapseModel {
    * @returns {Promise<boolean>} success
    */
   static async startLapse(idLapse, id_period) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [lapseActive] = await db.query(
+      const [lapseActive] = await pool.query(
         "SELECT * FROM lapses WHERE is_active = 1 AND id_period = ?",
         [id_period],
       );
       if (lapseActive.length > 0) {
         return false;
       }
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "UPDATE lapses SET is_active = 1 WHERE id = ?",
         [idLapse],
       );
@@ -114,8 +100,6 @@ export class LapseModel {
     } catch (error) {
       console.error(error);
       throw error;
-    } finally {
-      if (db) await closeDatabaseConnection(db);
     }
   }
 }

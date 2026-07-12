@@ -1,4 +1,4 @@
-import { connectToDatabase, closeDatabaseConnection } from "../db.js";
+import { pool } from "../db.js";
 
 export class Grade {
   constructor(id, idEvaluation, idStudent, grade) {
@@ -17,11 +17,8 @@ export class Grade {
    * @returns {Promise<boolean>}
    */
   static async createGrade({ id_evaluation, id_student, grade }) {
-    let db = null;
     try {
-      db = await connectToDatabase();
-
-      const [result] = await db.query(
+      const [result] = await pool.query(
         `INSERT INTO grades (id_evaluation, id_student, grade) VALUES (?, ?, ?)`,
         [id_evaluation, id_student, grade],
       );
@@ -30,10 +27,6 @@ export class Grade {
     } catch (error) {
       console.error(`Ha ocurrido un error inesperado: ${error}`);
       return false; // Retornamos false si falla para respetar el @returns {boolean}
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -52,10 +45,7 @@ export class Grade {
     idLapse,
     idLoadAcademic,
   }) {
-    let db = null;
     try {
-      db = await connectToDatabase();
-
       // 1. Base del query con un "WHERE 1=1" para poder concatenar "AND" fácilmente
       let query = `
       SELECT
@@ -104,16 +94,11 @@ export class Grade {
       query += ` ORDER BY lap.id ASC, det.id ASC`;
 
       // 3. Ejecutamos pasándole exactamente el array de parámetros mapeado
-      const [gradesStudent] = await db.query(query, queryParams);
+      const [gradesStudent] = await pool.query(query, queryParams);
       return gradesStudent;
     } catch (error) {
       console.log(`Error en modelo grade: ${error}`);
       return []; // Retorna array vacío en caso de error para evitar que el controlador rompa su lógica
-    } finally {
-      // 4. IMPRESCINDIBLE: Cerramos la conexión para proteger la salud de SIGACE
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -125,12 +110,9 @@ export class Grade {
    * @returns {Array<object>} Rows con el consolidado por materia
    */
   static async getGradesForBoleta(SIG, idStudent, idSection) {
-    let db = null;
     try {
-      db = await connectToDatabase();
-
       // 1. 🔍 Primero buscamos el ID del periodo activo asociado al SIG del colegio
-      const [periodResult] = await db.query(
+      const [periodResult] = await pool.query(
         "SELECT id FROM academic_periods WHERE SIG = ? AND is_active = 1 LIMIT 1",
         [SIG],
       );
@@ -138,7 +120,7 @@ export class Grade {
       // Si por alguna razón no hay uno marcado como activo, buscamos el último creado para ese SIG
       let periodId = periodResult[0]?.id;
       if (!periodId) {
-        const [lastPeriod] = await db.query(
+        const [lastPeriod] = await pool.query(
           "SELECT id FROM academic_periods WHERE SIG = ? ORDER BY id DESC LIMIT 1",
           [SIG],
         );
@@ -146,7 +128,7 @@ export class Grade {
       }
 
       // 2. 🔍 Ahora buscamos los lapsos usando el 'id_period' que encontramos
-      const [lapsesResult] = await db.query(
+      const [lapsesResult] = await pool.query(
         "SELECT id FROM lapses WHERE id_period = ? ORDER BY id ASC",
         [periodId],
       );
@@ -195,7 +177,7 @@ export class Grade {
       ORDER BY sub.name ASC;
     `;
 
-      const [rows] = await db.query(query, [
+      const [rows] = await pool.query(query, [
         lapse1_id,
         lapse2_id,
         lapse3_id,
@@ -213,8 +195,6 @@ export class Grade {
     } catch (error) {
       console.error(`❌ Error crítico en getGradesForBoleta: ${error}`);
       return [];
-    } finally {
-      if (db) await closeDatabaseConnection(db);
     }
   }
 }

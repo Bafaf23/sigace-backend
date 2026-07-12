@@ -1,4 +1,4 @@
-import { connectToDatabase, closeDatabaseConnection } from "../db.js";
+import { pool } from "../db.js";
 export class Academic_periods {
   constructor(name, start_date, end_date, is_active, SIG) {
     this.id;
@@ -14,10 +14,8 @@ export class Academic_periods {
    * @returns id del nuevo perido
    */
   static async createAcademicPeriod(academicPeriodModel) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "INSERT INTO academic_periods (name, start_date, end_date, is_active, SIG) VALUES (?, ?, ?, ?, ?)",
         [
           academicPeriodModel.name,
@@ -32,9 +30,7 @@ export class Academic_periods {
     } catch (error) {
       console.error(error);
       throw error;
-    } finally {
-      if (db) await closeDatabaseConnection(db);
-    }
+    } 
   }
 
   /**
@@ -44,10 +40,8 @@ export class Academic_periods {
    * @returns {Promise<Array<object>>} Array con todos los periodos
    */
   static async getAcademicPeriods(SIG) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [rows] = await db.query(
+      const [rows] = await pool.query(
         `SELECT * FROM academic_periods WHERE SIG = ? ORDER BY id DESC`,
         [SIG],
       );
@@ -56,9 +50,7 @@ export class Academic_periods {
     } catch (error) {
       console.error("Error en getAcademicPeriods:", error);
       throw error;
-    } finally {
-      if (db) await closeDatabaseConnection(db);
-    }
+    } 
   }
 
   /**
@@ -67,10 +59,8 @@ export class Academic_periods {
    * @returns {boolean} success
    */
   static async endAcademicPeriod(SIG) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "UPDATE academic_periods SET is_active = 0 WHERE SIG = ?",
         [SIG],
       );
@@ -78,9 +68,7 @@ export class Academic_periods {
     } catch (error) {
       console.error(error);
       throw error;
-    } finally {
-      if (db) await closeDatabaseConnection(db);
-    }
+    } 
   }
 
   /**
@@ -89,10 +77,8 @@ export class Academic_periods {
    * @returns {Promise<boolean>} True si hay un período activo, False de lo contrario.
    */
   static async hasActivePeriod(SIG) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [rows] = await db.query(
+      const [rows] = await pool.query(
         `SELECT id FROM academic_periods WHERE is_active = 1 AND  SIG = ? LIMIT 1`,
         [SIG],
       );
@@ -101,10 +87,6 @@ export class Academic_periods {
     } catch (error) {
       console.error("Error en Academic_periods.hasActivePeriod:", error);
       throw error; // Dejar que el controlador maneje el error general
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -114,9 +96,7 @@ export class Academic_periods {
    * @param {object}
    */
   static async getPeriodEnrollmentStudent(id_student) {
-    let db;
     try {
-      db = await connectToDatabase();
       const sql = `SELECT 
         ap.id AS id_period,
         ap.name AS school_year,        -- Ej: "Año Escolar 2025 - 2026"
@@ -132,7 +112,7 @@ export class Academic_periods {
 
       const params = [id_student];
 
-      const row = await db.execute(sql, params);
+      const row = await pool.execute(sql, params);
       return row;
     } catch (error) {
       throw error;

@@ -1,4 +1,4 @@
-import { connectToDatabase, closeDatabaseConnection } from "../db.js";
+import { pool } from "../db.js";
 
 export class Subject {
   constructor(code_subject, name, abbreviation, year_id, SIG) {
@@ -9,10 +9,8 @@ export class Subject {
     this.SIG = SIG;
   }
   static async createSubject(subject) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "INSERT INTO subjects (code_subject, name, year_id, SIG, abbreviation) VALUES (?, ?, ?, ?, ?)",
         [
           subject.code_subject,
@@ -26,18 +24,12 @@ export class Subject {
     } catch (error) {
       console.error("Error al crear la materia:", error);
       return null;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
   static async getSubjects(SIG) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "SELECT s.code_subject, s.name, y.name AS year_name, s.abbreviation FROM subjects s INNER JOIN years y ON s.year_id = y.id WHERE s.SIG = ?",
         [SIG],
       );
@@ -45,18 +37,12 @@ export class Subject {
     } catch (error) {
       console.error("Error al obtener las materias:", error);
       return null;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
   static async getYears(SIG) {
-    let db;
     try {
-      db = await connectToDatabase();
-      const [result] = await db.query(
+      const [result] = await pool.query(
         "SELECT id, name FROM years WHERE SIG = ?",
         [SIG],
       );
@@ -64,10 +50,6 @@ export class Subject {
     } catch (error) {
       console.error("Error al obtener los años:", error);
       return null;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -79,15 +61,9 @@ export class Subject {
    * @returns {Promise<Array<object>>} - Array de materias con sus evaluaciones agrupadas
    */
   static async getSubjectBySection({ id_lapse, id_section, id_student, SIG }) {
-    let db = null;
     try {
-      db = await connectToDatabase();
-
-      // 1. Mapeo dinámico inicial de parámetros para el JOIN
       const joinParams = [];
       let studentJoinCondition = "";
-
-      // Si viene id_student, lo filtramos directamente en la unión de la tabla 'grades'
       if (id_student) {
         studentJoinCondition = " AND g.id_student = ?";
         joinParams.push(id_student);
@@ -130,7 +106,7 @@ export class Subject {
       // 4. Un solo ORDER BY al final de la consulta
       sql += ` ORDER BY s.name ASC, epd.date ASC;`;
 
-      const [rows] = await db.execute(sql, params);
+      const [rows] = await pool.execute(sql, params);
 
       // 5. Procesamiento y mapeo de la data
       const subjectsMap = rows.reduce((acc, row) => {
@@ -182,10 +158,6 @@ export class Subject {
     } catch (error) {
       console.error("❌ Error al obtener las materias por sección:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
     }
   }
 
@@ -195,11 +167,11 @@ export class Subject {
    * @returns {boolean} terdadero si elimina una asignatura
    */
   static async deleteSubjects(code_subject, SIG) {
-    let db;
+    
     try {
-      db = await connectToDatabase();
+     
       const query = `DELETE FROM subjects WHERE code_subject = ? AND SIG = ?`;
-      const result = await db.query(query, [code_subject, SIG]);
+      const result = await pool.query(query, [code_subject, SIG]);
       return result.affectedRows > 0;
     } catch (error) {
       throw error;
@@ -214,9 +186,9 @@ export class Subject {
    * @param {string} param0.SIG
    */
   static async getGradesForSheetNote({ id_lapse, id_section, SIG }) {
-    let db = null;
+   
     try {
-      db = await connectToDatabase();
+    
 
       const query = `
      SELECT 
@@ -245,16 +217,12 @@ export class Subject {
     `;
 
       // Pasamos los parámetros de forma limpia y segura
-      const [rows] = await db.execute(query, [id_lapse, id_section, SIG]);
+      const [rows] = await pool.execute(query, [id_lapse, id_section, SIG]);
       return rows;
     } catch (error) {
       console.error("❌ Error en getGradesForSheetNote:", error);
       throw error;
-    } finally {
-      if (db) {
-        await closeDatabaseConnection(db);
-      }
-    }
+    } 
   }
 
   /**
@@ -263,16 +231,16 @@ export class Subject {
    * @return {Array<object>}
    */
   static async getPendingSubject(id_student) {
-    let db;
+    
     try {
-      db = await connectToDatabase();
-     
+      
+
       const sql = `SELECT ps.id_subject, ps.status, su.name, su.abbreviation 
                  FROM pending_subjects ps 
                  LEFT JOIN subjects su ON ps.id_subject = su.code_subject 
                  WHERE ps.id_student = ?`;
 
-      const result = await db.query(sql, [id_student]);
+      const result = await pool.query(sql, [id_student]);
       return result;
     } catch (error) {
       throw error;

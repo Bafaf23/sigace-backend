@@ -1,4 +1,4 @@
-import { connectToDatabase, closeDatabaseConnection } from "../db.js";
+import { pool } from "../db.js";
 export class LoadAcademic {
   constructor(
     id,
@@ -19,9 +19,7 @@ export class LoadAcademic {
   }
 
   static async createLoadAcademic(loadAcademic) {
-    let db;
     try {
-      db = await connectToDatabase();
       const query = `INSERT INTO load_academic (id_teacher, SIG, id_section, id_period, id_subject, created_at) VALUES (?, ?, ?, ?, ?, ?)`;
       const values = [
         loadAcademic.id_teacher,
@@ -31,20 +29,16 @@ export class LoadAcademic {
         loadAcademic.id_subject,
         loadAcademic.created_at,
       ];
-      const result = await db.query(query, values);
+      const result = await pool.query(query, values);
       return true;
     } catch (error) {
       console.error("Error al crear el registro de carga académica:", error);
       return false;
-    } finally {
-      await closeDatabaseConnection(db);
     }
   }
 
   static async getLoadAcademic(SIG) {
-    let db;
     try {
-      db = await connectToDatabase();
       const query = `SELECT 
     la.*, 
     se.name AS name_section, 
@@ -65,13 +59,11 @@ LEFT JOIN users u ON t.id_user = u.id
 
 WHERE la.SIG = ? 
   AND p.is_active = 1;`;
-      const [rows] = await db.query(query, [SIG]);
+      const [rows] = await pool.query(query, [SIG]);
       return rows;
     } catch (error) {
       console.error("Error al obtener el registro de carga académica:", error);
       throw error;
-    } finally {
-      await closeDatabaseConnection(db);
     }
   }
 }
