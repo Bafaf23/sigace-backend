@@ -51,7 +51,7 @@ export const createUser = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({
+      return res.status(402).json({
         success: false,
         code: "USER_CREATION_FAILED",
         message:
