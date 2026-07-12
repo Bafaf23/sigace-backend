@@ -182,12 +182,19 @@ export class Users {
   /**
    * Crea un nuevo usuario en la base de datos y relaciona el usuario con la tabla correspondiente
    * @param {Users} user - Objeto de la clase Users
-   * @returns {boolean} False si ocurre un error al crear el usuario
+   * @returns {number|boolean} El ID del usuario creado o False si ocurre un error
    */
   static async createUser(user) {
+    const connection = await pool.getConnection();
+
     try {
+      // 2. Iniciamos la transacción sobre esta conexión exclusiva
+      await connection.beginTransaction();
+
       const hashedPassword = await bcrypt.hash(user.password, 10);
-      const [result] = await pool.query(
+
+      // NOTA: Usamos 'connection.query', NO 'pool.query'
+      const [result] = await connection.query(
         "INSERT INTO users (document, name, last_name, email, phone, role_id, pass) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
           user.document,
@@ -205,8 +212,8 @@ export class Users {
 
       switch (roleUser) {
         case 2:
-          await pool.query(
-            "INSERT INTO students (id_user, gender, SIG, representative_id, tuition_number, allergies, medical_condition, weight, birth_date, height, shirt_size, pants_size, shoe_size, \`condition\`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          await connection.query(
+            "INSERT INTO students (id_user, gender, SIG, representative_id, tuition_number, allergies, medical_condition, weight, birth_date, height, shirt_size, pants_size, shoe_size, `condition`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
               idUser,
               user.gender,
@@ -226,36 +233,42 @@ export class Users {
           );
           break;
         case 3:
-          await pool.query(
+          await connection.query(
             "INSERT INTO teachers (id_user, SIG) VALUES (?, ?)",
             [idUser, user.SIG],
           );
           break;
         case 4:
-          await pool.query(
+          await connection.query(
             "INSERT INTO directors (id_user, SIG) VALUES (?, ?)",
             [idUser, user.SIG],
           );
           break;
         case 5:
-          await pool.query(
+          await connection.query(
             "INSERT INTO administrators (id_user, SIG) VALUES (?, ?)",
             [idUser, user.SIG],
           );
           break;
         default:
           console.error(
-            `El role ${roleUser} no requiere registro en una tabla`,
+            `El role ${roleUser} no requiere registro en una tabla secundaria`,
           );
           break;
       }
-      await pool.commit();
+
+      // 3. Si todas las consultas funcionaron sin errores, guardamos los cambios de forma definitiva
+      await connection.commit();
       return idUser;
     } catch (error) {
-      await pool.rollback();
+      // 4. Si algo falla en cualquier punto del proceso, revertimos TODO (no se creará el usuario ni el rol)
+      await connection.rollback();
 
-      console.error("Error al crear usuario:", error);
+      console.error("Error al crear usuario (Transacción revertida):", error);
       return false;
+    } finally {
+      // 5. CRÍTICO: Devolvemos la conexión al pool pase lo que pase
+      connection.release();
     }
   }
 

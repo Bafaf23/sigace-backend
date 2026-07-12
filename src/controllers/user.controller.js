@@ -46,7 +46,7 @@ export const createUser = async (req, res) => {
       email: req.body.email ? req.body.email.trim() : "",
       phone: req.body.phone,
       role_id: req.body.role_id,
-      SIG: req.user?.SIG,
+      SIG: req.user?.SIG || req.body?.SIG,
       password: passgeneric,
     });
 
