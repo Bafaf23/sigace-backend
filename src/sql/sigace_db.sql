@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS years (
     name VARCHAR(255) NOT NULL,
     SIG VARCHAR(10) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    order_year INT NULL, -- Cambiado a INT para que sea una columna de ordenamiento real
+    order_year INT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (SIG) REFERENCES schools (SIG) ON DELETE CASCADE
 );
@@ -292,3 +292,4 @@ INSERT INTO years (name, SIG, order_year) VALUES
 ('4to Año', 'SIG1234', 4),
 ('5to Año', 'SIG1234', 5),
 ('6to Año', 'SIG1234', 6);
+
