@@ -12,54 +12,52 @@ export class Teachers {
    * del periodo activo inyectada en un array.
    */
   static async getAllTeachersWithLoad({ SIG }) {
-   
     try {
-     
       await pool.query("SET SESSION group_concat_max_len = 1000000;");
-
 
       const [rows] = await pool.query(
         `SELECT 
-          t.id AS id_teacher, 
-          t.id_user, 
-          t.SIG, 
-          t.is_active, 
-          u.name, 
-          u.last_name, 
-          u.email, 
-          u.phone, 
-          u.document,
-          CASE 
-            WHEN ld.id IS NULL THEN '[]'
-            ELSE CONCAT(
-              '[',
-              GROUP_CONCAT(
-                CONCAT(
-                  '{"id_load_academic":', ld.id,
-                  ',"id_section":', sec.id,
-                  ',"section_name":"', sec.name, '"',
-                  ',"year_name":"', y.name, '"',
-                  ',"subject_name":"', s.name, '"',
-                  ',"code_subject":"', s.code_subject, '"}'
-                )
-                SEPARATOR ',' -- 🌟 ¡Crucial! Separa correctamente cada objeto con una coma
-              ),
-              ']'
-            )
-          END AS academic_load
-        FROM teachers t 
-        INNER JOIN users u ON t.id_user = u.id 
-        
-        LEFT JOIN load_academic ld ON t.id = ld.id_teacher 
-          AND ld.id_period = (SELECT id FROM academic_periods WHERE is_active = 1 AND SIG = t.SIG LIMIT 1)
-        LEFT JOIN subjects s ON ld.id_subject = s.code_subject
-        LEFT JOIN sections sec ON ld.id_section = sec.id
-        LEFT JOIN years y ON sec.id_year = y.id
-        
-        WHERE t.SIG = ?
-        
-        GROUP BY t.id, u.id
-        ORDER BY u.last_name ASC, u.name ASC;`,
+  t.id AS id_teacher, 
+  t.id_user, 
+  t.SIG, 
+  t.is_active, 
+  u.name, 
+  u.last_name, 
+  u.email, 
+  u.phone, 
+  u.document,
+  CASE 
+    WHEN COUNT(ld.id) = 0 THEN '[]'
+    ELSE CONCAT(
+      '[',
+      GROUP_CONCAT(
+        CONCAT(
+          '{"id_load_academic":', ld.id,
+          ',"id_section":', sec.id,
+          ',"section_name":"', sec.name, '"',
+          ',"year_name":"', y.name, '"',
+          ',"subject_name":"', s.name, '"',
+          ',"code_subject":"', s.code_subject, '"}'
+        )
+        SEPARATOR ','
+      ),
+      ']'
+    )
+  END AS academic_load
+FROM teachers t 
+INNER JOIN users u ON t.id_user = u.id 
+LEFT JOIN load_academic ld ON t.id = ld.id_teacher 
+  AND ld.id_period = (SELECT id FROM academic_periods WHERE is_active = 1 AND SIG = t.SIG LIMIT 1)
+LEFT JOIN subjects s ON ld.id_subject = s.code_subject
+LEFT JOIN sections sec ON ld.id_section = sec.id
+LEFT JOIN years y ON sec.id_year = y.id
+
+WHERE t.SIG = 'SIG6804' -- Recuerda parametrizar esto si es dinámico (ej. t.SIG = ?)
+
+GROUP BY 
+  t.id, t.id_user, t.SIG, t.is_active, 
+  u.id, u.name, u.last_name, u.email, u.phone, u.document
+ORDER BY u.last_name ASC, u.name ASC;`,
         [SIG],
       );
 
@@ -102,9 +100,7 @@ export class Teachers {
    * @returns {Promise<object|null>} - Datos del profesor con su carga o null
    */
   static async getTeacherWithLoadByID(SIG, id_teacher) {
-    
     try {
-
       const sql = `
         SELECT 
           t.id AS id_teacher, 
@@ -178,6 +174,6 @@ export class Teachers {
         error,
       );
       throw error;
-    } 
+    }
   }
 }
