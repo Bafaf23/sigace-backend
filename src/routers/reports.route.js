@@ -20,7 +20,7 @@ router.get(
 );
 
 router.get(
-  "/boleta/:id_student/:id_section",
+  "/boleta/:id_student/:id_section/:id_period",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor", "Estudiante"),
   boleta,

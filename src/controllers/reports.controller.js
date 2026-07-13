@@ -70,11 +70,12 @@ export const sectionList = async (req, res) => {
       }
     }
 
+    console.log(sectionsResult);
+
     const htmlContent = listSection(
       sectionsResult,
       filasEstudiantes,
       logoBase64,
-      studentCount,
       studentCount,
     );
 
@@ -132,7 +133,7 @@ export const sectionList = async (req, res) => {
  * ==========================================================================
  */
 export const boleta = async (req, res) => {
-  const { id_student, id_section } = req.params;
+  const { id_student, id_section, id_period } = req.params;
   const SIG = req.user?.SIG;
   let browser = null;
 
@@ -149,7 +150,7 @@ export const boleta = async (req, res) => {
     const [grades, seccionInfoResult, student] = await Promise.all([
       Grade.getGradesForBoleta(SIG, id_student, id_section),
       Sections.getSectionByID(SIG, id_section),
-      Students.getStudentByID(id_student),
+      Students.getStudentByID(id_student, id_period),
     ]);
 
     const seccionInfo = seccionInfoResult?.[0] || seccionInfoResult;
@@ -372,7 +373,7 @@ export const sheetNote = async (req, res) => {
   const SIG = req.user?.SIG;
   const id_period = req.user?.id_period;
   const { id_section } = req.params;
-  
+
   let browser = null;
 
   if (!SIG || !id_section) {

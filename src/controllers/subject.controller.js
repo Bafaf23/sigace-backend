@@ -220,7 +220,7 @@ export const getSubjectBySection = async (req, res) => {
     }
 
     const getSection = await Sections.getSectionByStudent(SIG, id, id_period);
-
+    console.log(getSection);
     if (!getSection) {
       return res.status(404).json({
         success: false,
