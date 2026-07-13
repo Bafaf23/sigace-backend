@@ -221,7 +221,6 @@ export const getSubjectBySection = async (req, res) => {
 
     const getSection = await Sections.getSectionByStudent(SIG, id, id_period);
 
-
     if (!getSection) {
       return res.status(404).json({
         success: false,
@@ -277,7 +276,7 @@ export const getSubjectBySection = async (req, res) => {
       message: "Carga académica e historial de corte de notas estructurado.",
       data: {
         year,
-        section_id: id_section,
+        section_id: getSection.id_section,
         section,
         subjects: cleanSubjects,
       },

@@ -27,7 +27,7 @@ export class EvaluationModel {
     this.updatedAt = updatedAt;
   }
 
-  static async resolveEvaluationPlanId(connection, evaluation) {
+  static async resolveEvaluationPlanId(evaluation) {
     const [existingPlans] = await pool.query(
       "SELECT id FROM evaluation_plans WHERE id_load_academic = ? AND id_lapse = ?",
       [evaluation.id_load_academic, evaluation.id_lapse],
@@ -68,6 +68,8 @@ export class EvaluationModel {
    */
   static async createEvaluation(evaluation) {
     try {
+      const idEvaluationPlan = await this.resolveEvaluationPlanId(evaluation);
+
       const details = Array.isArray(evaluation.details)
         ? evaluation.details
         : [evaluation];
@@ -86,7 +88,7 @@ export class EvaluationModel {
         } = detail;
 
         const [resultDetail] = await pool.query(query, [
-          idEvaluationPlan,
+          idEvaluationPlan, // 🌟 Ahora sí está perfectamente definido
           date,
           referent_teorical,
           activity,
@@ -97,28 +99,19 @@ export class EvaluationModel {
         ids.push(resultDetail.insertId);
       }
 
-      await pool.commit();
-
       return {
         id_evaluation_plan: idEvaluationPlan,
         ids,
         id: ids[0],
       };
     } catch (error) {
-      await pool.rollback();
-      console.error("Error en createEvaluation:", error);
+      console.error("❌ Error en createEvaluation:", error);
       throw error;
-    } finally {
-      pool.release();
     }
   }
 
   /**
    * Obtiene las evaluaciones de una carga académica
-   * @param {number} id_load_academic
-   * @param {number} [id_lapse]
-   * @returns {Array<Object>}
-   * @throws {Error} Si hay un error al obtener las evaluaciones
    */
   static async getEvaluations(id_load_academic, id_lapse) {
     try {
@@ -134,16 +127,13 @@ export class EvaluationModel {
       const [evaluations] = await pool.query(query, values);
       return evaluations;
     } catch (error) {
-      console.error("Error en getEvaluations:", error);
+      console.error("❌ Error en getEvaluations:", error);
       throw error;
     }
   }
 
   /**
    * Elimina una evaluación de la base de datos
-   * @param {number} id id de la evaluación
-   * @returns {Promise<boolean>}
-   * @throws {Error} Si hay un error al eliminar la evaluación
    */
   static async deleteEvaluation(id) {
     try {
@@ -153,7 +143,7 @@ export class EvaluationModel {
       );
       return result.affectedRows > 0;
     } catch (error) {
-      console.error("Error en deleteEvaluation:", error);
+      console.error("❌ Error en deleteEvaluation:", error);
       throw error;
     }
   }
