@@ -33,7 +33,7 @@ router.get(
   getYears,
 );
 router.get(
-  "/getSubjectSecction/student/:id_student",
+  "/getSubjectSecction/student/:id",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor", "Estudiante"),
   getSubjectBySection,

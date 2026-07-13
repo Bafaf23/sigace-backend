@@ -26,18 +26,19 @@ export class Teachers {
   u.email, 
   u.phone, 
   u.document,
+  -- Si el ID de la carga o el nombre de la sección es NULL, devolvemos el JSON vacío
   CASE 
-    WHEN COUNT(ld.id) = 0 THEN '[]'
+    WHEN COALESCE(GROUP_CONCAT(ld.id), '') = '' THEN '[]'
     ELSE CONCAT(
       '[',
       GROUP_CONCAT(
         CONCAT(
           '{"id_load_academic":', ld.id,
-          ',"id_section":', sec.id,
-          ',"section_name":"', sec.name, '"',
-          ',"year_name":"', y.name, '"',
-          ',"subject_name":"', s.name, '"',
-          ',"code_subject":"', s.code_subject, '"}'
+          ',"id_section":', COALESCE(sec.id, 'null'),
+          ',"section_name":"', COALESCE(sec.name, ''), '"',
+          ',"year_name":"', COALESCE(y.name, ''), '"',
+          ',"subject_name":"', COALESCE(s.name, ''), '"',
+          ',"code_subject":"', COALESCE(s.code_subject, ''), '"}'
         )
         SEPARATOR ','
       ),
@@ -46,13 +47,15 @@ export class Teachers {
   END AS academic_load
 FROM teachers t 
 INNER JOIN users u ON t.id_user = u.id 
+-- Dejamos el LEFT JOIN lo más limpio posible
 LEFT JOIN load_academic ld ON t.id = ld.id_teacher 
-  AND ld.id_period = (SELECT id FROM academic_periods WHERE is_active = 1 AND SIG = t.SIG LIMIT 1)
 LEFT JOIN subjects s ON ld.id_subject = s.code_subject
 LEFT JOIN sections sec ON ld.id_section = sec.id
 LEFT JOIN years y ON sec.id_year = y.id
+-- Filtramos por el periodo académico activo general aquí abajo en el LEFT JOIN secundario o en una subconsulta limpia
+LEFT JOIN academic_periods ap ON ld.id_period = ap.id AND ap.is_active = 1
 
-WHERE t.SIG = 'SIG6804' -- Recuerda parametrizar esto si es dinámico (ej. t.SIG = ?)
+WHERE t.SIG = ?
 
 GROUP BY 
   t.id, t.id_user, t.SIG, t.is_active, 
