@@ -67,7 +67,7 @@ router.get(
 );
 
 router.get(
-  "/getRecordStudent/:id_student/:id_period",
+  "/getRecordStudent/:id_student",
   verificarAutenticacion,
   permitirRoles("Administrador", "Estudiante"),
   getRecordStudent,

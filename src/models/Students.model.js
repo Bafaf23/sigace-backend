@@ -468,10 +468,7 @@ WHERE e.id_section = ? AND s.SIG = ?`,
    * @returns {Array<object>} - lista de estudiantes
    */
   static async getPreinscription(SIG, id_period) {
-    
     try {
-     
-
       const sql = `SELECT u.name, u.last_name, u.document, s.id FROM students s INNER JOIN users u ON s.id_user = u.id LEFT JOIN enrollments e ON s.id = e.id_student AND e.id_period = ? WHERE e.id_section IS NULL AND s.SIG = ? `;
 
       const studentn = await pool.query(sql, [id_period, SIG]);

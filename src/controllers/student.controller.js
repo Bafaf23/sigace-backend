@@ -23,9 +23,7 @@ function formatText(text) {
    ========================================================================== */
 export const getStudents = async (req, res) => {
   try {
-    console.log(
-      "⚠️ [SIGACE API]: Solicitando catálogo general de estudiantes...",
-    );
+    console.log("⚠️");
     const SIG = req.user.SIG;
     const id_period = req.user.id_period;
 
@@ -451,7 +449,7 @@ export const getStudentByID = async (req, res) => {
    ========================================================================== */
 export const getRecordStudent = async (req, res) => {
   const id_student = req.params.id_student;
-  const id_period = req.params.id_period;
+  const id_period = req.user.id_period;
 
   if (!id_student || !id_period) {
     return res.status(400).json({

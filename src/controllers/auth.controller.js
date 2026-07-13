@@ -140,7 +140,8 @@ export const login = async (req, res) => {
       return res.status(200).json({
         mustChangePassword: false,
         user: {
-          id: user.id_user, // Corregido: usabas user.id y arriba tienes user.id_user
+          id_user: user.id_user, // Corregido: usabas user.id y arriba tienes user.id_user
+          id: user.id,
           role: user.role,
           id_period: currentPeriodId,
           period: currentPeriodName,

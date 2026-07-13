@@ -111,13 +111,11 @@ export class Grade {
    */
   static async getGradesForBoleta(SIG, idStudent, idSection) {
     try {
-      // 1. 🔍 Primero buscamos el ID del periodo activo asociado al SIG del colegio
       const [periodResult] = await pool.query(
         "SELECT id FROM academic_periods WHERE SIG = ? AND is_active = 1 LIMIT 1",
         [SIG],
       );
 
-      // Si por alguna razón no hay uno marcado como activo, buscamos el último creado para ese SIG
       let periodId = periodResult[0]?.id;
       if (!periodId) {
         const [lastPeriod] = await pool.query(
@@ -127,7 +125,6 @@ export class Grade {
         periodId = lastPeriod[0]?.id || 0;
       }
 
-      // 2. 🔍 Ahora buscamos los lapsos usando el 'id_period' que encontramos
       const [lapsesResult] = await pool.query(
         "SELECT id FROM lapses WHERE id_period = ? ORDER BY id ASC",
         [periodId],
@@ -141,7 +138,6 @@ export class Grade {
         `📋 Lapsos del Periodo (ID: ${periodId}): M1=${lapse1_id}, M2=${lapse2_id}, M3=${lapse3_id}`,
       );
 
-      // 3. ⚡ Query Principal: Mapea las 3 materias de la sección e inyecta los IDs de los lapsos
       const query = `
       SELECT 
         sub.code_subject AS subject_id,
