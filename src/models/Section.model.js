@@ -92,26 +92,37 @@ export class Sections {
   /**
    * Busca la sección actual de un estudiante junto a los datos del año escolar.
    */
-  static async getSectionByStudent(SIG, id_student) {
+  static async getSectionByStudent(SIG, id, id_period) {
     try {
       const query = `
-        SELECT
+   SELECT
+          -- Datos del Usuario
+          u.id AS user_id,
+          u.name AS user_name,
+          
+          -- Datos del Estudiante
           s.id AS student_id,
+          
+          -- Datos de Inscripción
+          e.id AS enrollment_id,
+          e.status AS enrollment_status,
+          
+          -- Datos de la Sección
           sec.id AS id_section,
-          sec.name AS section_name,
-          y.name AS year_name
-        FROM students s
-        INNER JOIN enrollments e ON s.id = e.id_student
-        INNER JOIN sections sec ON e.id_section = sec.id
-        INNER JOIN years y ON sec.id_year = y.id
-        WHERE s.id = ? 
-          AND sec.SIG = ? 
-          AND e.status IN ('Activo', 'Repitiente')
+          sec.id_period AS section_period_id,
+          
+          -- Parámetro enviado para comparar
+          ? AS period_param_enviado
+        FROM users u
+        LEFT JOIN students s ON u.id = s.id_user
+        LEFT JOIN enrollments e ON s.id = e.id_student
+        LEFT JOIN sections sec ON e.id_section = sec.id
+        WHERE u.id = ?
         ORDER BY e.id DESC
         LIMIT 1;
       `;
 
-      const [rows] = await pool.execute(query, [Number(id_student), SIG]);
+      const [rows] = await pool.execute(query, [id_period, id]);
       return rows.length > 0 ? rows[0] : null;
     } catch (error) {
       console.error(
@@ -128,25 +139,23 @@ export class Sections {
   static async getSectionByID(SIG, id_section) {
     try {
       const query = `
-        SELECT 
-          s.name AS section_name,        
-          y.name AS year_name,             
-          u.name AS teacher_name,         
-          u.last_name AS teacher_last_name,
-          u.document AS teacher_document,
-          sho.name AS school_name,
-          sho.SIG AS SIG,
-          sho.DEA_CODE AS school_code,
-          sho.logo_school,
-          acp.name AS period
-        FROM sections s
-        INNER JOIN years y ON s.id_year = y.id
-        INNER JOIN schools sho ON s.SIG = sho.SIG
-        INNER JOIN academic_periods acp ON s.id_period = acp.id
-        -- 🔥 CORRECCIÓN: LEFT JOINs para evitar fallos si no hay un docente guía asignado aún
-        LEFT JOIN teachers t ON s.guide_id = t.id
-        LEFT JOIN users u ON t.id_user = u.id
-        WHERE s.SIG = ? AND s.id = ?;
+       SELECT
+      s.id AS student_id,
+      sec.id AS id_section,
+      sec.name AS section_name,
+      y.name AS year_name
+    FROM students s
+    INNER JOIN users u ON s.id_user = u.id
+    INNER JOIN enrollments e ON s.id = e.id_student
+    INNER JOIN sections sec ON e.id_section = sec.id
+    INNER JOIN years y ON sec.id_year = y.id
+    WHERE sec.SIG = ?          -- 1er ? -> SIG
+      -- 🌟 Cambiamos s.id por s.id_user por si el parámetro es el ID de usuario
+      AND s.id_user = ?        -- 2do ? -> id_student (ID de usuario de la cuenta)
+      AND sec.id_period = ?    -- 3er ? -> id_period
+      AND e.status IN ('Activo', 'Repitiente')
+    ORDER BY e.id DESC
+    LIMIT 1;
       `;
 
       const [rows] = await pool.execute(query, [SIG, id_section]);

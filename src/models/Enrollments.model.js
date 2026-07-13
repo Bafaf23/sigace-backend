@@ -12,12 +12,13 @@ export class Enrollments {
   static async createEnrollment(enrollment) {
     try {
       const [result] = await pool.query(
-        "INSERT INTO enrollments (id_student, id_period, id_section, status) VALUES (?, ?, ?, ?)",
+        "INSERT INTO enrollments (id_student, id_period, id_section, status, id_year) VALUES (?, ?, ?, ?, ?)",
         [
           enrollment.id_student,
           enrollment.id_period,
           enrollment.id_section,
           enrollment.status,
+          enrollment.id_year,
         ],
       );
       return result.insertId;

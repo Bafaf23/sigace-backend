@@ -194,11 +194,11 @@ export const getSubjectBySection = async (req, res) => {
     console.log(
       `⚠️ [SIGACE API]: Consolidando carga y plan evaluativo del estudiante...`,
     );
-    const { id_student } = req.params;
+    const { id } = req.params;
     const SIG = req.user?.SIG;
     const id_period = req.user?.id_period;
 
-    if (!id_student || !SIG) {
+    if (!id || !SIG) {
       return res.status(400).json({
         success: false,
         code: "MISSING_ACADEMIC_PARAMS",
@@ -219,11 +219,8 @@ export const getSubjectBySection = async (req, res) => {
       });
     }
 
-    const getSection = await Sections.getSectionByStudent(
-      SIG,
-      id_student,
-      id_period,
-    );
+    const getSection = await Sections.getSectionByStudent(SIG, id, id_period);
+
 
     if (!getSection) {
       return res.status(404).json({
@@ -234,16 +231,12 @@ export const getSubjectBySection = async (req, res) => {
       });
     }
 
-    const id_section = getSection.id_section;
-
     const subjectSections = await Subject.getSubjectBySection({
       id_lapse: lapseActive.id,
-      id_section: id_section,
+      id_section: getSection.id_section,
       SIG: SIG,
-      id_student,
+      id_student: getSection.student_id,
     });
-
-    console.log(subjectSections);
 
     if (!subjectSections || subjectSections.length === 0) {
       return res.status(404).json({
