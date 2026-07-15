@@ -448,8 +448,8 @@ export const getStudentByID = async (req, res) => {
    7. EXPEDIENTE / RÉCORD ACADÉMICO INTEGRAL
    ========================================================================== */
 export const getRecordStudent = async (req, res) => {
-  const id_student = req.params.id_student;
-  const id_period = req.user.id_period;
+  const { id_student } = req.params;
+  const { id_period } = req.query || req.user.id_period;
 
   if (!id_student || !id_period) {
     return res.status(400).json({
@@ -465,6 +465,7 @@ export const getRecordStudent = async (req, res) => {
       `🔄 [SIGACE API]: Estructurando historial para estudiante ID: ${id_student} en el period: ${id_period}`,
     );
     const record = await Students.getRecordStudent(id_student, id_period);
+    console.log(record);
 
     if (!record || record.length === 0) {
       return res.status(404).json({
