@@ -9,6 +9,7 @@ import { Subject } from "../models/Subject.model.js";
 import { LapseModel } from "../models/Lapse.model.js";
 import { School } from "../models/School.model.js";
 import { noteSheet } from "../templates/noteSheet.template.js";
+import { reporteFinalRendimientoEstudiantil } from "../templates/reporteFinalRendimientoEstudiantil.template.js";
 import puppeteer from "puppeteer";
 import fs from "fs";
 import path from "path";
@@ -513,7 +514,7 @@ export const sheetNote = async (req, res) => {
 
     const pdfBuffer = await page.pdf({
       format: "A4",
-      landscape: true, // Cambiado a true por las dimensiones de la tabla de una sábana escolar
+      landscape: true,
       printBackground: true,
       preferCSSPageSize: false,
       margin: { top: "10mm", right: "10mm", bottom: "10mm", left: "10mm" },
@@ -539,4 +540,97 @@ export const sheetNote = async (req, res) => {
         "Ocurrió un error interno al intentar estructurar la sábana de notas consolidada.",
     });
   }
+};
+
+/**
+ * ===========================================================================
+ * 5. Resumen final del rendimiento estudiantil
+ * ===========================================================================
+ */
+
+export const resumenFinalE = async (req, res) => {
+  /*   const SIG = req.user?.SIG;
+  const id_period = req.user?.id_period;
+  const { id_section } = req.params;
+
+  if (!SIG || !id_section) {
+    return res.status(400).json({
+      success: false,
+      code: "INCOMPLETE_SHEET_PARAMS",
+      message:
+        "Los parámetros institucionales de la sección son requeridos para auditar el reporte.",
+    });
+  } */
+
+  const data = {
+    dataSchool: {
+      school_name: "U.E.N Juan de Escalona",
+      eval_type: "FINAL",
+      period: "2026-2027",
+      DEA: "10293DO093",
+      adress: "Av, el Arroyo",
+      phone: "02128973333",
+      municipio: "EL hatillo",
+      entidad_federal: "Caracas",
+      cdcee: "Zona Educativa Bolivaria de miranda",
+      director: {
+        name: "Bryant Facenda",
+        dni: "V-30021867",
+      },
+    },
+    student: [
+      {
+        cedula: "V-30021867",
+        nombre: "Bryant",
+        apellido: "Facenda",
+        efNacimiento: "Caracas",
+        sexo: "M",
+        diaNac: "23",
+        mesNac: "09",
+        anoNac: "2003",
+      },
+    ],
+    cursoInfo: {
+      planEstudio: "EDUCACION MEDIA GENERAL",
+      codigo: "31059",
+      anoCursado: "PRIMER",
+      seccion: "A",
+      director: {
+        name: "Bryant Facenda",
+        cedula: "V-30021867",
+      },
+    },
+  };
+
+  const htmlContent = reporteFinalRendimientoEstudiantil(data);
+
+  let browser = null;
+  browser = await puppeteer.launch(LAUNCH_ARGS);
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1400, height: 900 });
+  await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+  const pdfBuffer = await page.pdf({
+    format: "Legal",
+    landscape: false,
+    scale: 0.82,
+    printBackground: true,
+    preferCSSPageSize: false,
+    margin: {
+      top: "4mm",
+      right: "3mm",
+      bottom: "4mm",
+      left: "4mm",
+    },
+  });
+  await browser.close();
+  browser = null;
+
+  const year = data.cursoInfo.anoCursado || "Seccion";
+
+  const fileName = `Resumen Final del Rendimineto Estudiantil${year.replace(/\s+/g, "_")}.pdf`;
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+  res.setHeader("Content-Length", pdfBuffer.length);
+  return res.send(pdfBuffer);
 };

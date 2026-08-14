@@ -4,6 +4,7 @@ import {
   boleta,
   enrollmetP,
   sheetNote,
+  resumenFinalE,
 } from "../controllers/reports.controller.js";
 import {
   verificarAutenticacion,
@@ -39,4 +40,6 @@ router.get(
   permitirRoles("Administrador"),
   sheetNote,
 );
+
+router.get("/rfre", resumenFinalE);
 export default router;
