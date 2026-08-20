@@ -14,56 +14,26 @@ import {
 
 const router = Router();
 
-router.get("/", (req, res) => {
-  res.status(200).json({
-    name: "SIGACE API - Schools",
-    description: "API para la gestión de escuelas del sistema SIGACE.",
-    version: "1.0.0",
-    environment: "production",
-    status: "operational",
-    links: {
-      getAllSchools: `/getAllSchools`,
-      getSchoolBySIG: `/getSchoolBySIG/:SIG`,
-      createSchool: `/createSchool`,
-      deleteSchool: `/deleteSchool/:SIG`,
-      updateSchool: `/updateSchool/:SIG`,
-    },
-  });
-});
+router.get("/", verificarAutenticacion, permitirRoles("sudo"), getAllSchools);
 router.get(
-  "/getAllSchools",
+  "/:SIG",
   verificarAutenticacion,
-  permitirRoles("SuperAdmin"),
-  getAllSchools,
-);
-router.get(
-  "/getSchoolBySIG/:SIG",
-  verificarAutenticacion,
-  permitirRoles("SuperAdmin"),
+  permitirRoles("sudo"),
   getSchoolBySIG,
 );
-router.post(
-  "/createSchool",
-  verificarAutenticacion,
-  permitirRoles("SuperAdmin"),
-  createSchool,
-);
+router.post("/", verificarAutenticacion, permitirRoles("sudo"), createSchool);
 router.delete(
-  "/deleteSchool/:SIG",
+  "/:SIG",
   verificarAutenticacion,
-  permitirRoles("SuperAdmin"),
+  permitirRoles("sudo"),
   deleteSchool,
 );
-router.post(
-  "/updateSchool",
-  verificarAutenticacion,
-  permitirRoles("SuperAdmin"),
-  updateSchool,
-);
+router.put("/", verificarAutenticacion, permitirRoles("sudo"), updateSchool);
+
 router.get(
-  "/getRoles",
+  "/roles/roles",
   verificarAutenticacion,
-  permitirRoles("SuperAdmin"),
+  permitirRoles("sudo"),
   getRoles,
 );
 export default router;

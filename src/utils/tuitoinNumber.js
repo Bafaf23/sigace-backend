@@ -1,4 +1,4 @@
-import { pool } from "../db.js";
+import { prisma } from "../lib/prisma.js";
 /**
  * Genera un número de matrícula único para un estudiante
  * @param {string} SIG - SIG de la escuela
@@ -6,15 +6,18 @@ import { pool } from "../db.js";
  */
 export const generateTuitionNumber = async (SIG) => {
   try {
-    const prefix = "MAT"; // Matrícula
+    const prefix = "MAT";
     const year = new Date().getFullYear();
 
-    const [rows] = await pool.query(
-      "SELECT COUNT(*) AS total FROM students WHERE SIG = ?",
-      [SIG],
-    );
-    const next = Number(rows[0]?.total ?? 0) + 1;
-    return `${prefix}-${SIG}-${year}-${next}`;
+    const totalStudents = await prisma.student.count({
+      where: {
+        SIG: SIG,
+      },
+    });
+
+    const next = totalStudents + 1;
+
+    return `${SIG}-${year}-${next}`;
   } catch (error) {
     console.error("Error al generar número de matrícula:", error);
     return null;

@@ -1,4 +1,4 @@
-import { pool } from "../db.js";
+import { prisma } from "../lib/prisma.js";
 
 /**
  * @class Student
@@ -66,8 +66,8 @@ export class Students {
   }
 
   /**
-   * Obtiene a todos los estudiantes matriculados en un periodo específico,
-   * sin importar si ya tienen año o sección asignados en su matrícula.
+   ** Obtiene a todos los estudiantes matriculados en un periodo específico, sin importar si ya tienen año o sección      *  asignados en su matrícula.
+   *
    * @param {object} param
    * @param {string} param.SIG - código único del colegio
    * @param {number} param.id_period - id del período académico
@@ -75,88 +75,144 @@ export class Students {
    */
   static async getAllStudents({ SIG, id_period }) {
     try {
-      const [rows] = await pool.query(
-        `SELECT 
-          students.id, 
-          students.id_user, 
-          students.gender, 
-          students.SIG, 
-          students.representative_id, 
-          students.tuition_number, 
-          students.birth_date, 
-          users.name, 
-          users.last_name, 
-          users.email, 
-          users.phone, 
-          users.document, 
-          representatives.name AS representative_name, 
-          representatives.last_name AS representative_last_name,
-          representatives.phone AS representative_phone, 
-          representatives.relationship AS representative_relationship,
-          representatives.document AS representative_document, 
-          representatives.repEmail AS representative_repEmail, 
-          en.id_section,
-          students.condition, 
-          en.status AS enrollment_status,
-          sec.name AS section, 
-          yer.id AS id_year,
-          yer.name AS year 
-      FROM students 
-      INNER JOIN users ON students.id_user = users.id 
-      LEFT JOIN representatives ON students.representative_id = representatives.id
-      
-      -- Subconsulta que captura la matrícula prioritaria (Pre-inscrito > Inscrito > Activo)
-      LEFT JOIN enrollments en ON en.id = (
-          SELECT id 
-          FROM enrollments 
-          WHERE id_student = students.id AND id_period = ?
-          ORDER BY FIELD(status, 'Pre-inscrito', 'Inscrito', 'Activo') DESC, id DESC
-          LIMIT 1
-      )
-      -- Conexión directa a la sección vinculada a la matrícula obtenida
-      LEFT JOIN sections sec ON en.id_section = sec.id
-      -- Conexión directa para extraer el año real de esa sección pre-inscrita o activa
-      LEFT JOIN years yer ON sec.id_year = yer.id 
+      return await prisma.student.findMany({
+        where: {
+          SIG: SIG, // Trae a TODOS los estudiantes de la institución
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              id_card: true,
+              name: true,
+              last_name: true,
+              email: true,
+              phone: true,
+              is_active: true,
+            },
+          },
+          representative: {
+            select: {
+              id: true,
+              document: true,
+              name: true,
+              last_name: true,
+              relationship: true,
+              phone: true,
+            },
+          },
+          school: {
+            select: {
+              SIG: true,
+              school_name: true,
+            },
+          },
 
-      WHERE students.SIG = ?
-      
-      ORDER BY 
-          (yer.id IS NULL) DESC, 
-          yer.id ASC, 
-          sec.name ASC, 
-          users.last_name ASC;`,
-        [id_period, SIG],
-      );
-      return rows;
+          enrollments: {
+            where: id_period ? { id_period: Number(id_period) } : undefined,
+            select: {
+              id: true,
+              status: true,
+              id_period: true,
+              section: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              year: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          user: {
+            last_name: "asc",
+          },
+        },
+      });
     } catch (error) {
       console.error("❌ Error al obtener los estudiantes:", error);
       throw error;
     }
   }
 
-  static async createStudent(student) {
+  /**
+   * Crea un nuevo registro de un estudiante junto con su usuario correspondiente
+   * y lo conecta con su colegio y representante.
+   *
+   * @param {object} param
+   * @param {object} param.student - Datos académicos y antropométricos del estudiante
+   * @param {object} param.representative - Datos o ID del representante legal
+   * @param {object} param.user - Datos de la cuenta del usuario
+   */
+  static async createStudent({
+    student = {},
+    representative = {},
+    user = {},
+  } = {}) {
     try {
-      const [result] = await pool.query(
-        "INSERT INTO students (id_user, gender, SIG, representative_id, tuition_number, allergies, medical_condition, weight, height, shirt_size, pants_size, shoe_size, \`condition\`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [
-          student.id_user,
-          student.gender,
-          student.SIG,
-          student.representative_id,
-          student.tuition_number,
-          student.allergies,
-          student.medical_condition,
-          student.weight,
-          student.height,
-          student.shirt_size,
-          student.pants_size,
-          student.shoe_size,
-          student.condition,
-        ],
-      );
-      return result.affectedRows > 0;
+      return await prisma.student.create({
+        data: {
+          gender: student.gender ?? null,
+          tuition_number: student.tuition_number,
+          allergies: student.allergies ?? null,
+          medical_condition: student.medical_condition ?? null,
+          weight: student.weight ? Number(student.weight) : null,
+          height: student.height ? Number(student.height) : null,
+          shirt_size: student.shirt_size ?? null,
+          pants_size: student.pants_size ?? null,
+          shoe_size: student.shoe_size ?? null,
+          condition: student.condition,
+          birth_date: student.birth_date,
+
+          school: {
+            connect: { SIG: student.SIG },
+          },
+          representative: {
+            connectOrCreate: {
+              where: { document: representative.document },
+              create: {
+                document: representative.document,
+                name: representative.name,
+                last_name: representative.last_name,
+                phone: representative.phone ?? null,
+                relationship: representative.relationship ?? null,
+                repEmail: representative.repEmail ?? null,
+              },
+            },
+          },
+          user: {
+            create: {
+              id_card: user.document || user.id_card,
+              name: user.name,
+              last_name: user.last_name,
+              email: user.email ?? null,
+              pass: user.pass,
+              phone: user.phone ?? null,
+              role_id: Number(user.role_id || 4),
+            },
+          },
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              id_card: true,
+              name: true,
+              last_name: true,
+              email: true,
+            },
+          },
+          representative: true,
+        },
+      });
     } catch (error) {
-      console.error("Error al crear el estudiante:", error);
+      console.error("❌ Error al crear estudiante con Prisma:", error);
       throw error;
     }
   }
@@ -197,13 +253,28 @@ export class Students {
    * @param {string} params.SIG - SIG de la escuela
    * @returns {Array<object>} - Array de estudiantes no matriculados
    */
-  static async getStudentNotEnrolled({ id_period, SIG }) {
+  static async notEnrolled({ id_period, SIG }) {
     try {
-      const [rows] = await pool.query(
-        "SELECT u.name, u.last_name, u.document, s.id FROM students s INNER JOIN users u ON s.id_user = u.id LEFT JOIN enrollments e ON s.id = e.id_student AND e.id_period = ? WHERE e.id IS NULL AND s.SIG = ?",
-        [id_period, SIG],
-      );
-      return rows;
+      return await prisma.student.findMany({
+        where: {
+          SIG: SIG,
+          enrollments: {
+            none: {
+              id_period: Number(id_period),
+            },
+          },
+        },
+        select: {
+          id: true,
+          user: {
+            select: {
+              name: true,
+              last_name: true,
+              id_card: true,
+            },
+          },
+        },
+      });
     } catch (error) {
       console.error("Error al obtener los estudiantes no matriculados:", error);
       throw error;
@@ -217,7 +288,7 @@ export class Students {
    * @param {string} params.SIG - SIG de la escuela
    * @returns {Array<object>} - Array de estudiantes
    */
-  static async getStudentsBySection({ id_section, SIG }) {
+  /*  static async bySection({ id_section, SIG }) {
     try {
       const [rows] = await pool.query(
         `SELECT 
@@ -239,52 +310,61 @@ WHERE e.id_section = ? AND s.SIG = ?`,
       console.error("Error al obtener los estudiantes de la sección:", error);
       throw error;
     }
-  }
+  } */
 
   /**
-   * Busca a un estudiante por su ID
-   * @param {number} id_student - id del estudiante
+   * Busca a un estudiante por su id_card
+   * @param {string} id_card - id del estudiante
    * @return {object|null} - info del estudiante o null si no existe
    */
-  static async getStudentByID(id_student, id_period) {
+  static async byID(id_card) {
     try {
-      const sql = `
-      SELECT 
-        st.id AS id_student,
-        u.id AS id_user,
-        u.name , 
-        u.last_name, 
-        u.document,
-        u.phone,
-        u.email,
-        st.birth_date,
-        st.tuition_number,
-        st.allergies,
-        st.medical_condition,
-        st.weight,
-        st.condition,
-        st.SIG, 
-        st.created_at AS date_enrollment,
-        st.height,
-        st.shirt_size,
-        st.pants_size,
-        st.shoe_size,
-        st.gender,
-        en.status,
-        ye.name AS name_year,
-        sec.name AS name_section
-      FROM students st
-      INNER JOIN users u ON st.id_user = u.id
-      LEFT JOIN enrollments en ON en.id_student = st.id AND en.id_period = ?
-      LEFT JOIN sections sec ON sec.id = en.id_section
-      LEFT JOIN years ye ON ye.id = sec.id_year
-      WHERE st.id = ? 
-
-      LIMIT 1
-    `;
-      const [rows] = await pool.query(sql, [id_period, id_student]);
-
-      return rows.length > 0 ? rows[0] : null;
+      return await prisma.student.findFirst({
+        where: {
+          user: {
+            id_card: String(id_card).trim(),
+          },
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              id_card: true,
+              name: true,
+              last_name: true,
+              email: true,
+              phone: true,
+              role: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          representative: true,
+          school: {
+            select: {
+              SIG: true,
+              school_name: true,
+            },
+          },
+          enrollments: {
+            select: {
+              id: true,
+              section: {
+                select: {
+                  name: true,
+                },
+              },
+              year: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
     } catch (error) {
       console.log(`Error en getStudentByID: ${error}`);
       return null;
@@ -292,169 +372,91 @@ WHERE e.id_section = ? AND s.SIG = ?`,
   }
 
   /**
-   ** Recupera todo el récord académico del estudiante y lo agrupa por períodos lectivos,
-   * calculando la nota acumulativa por lapso en base al plan de evaluación real de su sección.
-   * @param {number|string} id_student - ID del estudiante
-   * @param {number|string} id_period - ID del periodo
+   ** Recupera todo el récord académico del estudiante y lo agrupa por períodos lectivos, calculando la nota acumulativa   * por lapso en base al plan de evaluación real de su sección.
+   * @param {number} id_student - ID del estudiante
+   * @param {number} id_period - ID del periodo
+   * @returns {object}
    */
-  static async getRecordStudent(id_student, id_period) {
+  static async record(id_student, id_period) {
     try {
-      const sql = `
-        SELECT 
-        en.id AS enrollment_id,
-        ap.name AS school_year,
-        y.name AS year_level,
-        sc.name AS section,
-        sb.name AS subject_name,
-        lap.name AS lapse_name,
-        CONCAT(epd.activity, ': ', epd.referent_teorical) AS evaluation_name, 
-        g.grade,
-        epd.porcentage
-      FROM enrollments en
-      INNER JOIN sections sc ON en.id_section = sc.id
-      INNER JOIN years y ON sc.id_year = y.id
-      INNER JOIN academic_periods ap ON en.id_period = ap.id
-      INNER JOIN load_academic la ON la.id_section = en.id_section AND la.id_period = en.id_period
-      INNER JOIN subjects sb ON la.id_subject = sb.code_subject
-      LEFT JOIN evaluation_plans ep ON ep.id_load_academic = la.id
-      LEFT JOIN lapses lap ON ep.id_lapse = lap.id
-      LEFT JOIN evaluation_plan_details epd ON epd.id_evaluation_plan = ep.id
-      LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = en.id_student
-      WHERE en.id_student = ? AND en.id_period = ?
-      ORDER BY ap.start_date DESC, sb.name ASC, lap.id ASC LIMIT 100
-      `;
-
-      const [rows] = await pool.query(sql, [id_student, id_period]);
-
-      if (!rows || rows.length === 0) {
-        return [];
-      }
-
-      const parseLapseNumber = (name) => {
-        if (!name) return null;
-        const normalized = name.toString().toLowerCase();
-        if (
-          normalized.includes("1") ||
-          (normalized.includes("i") &&
-            !normalized.includes("ii") &&
-            !normalized.includes("iii"))
-        )
-          return 1;
-        if (
-          normalized.includes("2") ||
-          (normalized.includes("ii") && !normalized.includes("iii"))
-        )
-          return 2;
-        if (normalized.includes("3") || normalized.includes("iii")) return 3;
-        const match = normalized.match(/\d+/);
-        return match ? parseInt(match[0], 10) : null;
+      const enrollmentQuery = {
+        where: {
+          id_period: id_period,
+        },
+        orderBy: {
+          created_at: "desc",
+        },
+        select: {
+          id: true,
+          status: true,
+          period: {
+            select: {
+              name: true,
+            },
+          },
+          year: {
+            select: {
+              name: true,
+            },
+          },
+          section: {
+            select: {
+              name: true,
+            },
+          },
+        },
       };
 
-      const periodsMap = {};
+      return await prisma.student.findFirst({
+        where: { id: id_student },
+        select: {
+          id: true,
+          tuition_number: true,
+          user: {
+            select: {
+              id_card: true,
+              name: true,
+              last_name: true,
+            },
+          },
+          school: {
+            select: {
+              school_name: true,
+              SIG: true,
+            },
+          },
+          enrollments: enrollmentQuery,
 
-      for (const row of rows) {
-        const enrollmentId = row.enrollment_id;
-
-        if (!periodsMap[enrollmentId]) {
-          periodsMap[enrollmentId] = {
-            school_year: row.school_year,
-            year_level: row.year_level,
-            section: row.section,
-            subjectsMap: {},
-          };
-        }
-
-        const subjectName = row.subject_name;
-        if (subjectName) {
-          if (!periodsMap[enrollmentId].subjectsMap[subjectName]) {
-            periodsMap[enrollmentId].subjectsMap[subjectName] = {
-              subject_name: subjectName,
-              lapsesEvaluations: {
-                1: { grade: null, evaluations: [] },
-                2: { grade: null, evaluations: [] },
-                3: { grade: null, evaluations: [] },
+          grades: {
+            select: {
+              id: true,
+              grade: true,
+              evaluation: {
+                select: {
+                  referent_teorical: true,
+                  activity: true,
+                  porcentage: true,
+                  evaluation_plan: {
+                    select: {
+                      lapse: true,
+                      load_academic: {
+                        select: {
+                          subject: {
+                            select: {
+                              name: true,
+                              code_subject: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               },
-            };
-          }
-
-          const subjectObj = periodsMap[enrollmentId].subjectsMap[subjectName];
-          const lapseNum = parseLapseNumber(row.lapse_name);
-
-          if (lapseNum && lapseNum >= 1 && lapseNum <= 3) {
-            // Guardamos las evaluaciones individuales para los desplegables de la UI
-            if (row.evaluation_name) {
-              subjectObj.lapsesEvaluations[lapseNum].evaluations.push({
-                name: row.evaluation_name,
-                grade: row.grade !== null ? parseFloat(row.grade) : 0,
-                percentage: parseFloat(row.porcentage || 0),
-              });
-            }
-          }
-        }
-      }
-
-      // Procesamiento y estructuración del resultado final
-      for (const enrollmentId in periodsMap) {
-        const subjectsMap = periodsMap[enrollmentId].subjectsMap;
-        const subjectsList = [];
-
-        for (const subName in subjectsMap) {
-          const sub = subjectsMap[subName];
-
-          const finalSubjectObj = {
-            subject_name: sub.subject_name,
-            final_grade: null,
-            lapses: [],
-          };
-
-          let sumLapses = 0;
-          let lapseCount = 0;
-
-          for (let l = 1; l <= 3; l++) {
-            const lapseData = sub.lapsesEvaluations[l];
-            let accumulatedGrade = 0;
-            let totalPercent = 0;
-            let hasGrades = false;
-
-            if (lapseData.evaluations.length > 0) {
-              lapseData.evaluations.forEach((ev) => {
-                accumulatedGrade += (ev.grade * ev.percentage) / 100;
-                totalPercent += ev.percentage;
-                hasGrades = true;
-              });
-
-              if (totalPercent > 0 && totalPercent < 100) {
-                accumulatedGrade = (accumulatedGrade / totalPercent) * 100;
-              }
-            }
-
-            const finalLapseGrade = hasGrades
-              ? Math.round(accumulatedGrade)
-              : null;
-
-            if (finalLapseGrade !== null) {
-              sumLapses += finalLapseGrade;
-              lapseCount++;
-            }
-
-            // Estructura idéntica a la que consume tu componente React original
-            finalSubjectObj.lapses.push({
-              number: l,
-              grade: finalLapseGrade,
-              evaluations: lapseData.evaluations, // Detalle de exámenes incluido
-            });
-          }
-
-          finalSubjectObj.final_grade =
-            lapseCount > 0 ? Math.round(sumLapses / lapseCount) : null;
-          subjectsList.push(finalSubjectObj);
-        }
-
-        periodsMap[enrollmentId].subjects = subjectsList;
-        delete periodsMap[enrollmentId].subjectsMap;
-      }
-
-      return Object.values(periodsMap);
+            },
+          },
+        },
+      });
     } catch (error) {
       console.error("❌ Error en modelo Students.getRecordStudent:", error);
       throw error;
@@ -462,19 +464,64 @@ WHERE e.id_section = ? AND s.SIG = ?`,
   }
 
   /**
-   ** Recupera a todos los estudiantes que no tienen una seccion
-   * @param {string} SIG - codigo del colegio
-   * @param {number} id_period - codigo del perido en cursor
-   * @returns {Array<object>} - lista de estudiantes
+   * Recupera a todos los estudiantes que están preinscritos en un período pero no tienen sección asignada.
+   * @param {string} SIG - Código del colegio
+   * @param {number} id_period - ID del período lectivo
+   * @returns {Promise<Array<object>>} - Lista de estudiantes
    */
-  static async getPreinscription(SIG, id_period) {
+  static async preInscription(SIG, id_period) {
     try {
-      const sql = `SELECT u.name, u.last_name, u.document, s.id FROM students s INNER JOIN users u ON s.id_user = u.id LEFT JOIN enrollments e ON s.id = e.id_student AND e.id_period = ? WHERE e.id_section IS NULL AND s.SIG = ? `;
-
-      const studentn = await pool.query(sql, [id_period, SIG]);
-
-      return studentn;
+      return await prisma.student.findMany({
+        where: {
+          SIG: SIG,
+          OR: [
+            // Caso A: Tiene inscripción en este período pero id_section es null
+            {
+              enrollments: {
+                some: {
+                  id_period: id_period,
+                  id_section: null,
+                },
+              },
+            },
+            // Caso B: Está registrado en el plantel pero NO tiene inscripción en este período
+            {
+              enrollments: {
+                none: {
+                  id_period: id_period,
+                },
+              },
+            },
+          ],
+        },
+        select: {
+          id: true,
+          tuition_number: true,
+          user: {
+            select: {
+              id_card: true,
+              name: true,
+              last_name: true,
+            },
+          },
+          enrollments: {
+            where: {
+              id_period: Number(id_period),
+            },
+            select: {
+              id: true,
+              status: true,
+              year: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
     } catch (error) {
+      console.error("❌ Error en Students.getPreinscription:", error);
       throw error;
     }
   }

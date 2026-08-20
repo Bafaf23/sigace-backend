@@ -16,67 +16,57 @@ import {
 
 const router = Router();
 
-router.get("/", (_req, res) => {
-  res.status(200).json({
-    message: "API de estudiantes",
-    description: "API para la gestión de estudiantes",
-    version: "1.0.0",
-    links: {
-      getStudents: `getStudents/:SIG`,
-      createStudent: `createStudent`,
-    },
-  });
-});
 router.get(
-  "/getStudents",
-  verificarAutenticacion,
-  permitirRoles("Administrador"),
+  "/",
+  /* verificarAutenticacion,
+  permitirRoles("administrador"), */
   getStudents,
 );
 router.post(
-  "/createStudent",
+  "/",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador"),
   createStudent,
 );
 router.put(
   "/updateStudent",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador"),
   updateStudent,
 );
 router.get(
-  "/getStudentNotEnrolled/:id_period",
+  "/not-enrolled/:id_period",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador"),
   getStudentNotEnrolled,
 );
 
-router.get(
-  "/getStudentsBySection/:id_section",
+// TODO: mover al secction router
+/* router.get(
+  "/sections/:id_section/students",
   verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor"),
+  permitirRoles("administrador", "Profesor"),
   getStudentsBySection,
-);
+); */
 
 router.get(
-  "/getStudentByID/:id_student",
+  "/:id_card",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador"),
   getStudentByID,
 );
 
 router.get(
-  "/getRecordStudent/:id_student",
+  "/:id_student/record",
   verificarAutenticacion,
-  permitirRoles("Administrador", "Estudiante"),
+  permitirRoles("administrador", "estudiante"),
   getRecordStudent,
 );
 
 router.get(
-  "/getPreinscription/:id_period",
+  "/:id_period/pre-inscription",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador"),
   getPreinscription,
 );
 

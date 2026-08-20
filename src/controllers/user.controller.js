@@ -1,4 +1,5 @@
 import { Users } from "../models/Users.model.js";
+import logger from "../utils/logger.js";
 import { welcomeEmail } from "../services/resend.service.js";
 
 function formatText(text) {
@@ -6,51 +7,59 @@ function formatText(text) {
     return "";
   }
   const cleanStr = text.trim();
+
   const regexPermitido = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/;
+
   if (!regexPermitido.test(cleanStr)) {
-    console.warn("⚠️ El texto contiene caracteres no permitidos.");
+    logger.warn("El texto contiene caracteres no permitidos.");
     return null;
   }
   return cleanStr.charAt(0).toUpperCase() + cleanStr.slice(1).toLowerCase();
 }
 
 /**
- * ==========================================================================
- * 1. CREAR UN NUEVO USUARIO
- * ==========================================================================
+ * Inserta un registro de usuario al sisitema
+ *
+ * @async
+ * @function createUser
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const createUser = async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    logger.error("No se proporcionaron datos para procesar el registro.");
+    return res.status(400).json({
+      success: false,
+      code: "EMPTY_PAYLOAD",
+      message: "No se proporcionaron datos en el cuerpo de la solicitud.",
+    });
+  }
+
   try {
-    console.log("⚠️ [SIGACE API]: Inicializando creación de usuario...");
+    console.log("BODY RECIBIDO EN BACKEND:", req.body);
+    console.log("SIG EXTRAÍDO:", req.body?.SIG);
 
-    if (!req.body || Object.keys(req.body).length === 0) {
-      return res.status(400).json({
-        success: false,
-        code: "EMPTY_PAYLOAD",
-        message: "No se proporcionaron datos en el cuerpo de la solicitud.",
-      });
-    }
-
-    const document = (
-      (req.body.typeDocuement || "") + (req.body.document || "")
-    ).trim();
+    const document = (req.body.typeDocuement + req.body.document).trim();
     const rawDocument = req.body.document ? String(req.body.document) : "";
     const passgeneric = rawDocument.substring(0, 4) + "@2026";
 
+    console.log(req.body.SIG);
     const formattedName = formatText(req.body.name);
 
-    const user = await Users.createUser({
-      document,
+    const user = await Users.create({
+      document: document,
       name: formatText(req.body.name),
       last_name: formatText(req.body.last_name),
-      email: req.body.email ? req.body.email.trim() : "",
+      email: req.body.email.trim(),
       phone: req.body.phone,
       role_id: req.body.role_id,
-      SIG: req.user?.SIG || req.body?.SIG,
+      SIG: req.body.SIG,
       password: passgeneric,
     });
 
     if (!user) {
+      logger.error("Error al intentar prosesar el registro.");
       return res.status(402).json({
         success: false,
         code: "USER_CREATION_FAILED",
@@ -59,13 +68,17 @@ export const createUser = async (req, res) => {
       });
     }
 
-    console.log(`Enviando correo... ${req.body.email}`);
-    welcomeEmail(formattedName, req.body.email).catch((error) => {
+    const userFir = user.name;
+
+    logger.debug("Iniciaindo proceso de envio de correo de bienvenida.");
+    await welcomeEmail(formattedName, req.body.email).catch((error) => {
       console.error(
         "❌ [Background Task Error]: Falló el envío del correo de bienvenida:",
         error,
       );
     });
+
+    logger.debug("Registro prosesado con exito.", { name: userFir });
 
     return res.status(201).json({
       success: true,
@@ -85,16 +98,20 @@ export const createUser = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 2. OBTENER TODOS LOS USUARIOS
- * ==========================================================================
+ * Obtiene a todos los usuarios en el sistema para la adminitracion sudo
+ *
+ * @async
+ * @function getUsers
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
-export const getUsers = async (_req, res) => {
+export const getUsers = async (req, res) => {
   try {
-    console.log("🔍 [SIGACE API]: Listando la base general de usuarios...");
     const users = await Users.getUsers();
 
     if (!users || users.length === 0) {
+      console.error(`⚠️ [NOT FOUND] No hay usuarios registrados.`);
       return res.status(404).json({
         success: false,
         code: "USERS_NOT_FOUND",
@@ -102,10 +119,34 @@ export const getUsers = async (_req, res) => {
       });
     }
 
+    const userLisp = users.filter((user) => user.id !== req.user.id);
+
+    const userProser = userLisp.map((user) => ({
+      id: user.id,
+      document: user.id_card,
+      name: user.name,
+      last_name: user.last_name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      school: {
+        name: user.school?.name ?? "Sin asignación",
+        SIG: user.school?.SIG ?? "Sin asignación",
+      },
+    }));
+
+    logger.debug("Usuarios cargados desde la base de datos", {
+      total: users.length,
+    });
+
+    if (process.env.NODE_ENV !== "production") {
+      console.table(userProser);
+    }
+
     return res.status(200).json({
       success: true,
       message: "Colección de usuarios cargada exitosamente.",
-      data: users,
+      data: userProser,
     });
   } catch (error) {
     console.error("❌ Error en getUsers:", error);
@@ -119,37 +160,42 @@ export const getUsers = async (_req, res) => {
 };
 
 /**
- * ==========================================================================
- * 3. CAMBIAR CONTRASEÑA (SEGURIDAD / PRIMER INGRESO)
- * ==========================================================================
+ * Metodo de cambio de credenciales
+ *
+ * @async
+ * @function changePassword
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const changePassword = async (req, res) => {
-  try {
-    console.log(
-      "🔒 [SIGACE API]: Procesando actualización de credenciales de seguridad...",
+  const { newPassword, confirmPassword, confirmNewPassword } = req.body;
+  const passwordConfirmation = confirmNewPassword ?? confirmPassword;
+
+  if (!newPassword || !passwordConfirmation) {
+    logger.error("Sin contrasenas para peocesar la solictud");
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_PASSWORDS",
+      message:
+        "Solicitud denegada: Debe ingresar y confirmar la nueva contraseña corporativa.",
+    });
+  }
+
+  if (newPassword !== passwordConfirmation) {
+    logger.error(
+      "Las contrasenas no cumplen con los requisitosde igualdad necesarios.",
     );
 
-    const { newPassword, confirmPassword, confirmNewPassword } = req.body;
-    const passwordConfirmation = confirmNewPassword ?? confirmPassword;
+    return res.status(400).json({
+      success: false,
+      code: "PASSWORDS_DO_NOT_MATCH",
+      message:
+        "Validación fallida: Las contraseñas suministradas no coinciden entre sí.",
+    });
+  }
 
-    if (!newPassword || !passwordConfirmation) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_PASSWORDS",
-        message:
-          "Solicitud denegada: Debe ingresar y confirmar la nueva contraseña corporativa.",
-      });
-    }
-
-    if (newPassword !== passwordConfirmation) {
-      return res.status(400).json({
-        success: false,
-        code: "PASSWORDS_DO_NOT_MATCH",
-        message:
-          "Validación fallida: Las contraseñas suministradas no coinciden entre sí.",
-      });
-    }
-
+  try {
     const passwordChanged = await Users.changePassword(
       req.user.id,
       newPassword,
@@ -164,7 +210,6 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    // Limpieza de banderas de cambio forzado en sesión activa si aplica
     if (req.session?.user?.id_user === req.user?.id) {
       req.session.user.mustChangePassword = false;
     }
@@ -191,15 +236,11 @@ export const changePassword = async (req, res) => {
  * ==========================================================================
  * 4. ELIMINAR / RECOGER CUENTA DE USUARIO
  * ==========================================================================
+ * TODO: ajustar controlador por la nueva forma estandar
  */
 export const deleteUser = async (req, res) => {
   try {
-    console.log(
-      "⚠️ [SIGACE API]: Evaluando revocación de cuenta de usuario...",
-    );
-
     const idUser = req.params.id;
-    const role_id = req.params.role_id;
 
     if (!idUser) {
       return res.status(400).json({
@@ -209,7 +250,7 @@ export const deleteUser = async (req, res) => {
       });
     }
 
-    const deletedUser = await Users.deleteUser(idUser, role_id);
+    const deletedUser = await Users.deleteUser(idUser);
     if (!deletedUser) {
       return res.status(404).json({
         success: false,
@@ -238,25 +279,33 @@ export const deleteUser = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 5. ACTUALIZAR ATRIBUTOS DE USUARIO
- * ==========================================================================
+ * Actualiza la informacion permitida de un usuario
+ *
+ * @async
+ * @function updateUser
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const updateUser = async (req, res) => {
+  const userId = req.body.id;
+
+  if (!userId) {
+    logger.error("No se localizo el ID del usuario.");
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_UPDATE_ID",
+      message: "No se especificó el ID del usuario para aplicar los cambios.",
+    });
+  }
+
   try {
-    console.log("⚠️ [SIGACE API]: Sincronizando modificaciones de usuario...");
-
-    const userId = req.body.id;
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_UPDATE_ID",
-        message: "No se especificó el ID del usuario para aplicar los cambios.",
-      });
-    }
-
     const updatedUser = await Users.updateUser({ ...req.body, id: userId });
+
     if (!updatedUser) {
+      logger.error(
+        "No se pudo modificar la informacion en el sistema, intenta nuevamente.",
+      );
       return res.status(404).json({
         success: false,
         code: "USER_UPDATE_FAILED",
@@ -264,6 +313,8 @@ export const updateUser = async (req, res) => {
           "No se modificó el registro. Es posible que el usuario no exista.",
       });
     }
+
+    logger.debug("Informacion actualizada con exito.", userId);
 
     return res.status(200).json({
       success: true,
@@ -282,39 +333,61 @@ export const updateUser = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 6. OBTENER EXPEDIENTE DE PERFIL EN SESIÓN
- * ==========================================================================
+ * Obtiene los datos del perfil del usuario logeado
+ *
+ * @async
+ * @function getProfile
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getProfile = async (req, res) => {
+  if (!req.session) {
+    logger.error("No hay una session activa");
+    return res.status(401).json({
+      success: false,
+      code: "SESSION_EXPIRED",
+      message:
+        "Sesión caducada. Por favor, ingresa tus credenciales nuevamente.",
+    });
+  }
+
+  const email = req.user?.email;
+
+  if (!email) {
+    logger.error("Email sin expesificar", { email });
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_SESSION_EMAIL",
+      message:
+        "No se localizó una dirección de correo vinculada al token actual.",
+    });
+  }
+
   try {
-    console.log(
-      "🔍 [SIGACE API]: Cargando credenciales del perfil en sesión...",
-    );
-
-    if (!req.session) {
-      return res.status(401).json({
-        success: false,
-        code: "SESSION_EXPIRED",
-        message:
-          "Sesión caducada. Por favor, ingresa tus credenciales nuevamente.",
-      });
-    }
-
-    const email = req.user?.email;
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_SESSION_EMAIL",
-        message:
-          "No se localizó una dirección de correo vinculada al token actual.",
-      });
-    }
-
     const usersList = await Users.getUsers(email);
-    const dataProfil = usersList && usersList[0];
 
-    if (!dataProfil) {
+    const dataProfile = usersList.reduce((user) => {
+      const schoolData =
+        user.role !== "sudo" && user.school
+          ? { SIG: user.school.SIG, name: user.school.name ?? "sin asignar" }
+          : {};
+
+      return {
+        user: {
+          id_card: user.document,
+          name: user.name,
+          last_name: user.last_name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+        },
+        school: schoolData,
+      };
+    });
+
+    if (!usersList) {
+      logger.error("No se localizo el perfil solicitado.");
       return res.status(404).json({
         success: false,
         code: "PROFILE_NOT_FOUND",
@@ -323,10 +396,25 @@ export const getProfile = async (req, res) => {
       });
     }
 
+    logger.debug("Perfil sincronizado correctamente", { email });
+
+    if (process.env.NODE_ENV !== "production") {
+      console.table(
+        usersList.map((user) => ({
+          id: user.id,
+          name: user.name,
+          last_name: user.last_name,
+          email: user.email,
+          role: user.role,
+          SIG: user.school?.SIG ?? "sin asiganr",
+          school: user.school?.name ?? "sin asignar",
+        })),
+      );
+    }
     return res.status(200).json({
       success: true,
       message: "Ficha de perfil autorizada.",
-      data: dataProfil,
+      data: dataProfile,
     });
   } catch (error) {
     console.error("❌ Error en getProfile:", error);
