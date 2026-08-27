@@ -2,10 +2,9 @@ import { Router } from "express";
 import {
   createSubject,
   getSubjects,
-  getSubjectBySection,
+  /*   getSubjectBySection, */
   getYears,
   deleteSubjects,
-  getSubjectPending,
 } from "../controllers/subject.controller.js";
 import {
   verificarAutenticacion,
@@ -32,25 +31,19 @@ router.get(
   permitirRoles("administrador", "profesor", "director"),
   getYears,
 );
-router.get(
+
+/* router.get(
   "/getSubjectSecction/student/:id",
   verificarAutenticacion,
   permitirRoles("Administrador", "Profesor", "Estudiante"),
   getSubjectBySection,
-);
+); */
 
 router.delete(
   "/deleteSub/:code_subject",
   verificarAutenticacion,
   permitirRoles("Administrador"),
   deleteSubjects,
-);
-
-router.get(
-  "/getSubjectPending/:id_student",
-  verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor", "Estudiante"),
-  getSubjectPending,
 );
 
 export default router;

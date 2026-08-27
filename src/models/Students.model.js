@@ -531,4 +531,19 @@ export class Students {
       throw error;
     }
   }
+
+  /**
+   * Obtiene las asignaturas pendientes de un estudiante
+   * @param {number} id_student
+   * @return {Array<object>}
+   */
+  static async pendingSubject(id_student) {
+    try {
+      return await prisma.pending_subject.findMany({
+        where: { id_student: id_student },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
 }

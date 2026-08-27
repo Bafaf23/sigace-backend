@@ -850,3 +850,59 @@ export const getPreinscription = async (req, res) => {
     });
   }
 };
+
+/**
+ * Obtiene las asignaturas pendiente por cursar de un estudiante, si las tiene.
+ *
+ * @async
+ * @function getSubjectPending
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
+export const getSubjectPending = async (req, res) => {
+  const { id_student } = req.params;
+
+  if (!id_student) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_DELETE_SUBJECT_CODE",
+      message: "No se especificó el ID del estudiante.",
+    });
+  }
+
+  try {
+    logger.info("Buscando asiganturas pendientes...");
+    const pending = await Students.pendingSubject(id_student);
+
+    if (!pending) {
+      logger.info(
+        "El estudiante no tiene compromiso academico de años anteriores.",
+      );
+      return res.status(404).json({
+        success: false,
+        code: "SUBJECT_ALREADY_DELETED",
+        message: "Este estudante no tiene materia pendientes.",
+      });
+    }
+
+    logger.info("Asignaturas sincronizadas con exito.", {
+      subject_pending: pending.length,
+    });
+    return res.status(200).json({
+      success: true,
+      data: {
+        pending,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error en getSubejctPending:", error);
+    return res.status(500).json({
+      success: false,
+      code: "DELETE_SUBJECT_INTERNAL_ERROR",
+      message:
+        "Error en el servidor, no se pudo estraer la informacion, intenta nuevamente.",
+      error: error.message,
+    });
+  }
+};

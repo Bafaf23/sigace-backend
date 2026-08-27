@@ -169,26 +169,32 @@ export const createSubject = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 3. OBTENER AÑOS ACADÉMICOS CONFIGURADOS
- * ==========================================================================
+ ** Obtiere todos los años de formacion de un colegio.
+ *
+ * @async
+ * @function getYears
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getYears = async (req, res) => {
+  const SIG = req.user?.SIG;
+
+  if (!SIG) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_SCHOOL_SIG",
+      message:
+        "Código SIG ausente al solicitar la configuración institucional.",
+    });
+  }
+
   try {
-    const SIG = req.user?.SIG;
-
-    if (!SIG) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_SCHOOL_SIG",
-        message:
-          "Código SIG ausente al solicitar la configuración institucional.",
-      });
-    }
-
+    logger.inf("Buscando años de fromacion academcos para ", { SIG: SIG });
     const years = await Subject.getYears(SIG);
 
     if (!years || years.length === 0) {
+      logger.info("No se encontro años de formacion para ", { SIG: SIG });
       return res.status(404).json({
         success: false,
         code: "YEARS_NOT_FOUND",
@@ -197,6 +203,7 @@ export const getYears = async (req, res) => {
       });
     }
 
+    logger.info("Exito, años academicos encontrados", { years: years.length });
     return res.status(200).json({
       success: true,
       message: "Niveles educativos institucionales obtenidos con éxito.",
@@ -219,7 +226,7 @@ export const getYears = async (req, res) => {
  * 4. OBTENER CARGA ACADÉMICA / NOTAS DE SECCIÓN POR ESTUDIANTE
  * ==========================================================================
  */
-export const getSubjectBySection = async (req, res) => {
+/* export const getSubjectBySection = async (req, res) => {
   try {
     console.log(
       `⚠️ [SIGACE API]: Consolidando carga y plan evaluativo del estudiante...`,
@@ -322,6 +329,7 @@ export const getSubjectBySection = async (req, res) => {
     });
   }
 };
+ */
 
 /**
  ** Elimina una asigantura de un colegio
@@ -372,51 +380,6 @@ export const deleteSubjects = async (req, res) => {
       code: "DELETE_SUBJECT_INTERNAL_ERROR",
       message:
         "Seguridad del sistema: No se puede eliminar la materia debido a que posee calificaciones de estudiantes vinculadas.",
-      error: error.message,
-    });
-  }
-};
-
-/**
- * ==========================================================================
- * 6. Obtiene las materias pendietes de un estudiante
- * ==========================================================================
- */
-export const getSubjectPending = async (req, res) => {
-  const { id_student } = req.params;
-
-  if (!id_student) {
-    return res.status(400).json({
-      success: false,
-      code: "MISSING_DELETE_SUBJECT_CODE",
-      message: "No se especificó el ID del estudiante.",
-    });
-  }
-
-  try {
-    const pending = await Subject.getPendingSubject(id_student);
-
-    if (!pending) {
-      return res.status(404).json({
-        success: false,
-        code: "SUBJECT_ALREADY_DELETED",
-        message: "Este estudante no tiene materia pendientes.",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: {
-        pending,
-      },
-    });
-  } catch (error) {
-    console.error("❌ Error en getSubejctPending:", error);
-    return res.status(500).json({
-      success: false,
-      code: "DELETE_SUBJECT_INTERNAL_ERROR",
-      message:
-        "Error en el servidor, no se pudo estraer la informacion, intenta nuevamente.",
       error: error.message,
     });
   }

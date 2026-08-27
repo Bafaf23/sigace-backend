@@ -6,6 +6,7 @@ import {
   getStudentNotEnrolled,
   getStudentByID,
   getRecordStudent,
+  getSubjectPending,
   getPreinscription,
 } from "../controllers/student.controller.js";
 import {
@@ -59,6 +60,13 @@ router.get(
   verificarAutenticacion,
   permitirRoles("administrador", "director"),
   getPreinscription,
+);
+
+router.get(
+  "/:id_student/subject-pending",
+  verificarAutenticacion,
+  permitirRoles("administrador", "director", "estudiante", "gestion"),
+  getSubjectPending,
 );
 
 export default router;
