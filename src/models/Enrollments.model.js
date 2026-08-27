@@ -1,4 +1,6 @@
 import { pool } from "../db.js";
+import { prisma } from "../lib/prisma.js";
+
 export class Enrollments {
   constructor(id_student, id_period, id_section, status) {
     this.id_student = id_student;
@@ -6,6 +8,49 @@ export class Enrollments {
     this.id_section = id_section;
     this.status = status;
   }
+
+  /**
+   ** En lista todo los periodos academicos de un estudiante
+   * @param {number} id_student - id del estudiante
+   * @param {object}
+   */
+  static async periodEnrollmentStudent(id_student) {
+    try {
+      const row = await prisma.enrollment.findMany({
+        where: {
+          id_student: id_student,
+        },
+        select: {
+          status: true,
+          academic_periods: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        section: {
+          select: {
+            name: true,
+            year: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        orderBy: {
+          academic_period: {
+            start_date: "desc",
+          },
+        },
+      });
+      return row;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   /**
    * Crea la inscripsion del estudiante en el sistema
    */

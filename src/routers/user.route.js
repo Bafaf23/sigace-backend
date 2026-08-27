@@ -19,13 +19,13 @@ router.get("/", verificarAutenticacion, permitirRoles("sudo"), getUsers);
 router.post(
   "/",
   verificarAutenticacion,
-  permitirRoles("sudo", "Administrador"),
+  permitirRoles("sudo", "administrador", "director", "gestion"),
   createUser,
 );
 router.post(
   "/changePassword",
   verificarAutenticacion,
-  permitirRoles("sudo", "Administrador", "Profesor", "Estudiante"),
+  permitirRoles("sudo", "administrador", "profesor", "estudiante", "director"),
   changePassword,
 );
 router.delete(
@@ -36,6 +36,6 @@ router.delete(
 );
 router.put("/", verificarAutenticacion, permitirRoles("sudo"), updateUser);
 
-router.get("/profile", verificarAutenticacion, getProfile);
+router.get("/profile",   verificarAutenticacion,  getProfile);
 
 export default router;

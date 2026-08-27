@@ -1,33 +1,109 @@
 import { Subject } from "../models/Subject.model.js";
-import { LapseModel } from "../models/Lapse.model.js";
+import { Lapse } from "../models/Lapse.model.js";
 import { Sections } from "../models/Section.model.js";
+import logger from "../utils/logger.js";
 
 /**
- * ==========================================================================
- * 1. REGISTRAR UNA NUEVA MATERIA
- * ==========================================================================
+ ** Obtiene todas las asignaturas de una escuela
+ *
+ * @async
+ * @function getSubjects
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
-export const createSubject = async (req, res) => {
-  try {
-    console.log("⚠️ [SIGACE API]: Validando creación de asignatura...");
-    const { name, year_id } = req.body ?? {};
-    const SIG = req.user?.SIG;
+export const getSubjects = async (req, res) => {
+  const SIG = /* req.user?.SIG */ "SIG3728";
 
-    if (!name || !year_id) {
-      return res.status(400).json({
+  if (!SIG) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_SCHOOL_SIG",
+      message:
+        "Autenticación ambigua: El identificador SIG de la escuela es requerido.",
+    });
+  }
+
+  try {
+    logger.info("Cargando asignaturas...");
+    const subjects = await Subject.get(SIG);
+
+    if (!subjects || subjects.length === 0) {
+      logger.error("No se encontraron asiganturas registradas para", {
+        SIG: SIG,
+      });
+      return res.status(404).json({
         success: false,
-        code: "INCOMPLETE_SUBJECT_DATA",
+        code: "SUBJECTS_NOT_FOUND",
         message:
-          "No se pudo procesar: El nombre de la asignatura y el año escolar son obligatorios.",
+          "No se registran asignaturas académicas configuradas en el pensum del plantel.",
       });
     }
 
+    logger.info(
+      `Asignaturas obtenidas exitosamente de la BD: ${subjects.length} registros cargados para el SIG: ${SIG}`,
+    );
+
+    if (process.env.NODE_ENV !== "production") {
+      console.table(
+        subjects.map((subject) => ({
+          year_id: subject.year_id,
+          code_subject: subject.code_subject,
+          name: subject.name,
+          SIG: subject.SIG,
+        })),
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Plan de estudios y materias recuperados con éxito.",
+      data: subjects,
+    });
+  } catch (error) {
+    console.error("❌ Error en getSubjects:", error);
+    return res.status(500).json({
+      success: false,
+      code: "GET_SUBJECTS_INTERNAL_ERROR",
+      message:
+        "Error de red al intentar sincronizar el catálogo de asignaturas.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ ** Inserta una asignatura en el sistama segun la escuela que la cree
+ *
+ * @async
+ * @function createSubject
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
+export const createSubject = async (req, res) => {
+  const { name, year_id } = req.body ?? {};
+  const SIG = req.user?.SIG;
+
+  if (!name || !year_id) {
+    logger.error("No se recibieron los datos para continuar con el proceso", {
+      body: name,
+    });
+    return res.status(400).json({
+      success: false,
+      code: "INCOMPLETE_SUBJECT_DATA",
+      message:
+        "No se pudo procesar: El nombre de la asignatura y el año escolar son obligatorios.",
+    });
+  }
+
+  try {
     const years = await Subject.getYears(SIG);
     const yearSelect = years.find((year) => year.id == year_id);
 
     if (!yearSelect) {
-      console.log(
-        `❌ Año escolar con ID [${year_id}] inválido para el SIG: ${SIG}`,
+      logger.error(
+        `año escolar con ID [${year_id}] inválido para el SIG: ${SIG}`,
       );
       return res.status(400).json({
         success: false,
@@ -37,20 +113,20 @@ export const createSubject = async (req, res) => {
       });
     }
 
-    // Extraer el prefijo (ej: de "1er Año" extrae "1")
+    // Generando el codigo de la asiganatura
     const suffix = String(yearSelect.name).substring(0, 1).toUpperCase();
     const code_suffix = suffix.padStart(2, "0");
     const code_subject = `${name.substring(0, 3).toUpperCase()}-${code_suffix}-${SIG}`;
     const abbreviation = `${name.substring(0, 3).toUpperCase()}`;
 
-    console.log(
-      `[SIGACE API]: Código autogenerado consecutivo: ${code_subject}`,
-    );
+    logger.info(`Código autogenerado consecutivo: ${code_subject}`);
 
+    logger.info("Creando registro, espere por favor...");
     const subject = new Subject(code_subject, name, abbreviation, year_id, SIG);
-    const subjectCreated = await Subject.createSubject(subject);
+    const subjectCreated = await Subject.create(subject);
 
     if (!subjectCreated) {
+      logger.error("No se logro creae la asignatuera, intenta de nuevo");
       return res.status(400).json({
         success: false,
         code: "SUBJECT_CREATION_FAILED",
@@ -59,9 +135,13 @@ export const createSubject = async (req, res) => {
       });
     }
 
+    logger.info(
+      `Asignatura creada exitosamente en BD: [${subjectCreated.code_subject}] - ID: ${subjectCreated.code_subject}`,
+    );
+
     return res.status(201).json({
       success: true,
-      message: `¡Asignatura registrada! "${name}" ha sido dada de alta bajo el código institucional [${code_subject}].`,
+      message: `¡Asignatura registrada! "${name}" [${code_subject}] ya está disponible para el plan de estudios.`,
     });
   } catch (error) {
     console.error("❌ Error en createSubject:", error);
@@ -90,61 +170,11 @@ export const createSubject = async (req, res) => {
 
 /**
  * ==========================================================================
- * 2. OBTENER TODAS LAS MATERIAS (CATÁLOGO GENERAL)
- * ==========================================================================
- */
-export const getSubjects = async (req, res) => {
-  try {
-    console.log("⚠️ [SIGACE API]: Extrayendo catálogo de materias...");
-    const SIG = req.user?.SIG;
-
-    if (!SIG) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_SCHOOL_SIG",
-        message:
-          "Autenticación ambigua: El identificador SIG de la escuela es requerido.",
-      });
-    }
-
-    const subjects = await Subject.getSubjects(SIG);
-
-    if (!subjects || subjects.length === 0) {
-      return res.status(404).json({
-        success: false,
-        code: "SUBJECTS_NOT_FOUND",
-        message:
-          "No se registran asignaturas académicas configuradas en el pensum del plantel.",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Plan de estudios y materias recuperados con éxito.",
-      data: subjects,
-    });
-  } catch (error) {
-    console.error("❌ Error en getSubjects:", error);
-    return res.status(500).json({
-      success: false,
-      code: "GET_SUBJECTS_INTERNAL_ERROR",
-      message:
-        "Error de red al intentar sincronizar el catálogo de asignaturas.",
-      error: error.message,
-    });
-  }
-};
-
-/**
- * ==========================================================================
  * 3. OBTENER AÑOS ACADÉMICOS CONFIGURADOS
  * ==========================================================================
  */
 export const getYears = async (req, res) => {
   try {
-    console.log(
-      "⚠️ [SIGACE API]: Buscando niveles/años académicos habilitados...",
-    );
     const SIG = req.user?.SIG;
 
     if (!SIG) {
@@ -207,7 +237,7 @@ export const getSubjectBySection = async (req, res) => {
       });
     }
 
-    const lapses = await LapseModel.getLapses(SIG, id_period);
+    const lapses = await Lapse.getLapses(SIG, id_period);
     const lapseActive = lapses.find((lapse) => lapse.is_active == 1);
 
     if (!lapseActive) {
@@ -294,28 +324,33 @@ export const getSubjectBySection = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 5. ELIMINAR UNA ASIGNATURA
- * ==========================================================================
+ ** Elimina una asigantura de un colegio
+ *
+ * @async
+ * @function deleteSubjects
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const deleteSubjects = async (req, res) => {
+  const { code_subject } = req.params;
+  const SIG = req.user?.SIG;
+
+  if (!code_subject) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_DELETE_SUBJECT_CODE",
+      message:
+        "No se especificó el código de la asignatura que se desea purgar.",
+    });
+  }
+
   try {
-    console.log(`⚠️ [SIGACE API]: Ejecutando baja de asignatura...`);
-    const { code_subject } = req.params;
-    const SIG = req.user?.SIG;
-
-    if (!code_subject) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_DELETE_SUBJECT_CODE",
-        message:
-          "No se especificó el código de la asignatura que se desea purgar.",
-      });
-    }
-
+    logger.info("Iniciando proceso de eliminazion de asigantura...");
     const del = await Subject.deleteSubjects(code_subject, SIG);
 
-    if (del === false) {
+    if (del <= 0) {
+      logger.error("La asignatura ya fue eliminada");
       return res.status(404).json({
         success: false,
         code: "SUBJECT_ALREADY_DELETED",
@@ -324,6 +359,7 @@ export const deleteSubjects = async (req, res) => {
       });
     }
 
+    logger.info("asignatura eliminada con exito");
     return res.status(200).json({
       success: true,
       message:
@@ -347,20 +383,17 @@ export const deleteSubjects = async (req, res) => {
  * ==========================================================================
  */
 export const getSubjectPending = async (req, res) => {
+  const { id_student } = req.params;
+
+  if (!id_student) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_DELETE_SUBJECT_CODE",
+      message: "No se especificó el ID del estudiante.",
+    });
+  }
+
   try {
-    console.log(
-      `⚠️ [SIGACE API]: Ejecutando obtiencion de asignatura pendientes...`,
-    );
-    const { id_student } = req.params;
-
-    if (!id_student) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_DELETE_SUBJECT_CODE",
-        message: "No se especificó el ID del estudiante.",
-      });
-    }
-
     const pending = await Subject.getPendingSubject(id_student);
 
     if (!pending) {

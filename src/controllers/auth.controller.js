@@ -5,6 +5,7 @@ import crypto from "crypto";
 import jsonwebtoken from "jsonwebtoken";
 import { sendResetPasswordEmail } from "../services/resend.service.js";
 import logger from "../utils/logger.js";
+import { School } from "../models/School.model.js";
 
 const { sign } = jsonwebtoken;
 
@@ -19,65 +20,75 @@ const { sign } = jsonwebtoken;
  */
 export const login = async (req, res) => {
   const { email, password } = req.body;
+  const subdomain = req.subdomain;
+  const isProduction = process.env.NODE_ENV === "production";
 
   if (!email || !password) {
-    logger.err("No se proporciono el usuario ni la contrasena.");
+    logger.error("No se proporcionó el usuario ni la contraseña.");
     return res.status(400).json({
       success: false,
       code: "EMPTY_PAYLOAD",
-      message: "Los datos de inicio de sesion son obligatorios.",
+      message: "Los datos de inicio de sesión son obligatorios.",
     });
   }
 
   try {
+    const school = await School.checkSubdomain(String(subdomain));
     const user = await Users.getUserByEmail(email);
 
     if (!user) {
-      logger.debug("No se encontro registro sobre la cuenta consultada", {
-        email: email,
+      logger.debug("No se encontró registro sobre la cuenta consultada", {
+        email,
       });
       return res.status(401).json({
         success: false,
         code: "LOGIN_INVALID",
         message:
-          "Las credenciales son invalidas, verificalas e intenta de nuevo.",
+          "Las credenciales son inválidas, verifícalas e intenta de nuevo.",
       });
     }
 
-    const userId = user.id;
-    const roleName = user.role.name;
+    const userId = user.id_user || user.id;
+    const roleName = user.role?.name || user.role || "usuario";
 
-    let intentos = 0;
-
-    const passwordMatch = await bcrypt.compare(password, user.pass);
+    const passwordMatch = await bcrypt.compare(
+      password,
+      user.pass || user.password,
+    );
 
     if (!passwordMatch) {
-      intentos++;
-
       logger.error(
-        `Se registro un intento de inicio de sesion con ${intentos} fallidos`,
-        { email: email, id: userId },
+        "Intento de inicio de sesión fallido por contraseña incorrecta",
+        {
+          email,
+          id: userId,
+        },
       );
       return res.status(401).json({
         success: false,
         code: "LOGIN_INVALID",
         message:
-          "Las credenciales son invalidas, verificalas e intenta de nuevo.",
+          "Las credenciales son inválidas, verifícalas e intenta de nuevo.",
       });
     }
 
-    // 4. Circuito de seguridad: Restricción por Período Académico Inactivo
-    const isAdmin =
-      roleName === "administrador" ||
-      roleName === "sudo" ||
-      roleName === "director";
+    // Extraer SIG con fallbacks seguros para evitar que Prisma reciba null/undefined
+    const userSchools = Array.isArray(user.user_schools)
+      ? user.user_schools
+      : [];
+    const SIG = userSchools[0]?.SIG || school?.SIG || "";
 
-    if (!isAdmin) {
-      const isSystemOpen = await Academic_periods.hasActivePeriod(user.SIG);
+    const isAdmin = ["administrador", "sudo", "director"].includes(
+      roleName.toLowerCase(),
+    );
+
+    // 4. Circuito de seguridad: Verificar si hay sistema abierto solo si existe SIG
+    if (!isAdmin && SIG) {
+      const isSystemOpen = await Academic_periods.hasActivePeriod(SIG);
 
       if (!isSystemOpen) {
         logger.warn(
-          `Intento de acceso bloqueado: sistema cerrado sin período activo.`,
+          "Intento de acceso bloqueado: sistema cerrado sin período activo.",
           {
             email: user.email,
             role: roleName,
@@ -91,32 +102,36 @@ export const login = async (req, res) => {
       }
     }
 
-    const periodsList = await Academic_periods.getAcademicPeriods(user.SIG);
+    // Consulta de períodos segura (evita invocar la base de datos si SIG está vacío)
+    const periodsList = SIG
+      ? await Academic_periods.getAcademicPeriods(SIG)
+      : [];
 
     let activePeriod = Array.isArray(periodsList)
       ? periodsList.find((p) => p.is_active === 1 || p.is_active === true)
       : null;
 
-    if (!activePeriod && isAdmin) {
-      if (Array.isArray(periodsList) && periodsList.length > 0) {
-        activePeriod = periodsList[0];
-        logger.debug(
-          `Admin sin período activo. Asignando último período creado: ${activePeriod.name}`,
-        );
-      }
+    if (
+      !activePeriod &&
+      isAdmin &&
+      Array.isArray(periodsList) &&
+      periodsList.length > 0
+    ) {
+      activePeriod = periodsList[0];
+      logger.debug(
+        `Admin sin período activo. Asignando último período creado: ${activePeriod.name}`,
+      );
     }
 
     const currentPeriodId = activePeriod ? activePeriod.id : null;
     const currentPeriodName = activePeriod
       ? activePeriod.name
-      : "Sin Periodo Activo";
-
-    const mustChangePassword =
-      user.is_first_login === 1 || user.is_first_login === true;
+      : "Sin Período Activo";
+    const mustChangePassword = Boolean(user.is_first_login);
 
     req.session.userId = userId;
     req.session.role = roleName;
-    req.session.SIG = user.SIG;
+    req.session.SIG = SIG;
     req.session.id_period = currentPeriodId;
 
     // Generar Token JWT
@@ -126,7 +141,7 @@ export const login = async (req, res) => {
         id: userId,
         id_user: userId,
         role: roleName,
-        SIG: user.SIG,
+        SIG: SIG,
         id_period: currentPeriodId,
         mustChangePassword,
       },
@@ -134,22 +149,16 @@ export const login = async (req, res) => {
       { expiresIn: mustChangePassword ? "15m" : "1h" },
     );
 
-    const cookieOptionsBase = {
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      domain: isProduction ? ".sigace.xyz" : undefined,
+      maxAge: 7200 * 1000,
+      path: "/",
     };
 
-    res.cookie("auth_token", token, {
-      ...cookieOptionsBase,
-      httpOnly: true,
-      maxAge: mustChangePassword ? 15 * 60 * 1000 : 60 * 60 * 1000,
-    });
-
-    res.cookie("user_name", encodeURIComponent(user.name || ""), {
-      ...cookieOptionsBase,
-      httpOnly: false,
-      maxAge: mustChangePassword ? 15 * 60 * 1000 : 60 * 60 * 1000,
-    });
+    res.cookie("auth_token", token, cookieOptions);
 
     if (mustChangePassword) {
       logger.warn(
@@ -166,7 +175,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Guardado explícito de la sesión en MySQL
     req.session.save((err) => {
       if (err) {
         console.error("Error al guardar la sesión en MySQL:", err);
@@ -205,7 +213,6 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     res.clearCookie("auth_token");
-    res.clearCookie("user_name");
     res.clearCookie("connect.sid");
 
     return res.status(200).json({ message: "Sesión cerrada correctamente" });

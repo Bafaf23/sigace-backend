@@ -288,29 +288,36 @@ export class Students {
    * @param {string} params.SIG - SIG de la escuela
    * @returns {Array<object>} - Array de estudiantes
    */
-  /*  static async bySection({ id_section, SIG }) {
+  static async bySection({ id_section, SIG }) {
     try {
-      const [rows] = await pool.query(
-        `SELECT 
-    s.id, 
-    s.id_user, 
-    s.SIG, 
-    s.tuition_number, 
-    u.name, 
-    u.last_name, 
-    u.document 
-FROM students s 
-INNER JOIN users u ON s.id_user = u.id  
-INNER JOIN enrollments e ON s.id = e.id_student
-WHERE e.id_section = ? AND s.SIG = ?`,
-        [id_section, SIG],
-      );
-      return rows;
+      return await prisma.student.findMany({
+        where: {
+          SIG: SIG,
+          enrollments: {
+            some: {
+              id_section: Number(id_section),
+            },
+          },
+        },
+        select: {
+          id: true,
+          id_user: true,
+          SIG: true,
+          tuition_number: true,
+          user: {
+            select: {
+              name: true,
+              last_name: true,
+              id_card: true, // Nota: en tu schema.prisma el campo se llama id_card, no document
+            },
+          },
+        },
+      });
     } catch (error) {
       console.error("Error al obtener los estudiantes de la sección:", error);
       throw error;
     }
-  } */
+  }
 
   /**
    * Busca a un estudiante por su id_card
@@ -475,7 +482,6 @@ WHERE e.id_section = ? AND s.SIG = ?`,
         where: {
           SIG: SIG,
           OR: [
-            // Caso A: Tiene inscripción en este período pero id_section es null
             {
               enrollments: {
                 some: {

@@ -15,21 +15,21 @@ import {
 const router = Router();
 
 router.post(
-  "/create",
+  "/",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador", "director"),
   createSubject,
 );
 router.get(
-  "/get",
+  "/",
   verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor"),
+  permitirRoles("administrador", "profesor", "director", "gestion"),
   getSubjects,
 );
 router.get(
-  "/getYears",
+  "/years",
   verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor"),
+  permitirRoles("administrador", "profesor", "director"),
   getYears,
 );
 router.get(

@@ -3,7 +3,6 @@ import {
   endAcademicPeriod,
   createAcademicPeriod,
   getAcademicPeriods,
-  periodStudent,
 } from "../controllers/academinc_period.controller.js";
 import {
   verificarAutenticacion,
@@ -13,29 +12,28 @@ import {
 const router = Router();
 
 router.put(
-  "/endAcademicPeriod",
+  "/end",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador"),
   endAcademicPeriod,
 );
 router.post(
-  "/createAcademicPeriod",
+  "/",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador", "director"),
   createAcademicPeriod,
 );
 router.get(
-  "/getAcademicPeriods",
+  "/",
   verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor", "Estudiante"),
+  permitirRoles(
+    "administrador",
+    "profesor",
+    "estudiante",
+    "director",
+    "gestion",
+  ),
   getAcademicPeriods,
-);
-
-router.get(
-  "/periodStudent/:id_student",
-  verificarAutenticacion,
-  permitirRoles("Administrador", "Estudiante"),
-  periodStudent,
 );
 
 export default router;

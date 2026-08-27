@@ -102,7 +102,9 @@ export class Users {
           administrator_profile: {
             include: { school: true },
           },
-          supervised_school: true,
+          user_schools: {
+            include: { school: true },
+          },
         },
       });
 
@@ -164,12 +166,23 @@ export class Users {
       };
     }
 
+    const gestorRelation = Array.isArray(row.user_schools)
+      ? row.user_schools[0]
+      : null;
+
+    if (gestorRelation) {
+      user.gestion = {
+        id_gestor: gestorRelation.id,
+        SIG: gestorRelation.SIG,
+      };
+    }
     // Extraer la escuela de forma segura, evaluando todos los posibles roles
     const schoolData =
       row.student_profile?.school ||
       row.teacher_profile?.school ||
       row.administrator_profile?.school ||
-      row.supervised_school;
+      row.supervised_school ||
+      gestorRelation?.school;
 
     // Solo asignar si schoolData realmente es un objeto válido
     if (schoolData && typeof schoolData === "object") {
@@ -212,6 +225,12 @@ export class Users {
         const roleUser = Number(user.role_id);
 
         switch (roleUser) {
+          case 3:
+            await tx.school.update({
+              where: { SIG: user.SIG },
+              data: { director_id: idUser },
+            });
+            break;
           case 4:
             const tuition_number = await generateTuitionNumber(user.SIG);
             await tx.student.create({
@@ -250,6 +269,15 @@ export class Users {
               },
             });
             break;
+          case 7:
+          case 8:
+            await tx.user_schools.create({
+              data: {
+                user_id: idUser,
+                SIG: user.SIG,
+              },
+            });
+            break;
           default:
             logger.warn(`Este usuario no requiere un registro especial`);
             break;
@@ -280,9 +308,15 @@ export class Users {
           role_id: true,
           name: true,
           last_name: true,
+          is_first_login: true,
           role: {
             select: {
               name: true,
+            },
+          },
+          user_schools: {
+            select: {
+              SIG: true,
             },
           },
         },

@@ -11,23 +11,27 @@ export const verificarAutenticacion = (req, res, next) => {
 
     if (!token) {
       console.log("❌ Acceso denegado: Cookie 'auth_token' ausente.");
-      return res.status(401).json({ error: "Acceso denegado. Inicie sesión nuevamente." });
+      return res
+        .status(401)
+        .json({ error: "Acceso denegado. Inicie sesión nuevamente." });
     }
 
     // Verificamos el token directamente desde la cookie
     const decoded = verify(token, process.env.JWT_SECRET);
-    
+
     // Inyectamos los datos del usuario decodificados en el objeto request
-    req.user = decoded; 
-    
-    return next(); 
+    req.user = decoded;
+
+    return next();
   } catch (error) {
     console.error("❌ Error en verificación de Token:", error.message);
-    
+
     if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ error: "Su sesión ha expirado. Por favor, vuelva a ingresar." });
+      return res.status(401).json({
+        error: "Su sesión ha expirado. Por favor, vuelva a ingresar.",
+      });
     }
-    
+
     return res.status(401).json({ error: "Token inválido o corrupto." });
   }
 };
@@ -39,8 +43,9 @@ export const verificarAutenticacion = (req, res, next) => {
 export const permitirRoles = (...rolesPermitidos) => {
   return (req, res, next) => {
     if (!req.user || !rolesPermitidos.includes(req.user.role)) {
-      return res.status(403).json({ 
-        message: "No tiene los permisos o el rol requerido para realizar esta acción." 
+      return res.status(403).json({
+        message:
+          "No tiene los permisos o el rol requerido para realizar esta acción.",
       });
     }
     return next();

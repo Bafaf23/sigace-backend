@@ -11,16 +11,16 @@ import {
 const router = Router();
 
 router.get(
-  "/get",
+  "/",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador", "director"),
   getTeachers,
 );
 
 router.get(
-  "/getLoadAcademicTeacher",
+  "/load",
   verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor"),
+  permitirRoles("administrador", "profesor", "director"),
   getLoadAcademicTeacher,
 );
 

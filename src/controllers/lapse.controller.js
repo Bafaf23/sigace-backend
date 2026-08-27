@@ -1,27 +1,35 @@
-import { LapseModel } from "../models/Lapse.model.js";
+import { Lapse } from "../models/Lapse.model.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
+import logger from "../utils/logger.js";
 
 /**
- * ==========================================================================
- * 1. OBTENER TODOS LOS LAPSOS DEL PERÍODO LECTIVO
- * ==========================================================================
+ ** Obtiene todos los laspos o momentos de una escuela. Dichos momentos deben estar registrados por el personla en cargado
+ * de la escuela
+ *
+ * @async
+ * @function getLapses
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getLapses = async (req, res) => {
   try {
-    console.log(
-      `🔍 [SIGACE API]: Solicitando el histórico de lapsos del período...`,
-    );
-    const { SIG, id_period } = req.user ?? {};
+    const SIG = req.user?.SIG;
+    const id_period = req.user?.id_period;
 
-    const lapses = await LapseModel.getLapses(SIG, id_period);
+    /* const SIG = "SIG3728";
+    const id_period = 2; */
+
+    logger.info("Bunscando lapso...", { SIG: SIG, id_period: id_period });
+    const lapses = await Lapse.getLapses(SIG, id_period);
 
     if (!lapses || lapses.length === 0) {
-      return res.status(204).json({
-        success: true,
+      logger.error("No hay Momentos en este colegio");
+      return res.status(400).json({
+        success: false,
         code: "LAPSES_EMPTY",
         message:
           "No se registran lapsos planificados o creados para este período.",
-        data: [],
       });
     }
 
@@ -43,27 +51,32 @@ export const getLapses = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 2. OBTENER EL LAPSO ACTIVO ACTUAL
- * ==========================================================================
+ ** Obtiene el Momento academico de un colegio activo
+ *
+ * @async
+ * @function getLapseActive
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getLapseActive = async (req, res) => {
   try {
-    console.log(`🔍 [SIGACE API]: Consultando lapso en curso...`);
     const { SIG, id_period } = req.user ?? {};
 
     if (!SIG) {
+      logger.error("Sin codigo SIG");
       return res.status(400).json({
         success: false,
         code: "MISSING_SCHOOL_SIG",
         message: "El código SIG de la institución es requerido en la sesión.",
       });
     }
-
-    const lapses = await LapseModel.getLapses(SIG, id_period);
+    logger.info("🔃 Sincronizano los momentos academicos...");
+    const lapses = await Lapse.getLapses(SIG, id_period);
     const lapseActive = lapses?.find((lapse) => lapse.is_active === 1);
 
     if (!lapseActive) {
+      logger.error("Sin Momento activo.");
       return res.status(200).json({
         success: true,
         code: "NO_ACTIVE_LAPSE",
@@ -90,19 +103,23 @@ export const getLapseActive = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 3. PLANIFICAR / CREAR UN NUEVO LAPSO
- * ==========================================================================
+ ** Crea un momento academico
+ *
+ * @async
+ * @function createLapse
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const createLapse = async (req, res) => {
   try {
-    console.log(`⚠️ [SIGACE API]: Registrando nueva planificación de lapso...`);
     const SIG = req.user?.SIG;
-
     const body = req.body || {};
+
     const { nameLapse, dateStart, dateEnd } = body;
 
     if (!SIG) {
+      logger.debug("Falta informacion para procesar el lapso", { SIG: SIG });
       return res.status(400).json({
         success: false,
         code: "MISSING_SCHOOL_SIG",
@@ -111,6 +128,7 @@ export const createLapse = async (req, res) => {
     }
 
     if (!nameLapse || !dateStart || !dateEnd) {
+      logger.debug("Falta informacion para procesar el lapso");
       return res.status(400).json({
         success: false,
         code: "INCOMPLETE_LAPSE_DATA",
@@ -119,13 +137,12 @@ export const createLapse = async (req, res) => {
       });
     }
 
+    logger.info("🔃 Creando el momento, espera...");
     const periods = await Academic_periods.getAcademicPeriods(SIG);
-    const periodActive = periods?.find((item) => item.is_active === 1);
+    const periodActive = periods?.find((item) => item.is_active === true);
 
     if (!periodActive) {
-      console.log(
-        `⚠️ [SIGACE API]: Intento de creación de lapso sin año escolar activo.`,
-      );
+      logger.debug("Intento de creación de lapso sin año escolar activo.");
       return res.status(400).json({
         success: false,
         code: "NO_ACTIVE_PERIOD",
@@ -134,11 +151,11 @@ export const createLapse = async (req, res) => {
       });
     }
 
-    const lapse = await LapseModel.createLapses({
+    const lapse = await Lapse.createLapses({
       id_period: periodActive.id,
       name: nameLapse,
-      start_date: dateStart,
-      end_date: dateEnd,
+      start_date: new Date(dateStart),
+      end_date: new Date(dateEnd),
       is_active: false,
     });
 
@@ -161,16 +178,20 @@ export const createLapse = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 4. CLAUSURAR / FINALIZAR LAPSO DOCENTE
- * ==========================================================================
+ ** Culmina el un momento activo
+ *
+ * @async
+ * @function endLapse
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const endLapse = async (req, res) => {
   try {
-    console.log(`⚠️ [SIGACE API]: Clausurando actividades del lapso...`);
     const idLapse = req.params.id;
 
     if (!idLapse) {
+      logger.error("Momento no espesificado");
       return res.status(400).json({
         success: false,
         code: "MISSING_LAPSE_ID",
@@ -179,7 +200,8 @@ export const endLapse = async (req, res) => {
       });
     }
 
-    await LapseModel.endLapse(idLapse);
+    logger.info("🔃 Espere un momento...");
+    await Lapse.endLapse(idLapse);
 
     return res.status(200).json({
       success: true,
@@ -200,19 +222,22 @@ export const endLapse = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 5. APERTURAR / APUNTAR LAPSO EN EJECUCIÓN (CON VALIDADOR DE CONCURRENCIA)
- * ==========================================================================
+ ** Inicia un momento academico
+ *
+ * @async
+ * @function startLapse
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const startLapse = async (req, res) => {
   try {
-    console.log(
-      `⚠️ [SIGACE API]: Abriendo período de carga de actividades del lapso...`,
-    );
     const { id } = req.params;
-    const id_period = req.user?.id_period;
+    const id_period = req.user.id_period;
+    const SIG = req.user.SIG;
 
     if (!id) {
+      logger.error("momento no espesificado");
       return res.status(400).json({
         success: false,
         code: "MISSING_LAPSE_ID",
@@ -221,9 +246,15 @@ export const startLapse = async (req, res) => {
       });
     }
 
-    const success = await LapseModel.startLapse(id, id_period);
+    const lapses = await Lapse.getLapses(SIG, id_period);
+    const lapseActive = lapses.find((lapse) => {
+      lapse.is_active === true;
+    });
 
-    if (success) {
+    if (!lapseActive) {
+      logger.info("🔃 Iniciando el momento...");
+      const success = await Lapse.startLapse(id);
+
       return res.status(200).json({
         success: true,
         code: "LAPSE_STARTED",
@@ -231,8 +262,8 @@ export const startLapse = async (req, res) => {
           "El lapso académico ha sido iniciado de forma exitosa. Sistema listo para la recepción de notas.",
       });
     } else {
-      console.log(
-        `⚠️ [SIGACE API]: Conflicto. Intento de inicio con un lapso paralelo activo.`,
+      logger.error(
+        "Conflicto. Intento de inicio con un lapso paralelo activo.",
       );
       return res.status(409).json({
         success: false,

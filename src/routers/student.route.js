@@ -4,7 +4,6 @@ import {
   createStudent,
   updateStudent,
   getStudentNotEnrolled,
-  getStudentsBySection,
   getStudentByID,
   getRecordStudent,
   getPreinscription,
@@ -18,8 +17,8 @@ const router = Router();
 
 router.get(
   "/",
-  /* verificarAutenticacion,
-  permitirRoles("administrador"), */
+  verificarAutenticacion,
+  permitirRoles("administrador", "director", "gestion"),
   getStudents,
 );
 router.post(
@@ -37,22 +36,14 @@ router.put(
 router.get(
   "/not-enrolled/:id_period",
   verificarAutenticacion,
-  permitirRoles("administrador"),
+  permitirRoles("administrador", "director"),
   getStudentNotEnrolled,
 );
-
-// TODO: mover al secction router
-/* router.get(
-  "/sections/:id_section/students",
-  verificarAutenticacion,
-  permitirRoles("administrador", "Profesor"),
-  getStudentsBySection,
-); */
 
 router.get(
   "/:id_card",
   verificarAutenticacion,
-  permitirRoles("administrador"),
+  permitirRoles("administrador", "director", "gestion"),
   getStudentByID,
 );
 
@@ -66,7 +57,7 @@ router.get(
 router.get(
   "/:id_period/pre-inscription",
   verificarAutenticacion,
-  permitirRoles("administrador"),
+  permitirRoles("administrador", "director"),
   getPreinscription,
 );
 

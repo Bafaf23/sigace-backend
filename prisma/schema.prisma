@@ -35,6 +35,7 @@ model school {
   DEA_CODE     String
   RIF          String?
   is_active    Boolean     @default(true)
+  subdomain    String?     @unique
 
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
@@ -42,8 +43,6 @@ model school {
   cdceId           Int
   cdcee            cdcee              @relation(fields: [cdceId], references: [id], map: "School_cdceId_fkey")
   students         student[]
-  director_id      Int?               @unique
-  director         users?             @relation("DirectorDeEscuela", fields: [director_id], references: [id])
   sections         section[]
   academic_periods academic_periods[]
   teachers         teacher[]
@@ -51,6 +50,7 @@ model school {
   administrators   administrator[]
   subjects         subject[]
   load_academics   load_academic[]
+  user_schools     user_schools[]  
 
   @@map("schools")
 }
@@ -109,12 +109,12 @@ enum student_condition {
 }
 
 enum enrollment_status {
-  Activo
-  Aprobado
-  Retirado
-  Materia_Pendiente @map("Materia Pendiente")
-  Reprobado
-  Pre_inscrito      @map("Pre-inscrito")
+  activo
+  aprobado
+  retirado
+  materia_pendiente @map("materia pendiente")
+  reprobado
+  pre_inscrito      @map("pre-inscrito")
 }
 
 model year {
@@ -148,15 +148,24 @@ model users {
   is_active      Boolean  @default(true)
 
   teacher_profile       teacher?
-  supervised_school     school?        @relation("DirectorDeEscuela")
   administrator_profile administrator?
   student_profile       student?
   auth_tokens           auth_token[]
+  user_schools user_schools[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   @@map("users")
+}
+
+model user_schools{
+  id       Int    @id @default(autoincrement())
+  user_id  Int
+  SIG      String
+
+  user     users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  school   school    @relation(fields: [SIG], references: [SIG], onDelete: Cascade)
 }
 
 model role {
@@ -313,7 +322,7 @@ model enrollment {
   id_student Int
   id_section Int?
   id_period  Int?
-  status     enrollment_status @default(Activo)
+  status     enrollment_status @default(activo)
   id_year    Int?
 
   created_at DateTime @default(now())

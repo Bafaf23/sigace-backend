@@ -6,6 +6,7 @@ import {
   deleteSchool,
   updateSchool,
   getRoles,
+  checkSchool,
 } from "../controllers/school.controller.js";
 import {
   verificarAutenticacion,
@@ -36,4 +37,7 @@ router.get(
   permitirRoles("sudo"),
   getRoles,
 );
+
+router.get("/check/:subdomain", checkSchool);
+
 export default router;

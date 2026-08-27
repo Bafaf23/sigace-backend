@@ -1,9 +1,11 @@
+import { Enrollments } from "../models/Enrollments.model.js";
 import { Sections } from "../models/Section.model.js";
+import { Students } from "../models/Students.model.js";
+import logger from "../utils/logger.js";
 import { getCurrentPeriod } from "../utils/periodAc.js";
 
 export const createSection = async (req, res) => {
   try {
-    console.log("⚠️ [SIGACE API]: Validando datos para la nueva sección...");
     const SIG = req.user.SIG;
     const id_year = req.body.yearId;
     const name = req.body.name;
@@ -11,9 +13,8 @@ export const createSection = async (req, res) => {
     const capacity = req.body.capacity;
     const id_period = req.body.id_period;
 
-    // 🔥 Agregado id_period a la validación estricta para evitar inconsistencias
     if (!name || !SIG || !id_year || !guide_id || !capacity || !id_period) {
-      console.log("❌ Parámetros obligatorios incompletos.");
+      logger.error("❌ Parámetros obligatorios incompletos.");
       return res.status(400).json({
         success: false,
         code: "INCOMPLETE_SECTION_DATA",
@@ -22,7 +23,7 @@ export const createSection = async (req, res) => {
       });
     }
 
-    console.log("🔄 [SIGACE API]: Registrando sección en la base de datos...");
+    logger.info("🔄 Registrando sección en la base de datos...");
     const section = await Sections.createSection({
       name,
       SIG,
@@ -73,12 +74,11 @@ export const createSection = async (req, res) => {
 
 export const getSections = async (req, res) => {
   try {
-    console.log("⚠️ [SIGACE API]: Consultando secciones asignadas...");
     const SIG = req.user.SIG;
-    const id_period = req.params.id_period;
+    const id_period = req.user.id_period;
 
     if (!SIG || !id_period) {
-      console.log("❌ Código institucional o ID de período ausente");
+      logger.error("Código institucional o ID de período ausente");
       return res.status(400).json({
         success: false,
         code: "MISSING_QUERY_PARAMETERS",
@@ -87,18 +87,22 @@ export const getSections = async (req, res) => {
       });
     }
 
-    console.log(
-      `🔄 [SIGACE API]: Extrayendo aulas para SIG: ${SIG} en Periodo: ${id_period}`,
-    );
     const sections = await Sections.getSections(SIG, id_period);
 
-    console.log(
-      `✅ Secciones localizadas con éxito. Cantidad: ${sections?.length || 0}`,
+    if (sections.length === 0) {
+      logger.debug("No hay secciones en este perido academico");
+      return res.status(200).json({
+        success: false,
+        message: "No hay secciones academicas en este perido.",
+      });
+    }
+    logger.info(
+      `✅ Secciones localizadas con éxito. Cantidad: ${sections?.length}`,
     );
     return res.status(200).json({
       success: true,
       message: "Distribución de secciones académicas recuperada con éxito.",
-      data: sections || [],
+      data: sections,
     });
   } catch (error) {
     console.error("❌ Error en getSections:", error);
@@ -107,6 +111,64 @@ export const getSections = async (req, res) => {
       code: "FETCH_SECTIONS_INTERNAL_ERROR",
       message:
         "No se pudo sincronizar el listado de secciones en este momento debido a un fallo de red interno.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Obtiene a los estudiantes de una seccion
+ * @async
+ * @function getStudentsBySection
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
+export const getStudentsBySection = async (req, res) => {
+  const id_section = req.params.id_section;
+  const SIG = req.user.SIG;
+
+  if (!id_section) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_SECTION_ID",
+      message: "El ID identificador de la sección es mandatorio.",
+    });
+  }
+
+  if (!SIG) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_SIG",
+      message: "Código institucional no suministrado.",
+    });
+  }
+
+  try {
+    const students = await Students.bySection({ id_section, SIG });
+
+    if (!students || students.length === 0) {
+      return res.status(404).json({
+        success: false,
+        code: "SECTION_EMPTY",
+        message:
+          "Aula disponible: Esta sección no cuenta con estudiantes inscritos actualmente.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Nómina de estudiantes asignados a la sección recuperada de forma exitosa.",
+      data: students,
+    });
+  } catch (error) {
+    console.error("❌ Error en getStudentsBySection:", error);
+    return res.status(500).json({
+      success: false,
+      code: "GET_STUDENTS_SECTION_INTERNAL_ERROR",
+      message:
+        "Inconveniente en el servidor al intentar leer la nómina de la sección.",
       error: error.message,
     });
   }

@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { createSIG } from "../utils/createSIG.js";
+import logger from "../utils/logger.js";
 
 const emptyToNull = (value) => {
   const trimmedValue = value?.trim();
@@ -27,11 +28,17 @@ export class School {
     try {
       return await prisma.school.findMany({
         include: {
-          director: {
-            select: {
-              id_card: true,
-              name: true,
-              last_name: true,
+          user_schools: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  last_name: true,
+                  email: true,
+                  role: true,
+                },
+              },
             },
           },
           cdcee: true,
@@ -73,9 +80,10 @@ export class School {
   /**
    ** Metodo para insertar una escuala en la BD
    * @param {object} school - Objeto con toda la indormacion de la escuela
+   * @param {string} subdomain - subdominio de la escuela
    * @returns {Promise<object>}
    */
-  static async createSchool(school) {
+  static async createSchool(school, subdomain) {
     try {
       const SIG = createSIG();
       const rif = emptyToNull(school.RIF);
@@ -97,7 +105,7 @@ export class School {
           DEA_CODE: DEA_CODE,
           RIF: rif,
           cdceId: school.cdceId || 1,
-          director_id: school.director_id || null,
+          subdomain: subdomain,
         },
       });
 
@@ -162,6 +170,26 @@ export class School {
     } catch (error) {
       console.error("Error al obtener roles:", error);
       throw error;
+    }
+  }
+
+  /**
+   ** Método para verificar el sudDominio de una escuela
+   * @param {string} subdomain - sudDominio del colegio a verificar
+   * @returns {Promise<object>} Retorna un obejto de la escuela con el subdomino
+   */
+  static async checkSubdomain(subdomain) {
+    try {
+      const count = await prisma.school.findUnique({
+        where: {
+          subdomain: subdomain,
+        },
+      });
+
+      return count;
+    } catch (e) {
+      logger.error("Ocurrio en error verificando el dominio del colegio");
+      throw e;
     }
   }
 }

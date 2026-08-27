@@ -224,3 +224,57 @@ export const updatePreInscrip = async (req, res) => {
     });
   }
 };
+
+/**
+ * Obtiene todos los peridos en los que acurdaso un estudiante desde su incripsion.
+ *
+ * @async
+ * @function periodStudent
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
+export const periodStudent = async (req, res) => {
+  try {
+    const { id_student } = req.params;
+
+    if (!id_student) {
+      logger.error("El id del usuario es requerido");
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_STUDENT_ID",
+        message:
+          "El identificador único del estudiante es estrictamente requerido.",
+      });
+    }
+
+    logger.info("🔃 Obteniando los peridos academicos de un estudiante...");
+    const periods = await Enrollments.periodEnrollmentStudent(id_student);
+
+    if (!periods || periods.length === 0) {
+      logger.error("Ocurrio un error en los periodos");
+      return res.status(404).json({
+        success: false,
+        code: "STUDENT_MATRICULA_NOT_FOUND",
+        message:
+          "El estudiante seleccionado no posee trazas de inscripción en ningún año escolar registrado.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      code: "STUDENT_PERIODS_FETCHED",
+      message: "Historial de inscripción escolar recuperado con éxito.",
+      data: periods,
+    });
+  } catch (error) {
+    console.error("❌ Error crítico en periodStudent:", error);
+    return res.status(500).json({
+      success: false,
+      code: "STUDENT_PERIODS_INTERNAL_ERROR",
+      message:
+        "Inconsistencia interna al intentar estructurar el expediente cronológico del alumno.",
+      error: error.message,
+    });
+  }
+};

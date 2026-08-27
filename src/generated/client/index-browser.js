@@ -145,10 +145,10 @@ exports.Prisma.SchoolScalarFieldEnum = {
   DEA_CODE: 'DEA_CODE',
   RIF: 'RIF',
   is_active: 'is_active',
+  subdomain: 'subdomain',
   created_at: 'created_at',
   updated_at: 'updated_at',
-  cdceId: 'cdceId',
-  director_id: 'director_id'
+  cdceId: 'cdceId'
 };
 
 exports.Prisma.SubjectScalarFieldEnum = {
@@ -194,6 +194,12 @@ exports.Prisma.UsersScalarFieldEnum = {
   is_active: 'is_active',
   created_at: 'created_at',
   updated_at: 'updated_at'
+};
+
+exports.Prisma.User_schoolsScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  SIG: 'SIG'
 };
 
 exports.Prisma.RoleScalarFieldEnum = {
@@ -368,7 +374,8 @@ exports.Prisma.schoolOrderByRelevanceFieldEnum = {
   phone: 'phone',
   email: 'email',
   DEA_CODE: 'DEA_CODE',
-  RIF: 'RIF'
+  RIF: 'RIF',
+  subdomain: 'subdomain'
 };
 
 exports.Prisma.subjectOrderByRelevanceFieldEnum = {
@@ -394,6 +401,10 @@ exports.Prisma.usersOrderByRelevanceFieldEnum = {
   email: 'email',
   phone: 'phone',
   pass: 'pass'
+};
+
+exports.Prisma.user_schoolsOrderByRelevanceFieldEnum = {
+  SIG: 'SIG'
 };
 
 exports.Prisma.roleOrderByRelevanceFieldEnum = {
@@ -474,12 +485,12 @@ exports.student_condition = exports.$Enums.student_condition = {
 };
 
 exports.enrollment_status = exports.$Enums.enrollment_status = {
-  Activo: 'Activo',
-  Aprobado: 'Aprobado',
-  Retirado: 'Retirado',
-  Materia_Pendiente: 'Materia_Pendiente',
-  Reprobado: 'Reprobado',
-  Pre_inscrito: 'Pre_inscrito'
+  activo: 'activo',
+  aprobado: 'aprobado',
+  retirado: 'retirado',
+  materia_pendiente: 'materia_pendiente',
+  reprobado: 'reprobado',
+  pre_inscrito: 'pre_inscrito'
 };
 
 exports.pending_subject_status = exports.$Enums.pending_subject_status = {
@@ -495,6 +506,7 @@ exports.Prisma.ModelName = {
   lapse: 'lapse',
   year: 'year',
   users: 'users',
+  user_schools: 'user_schools',
   role: 'role',
   academic_periods: 'academic_periods',
   administrator: 'administrator',

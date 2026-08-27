@@ -49,6 +49,11 @@ export type year = $Result.DefaultSelection<Prisma.$yearPayload>
  */
 export type users = $Result.DefaultSelection<Prisma.$usersPayload>
 /**
+ * Model user_schools
+ * 
+ */
+export type user_schools = $Result.DefaultSelection<Prisma.$user_schoolsPayload>
+/**
  * Model role
  * 
  */
@@ -150,12 +155,12 @@ export type student_condition = (typeof student_condition)[keyof typeof student_
 
 
 export const enrollment_status: {
-  Activo: 'Activo',
-  Aprobado: 'Aprobado',
-  Retirado: 'Retirado',
-  Materia_Pendiente: 'Materia_Pendiente',
-  Reprobado: 'Reprobado',
-  Pre_inscrito: 'Pre_inscrito'
+  activo: 'activo',
+  aprobado: 'aprobado',
+  retirado: 'retirado',
+  materia_pendiente: 'materia_pendiente',
+  reprobado: 'reprobado',
+  pre_inscrito: 'pre_inscrito'
 };
 
 export type enrollment_status = (typeof enrollment_status)[keyof typeof enrollment_status]
@@ -380,6 +385,16 @@ export class PrismaClient<
     * ```
     */
   get users(): Prisma.usersDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.user_schools`: Exposes CRUD operations for the **user_schools** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more User_schools
+    * const user_schools = await prisma.user_schools.findMany()
+    * ```
+    */
+  get user_schools(): Prisma.user_schoolsDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.role`: Exposes CRUD operations for the **role** model.
@@ -974,6 +989,7 @@ export namespace Prisma {
     lapse: 'lapse',
     year: 'year',
     users: 'users',
+    user_schools: 'user_schools',
     role: 'role',
     academic_periods: 'academic_periods',
     administrator: 'administrator',
@@ -1003,7 +1019,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "session" | "cdcee" | "school" | "subject" | "lapse" | "year" | "users" | "role" | "academic_periods" | "administrator" | "teacher" | "student" | "representative" | "load_academic" | "section" | "enrollment" | "evaluation_plan" | "evaluation_plan_detail" | "grade" | "pending_subject" | "auth_token"
+      modelProps: "session" | "cdcee" | "school" | "subject" | "lapse" | "year" | "users" | "user_schools" | "role" | "academic_periods" | "administrator" | "teacher" | "student" | "representative" | "load_academic" | "section" | "enrollment" | "evaluation_plan" | "evaluation_plan_detail" | "grade" | "pending_subject" | "auth_token"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1466,6 +1482,72 @@ export namespace Prisma {
           count: {
             args: Prisma.usersCountArgs<ExtArgs>
             result: $Utils.Optional<UsersCountAggregateOutputType> | number
+          }
+        }
+      }
+      user_schools: {
+        payload: Prisma.$user_schoolsPayload<ExtArgs>
+        fields: Prisma.user_schoolsFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.user_schoolsFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$user_schoolsPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.user_schoolsFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$user_schoolsPayload>
+          }
+          findFirst: {
+            args: Prisma.user_schoolsFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$user_schoolsPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.user_schoolsFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$user_schoolsPayload>
+          }
+          findMany: {
+            args: Prisma.user_schoolsFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$user_schoolsPayload>[]
+          }
+          create: {
+            args: Prisma.user_schoolsCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$user_schoolsPayload>
+          }
+          createMany: {
+            args: Prisma.user_schoolsCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.user_schoolsDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$user_schoolsPayload>
+          }
+          update: {
+            args: Prisma.user_schoolsUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$user_schoolsPayload>
+          }
+          deleteMany: {
+            args: Prisma.user_schoolsDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.user_schoolsUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.user_schoolsUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$user_schoolsPayload>
+          }
+          aggregate: {
+            args: Prisma.User_schoolsAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUser_schools>
+          }
+          groupBy: {
+            args: Prisma.user_schoolsGroupByArgs<ExtArgs>
+            result: $Utils.Optional<User_schoolsGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.user_schoolsCountArgs<ExtArgs>
+            result: $Utils.Optional<User_schoolsCountAggregateOutputType> | number
           }
         }
       }
@@ -2523,6 +2605,7 @@ export namespace Prisma {
     lapse?: lapseOmit
     year?: yearOmit
     users?: usersOmit
+    user_schools?: user_schoolsOmit
     role?: roleOmit
     academic_periods?: academic_periodsOmit
     administrator?: administratorOmit
@@ -2656,6 +2739,7 @@ export namespace Prisma {
     administrators: number
     subjects: number
     load_academics: number
+    user_schools: number
   }
 
   export type SchoolCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2667,6 +2751,7 @@ export namespace Prisma {
     administrators?: boolean | SchoolCountOutputTypeCountAdministratorsArgs
     subjects?: boolean | SchoolCountOutputTypeCountSubjectsArgs
     load_academics?: boolean | SchoolCountOutputTypeCountLoad_academicsArgs
+    user_schools?: boolean | SchoolCountOutputTypeCountUser_schoolsArgs
   }
 
   // Custom InputTypes
@@ -2734,6 +2819,13 @@ export namespace Prisma {
    */
   export type SchoolCountOutputTypeCountLoad_academicsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: load_academicWhereInput
+  }
+
+  /**
+   * SchoolCountOutputType without action
+   */
+  export type SchoolCountOutputTypeCountUser_schoolsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: user_schoolsWhereInput
   }
 
 
@@ -2863,10 +2955,12 @@ export namespace Prisma {
 
   export type UsersCountOutputType = {
     auth_tokens: number
+    user_schools: number
   }
 
   export type UsersCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     auth_tokens?: boolean | UsersCountOutputTypeCountAuth_tokensArgs
+    user_schools?: boolean | UsersCountOutputTypeCountUser_schoolsArgs
   }
 
   // Custom InputTypes
@@ -2885,6 +2979,13 @@ export namespace Prisma {
    */
   export type UsersCountOutputTypeCountAuth_tokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: auth_tokenWhereInput
+  }
+
+  /**
+   * UsersCountOutputType without action
+   */
+  export type UsersCountOutputTypeCountUser_schoolsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: user_schoolsWhereInput
   }
 
 
@@ -5117,12 +5218,10 @@ export namespace Prisma {
 
   export type SchoolAvgAggregateOutputType = {
     cdceId: number | null
-    director_id: number | null
   }
 
   export type SchoolSumAggregateOutputType = {
     cdceId: number | null
-    director_id: number | null
   }
 
   export type SchoolMinAggregateOutputType = {
@@ -5139,10 +5238,10 @@ export namespace Prisma {
     DEA_CODE: string | null
     RIF: string | null
     is_active: boolean | null
+    subdomain: string | null
     created_at: Date | null
     updated_at: Date | null
     cdceId: number | null
-    director_id: number | null
   }
 
   export type SchoolMaxAggregateOutputType = {
@@ -5159,10 +5258,10 @@ export namespace Prisma {
     DEA_CODE: string | null
     RIF: string | null
     is_active: boolean | null
+    subdomain: string | null
     created_at: Date | null
     updated_at: Date | null
     cdceId: number | null
-    director_id: number | null
   }
 
   export type SchoolCountAggregateOutputType = {
@@ -5179,22 +5278,20 @@ export namespace Prisma {
     DEA_CODE: number
     RIF: number
     is_active: number
+    subdomain: number
     created_at: number
     updated_at: number
     cdceId: number
-    director_id: number
     _all: number
   }
 
 
   export type SchoolAvgAggregateInputType = {
     cdceId?: true
-    director_id?: true
   }
 
   export type SchoolSumAggregateInputType = {
     cdceId?: true
-    director_id?: true
   }
 
   export type SchoolMinAggregateInputType = {
@@ -5211,10 +5308,10 @@ export namespace Prisma {
     DEA_CODE?: true
     RIF?: true
     is_active?: true
+    subdomain?: true
     created_at?: true
     updated_at?: true
     cdceId?: true
-    director_id?: true
   }
 
   export type SchoolMaxAggregateInputType = {
@@ -5231,10 +5328,10 @@ export namespace Prisma {
     DEA_CODE?: true
     RIF?: true
     is_active?: true
+    subdomain?: true
     created_at?: true
     updated_at?: true
     cdceId?: true
-    director_id?: true
   }
 
   export type SchoolCountAggregateInputType = {
@@ -5251,10 +5348,10 @@ export namespace Prisma {
     DEA_CODE?: true
     RIF?: true
     is_active?: true
+    subdomain?: true
     created_at?: true
     updated_at?: true
     cdceId?: true
-    director_id?: true
     _all?: true
   }
 
@@ -5358,10 +5455,10 @@ export namespace Prisma {
     DEA_CODE: string
     RIF: string | null
     is_active: boolean
+    subdomain: string | null
     created_at: Date
     updated_at: Date
     cdceId: number
-    director_id: number | null
     _count: SchoolCountAggregateOutputType | null
     _avg: SchoolAvgAggregateOutputType | null
     _sum: SchoolSumAggregateOutputType | null
@@ -5397,13 +5494,12 @@ export namespace Prisma {
     DEA_CODE?: boolean
     RIF?: boolean
     is_active?: boolean
+    subdomain?: boolean
     created_at?: boolean
     updated_at?: boolean
     cdceId?: boolean
-    director_id?: boolean
     cdcee?: boolean | cdceeDefaultArgs<ExtArgs>
     students?: boolean | school$studentsArgs<ExtArgs>
-    director?: boolean | school$directorArgs<ExtArgs>
     sections?: boolean | school$sectionsArgs<ExtArgs>
     academic_periods?: boolean | school$academic_periodsArgs<ExtArgs>
     teachers?: boolean | school$teachersArgs<ExtArgs>
@@ -5411,6 +5507,7 @@ export namespace Prisma {
     administrators?: boolean | school$administratorsArgs<ExtArgs>
     subjects?: boolean | school$subjectsArgs<ExtArgs>
     load_academics?: boolean | school$load_academicsArgs<ExtArgs>
+    user_schools?: boolean | school$user_schoolsArgs<ExtArgs>
     _count?: boolean | SchoolCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["school"]>
 
@@ -5430,17 +5527,16 @@ export namespace Prisma {
     DEA_CODE?: boolean
     RIF?: boolean
     is_active?: boolean
+    subdomain?: boolean
     created_at?: boolean
     updated_at?: boolean
     cdceId?: boolean
-    director_id?: boolean
   }
 
-  export type schoolOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"SIG" | "school_name" | "type" | "company_name" | "address" | "city" | "municipality" | "state" | "phone" | "email" | "DEA_CODE" | "RIF" | "is_active" | "created_at" | "updated_at" | "cdceId" | "director_id", ExtArgs["result"]["school"]>
+  export type schoolOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"SIG" | "school_name" | "type" | "company_name" | "address" | "city" | "municipality" | "state" | "phone" | "email" | "DEA_CODE" | "RIF" | "is_active" | "subdomain" | "created_at" | "updated_at" | "cdceId", ExtArgs["result"]["school"]>
   export type schoolInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     cdcee?: boolean | cdceeDefaultArgs<ExtArgs>
     students?: boolean | school$studentsArgs<ExtArgs>
-    director?: boolean | school$directorArgs<ExtArgs>
     sections?: boolean | school$sectionsArgs<ExtArgs>
     academic_periods?: boolean | school$academic_periodsArgs<ExtArgs>
     teachers?: boolean | school$teachersArgs<ExtArgs>
@@ -5448,6 +5544,7 @@ export namespace Prisma {
     administrators?: boolean | school$administratorsArgs<ExtArgs>
     subjects?: boolean | school$subjectsArgs<ExtArgs>
     load_academics?: boolean | school$load_academicsArgs<ExtArgs>
+    user_schools?: boolean | school$user_schoolsArgs<ExtArgs>
     _count?: boolean | SchoolCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -5456,7 +5553,6 @@ export namespace Prisma {
     objects: {
       cdcee: Prisma.$cdceePayload<ExtArgs>
       students: Prisma.$studentPayload<ExtArgs>[]
-      director: Prisma.$usersPayload<ExtArgs> | null
       sections: Prisma.$sectionPayload<ExtArgs>[]
       academic_periods: Prisma.$academic_periodsPayload<ExtArgs>[]
       teachers: Prisma.$teacherPayload<ExtArgs>[]
@@ -5464,6 +5560,7 @@ export namespace Prisma {
       administrators: Prisma.$administratorPayload<ExtArgs>[]
       subjects: Prisma.$subjectPayload<ExtArgs>[]
       load_academics: Prisma.$load_academicPayload<ExtArgs>[]
+      user_schools: Prisma.$user_schoolsPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       SIG: string
@@ -5479,10 +5576,10 @@ export namespace Prisma {
       DEA_CODE: string
       RIF: string | null
       is_active: boolean
+      subdomain: string | null
       created_at: Date
       updated_at: Date
       cdceId: number
-      director_id: number | null
     }, ExtArgs["result"]["school"]>
     composites: {}
   }
@@ -5825,7 +5922,6 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     cdcee<T extends cdceeDefaultArgs<ExtArgs> = {}>(args?: Subset<T, cdceeDefaultArgs<ExtArgs>>): Prisma__cdceeClient<$Result.GetResult<Prisma.$cdceePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     students<T extends school$studentsArgs<ExtArgs> = {}>(args?: Subset<T, school$studentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$studentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    director<T extends school$directorArgs<ExtArgs> = {}>(args?: Subset<T, school$directorArgs<ExtArgs>>): Prisma__usersClient<$Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     sections<T extends school$sectionsArgs<ExtArgs> = {}>(args?: Subset<T, school$sectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$sectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     academic_periods<T extends school$academic_periodsArgs<ExtArgs> = {}>(args?: Subset<T, school$academic_periodsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$academic_periodsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     teachers<T extends school$teachersArgs<ExtArgs> = {}>(args?: Subset<T, school$teachersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$teacherPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -5833,6 +5929,7 @@ export namespace Prisma {
     administrators<T extends school$administratorsArgs<ExtArgs> = {}>(args?: Subset<T, school$administratorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$administratorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     subjects<T extends school$subjectsArgs<ExtArgs> = {}>(args?: Subset<T, school$subjectsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$subjectPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     load_academics<T extends school$load_academicsArgs<ExtArgs> = {}>(args?: Subset<T, school$load_academicsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$load_academicPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    user_schools<T extends school$user_schoolsArgs<ExtArgs> = {}>(args?: Subset<T, school$user_schoolsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$user_schoolsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5875,10 +5972,10 @@ export namespace Prisma {
     readonly DEA_CODE: FieldRef<"school", 'String'>
     readonly RIF: FieldRef<"school", 'String'>
     readonly is_active: FieldRef<"school", 'Boolean'>
+    readonly subdomain: FieldRef<"school", 'String'>
     readonly created_at: FieldRef<"school", 'DateTime'>
     readonly updated_at: FieldRef<"school", 'DateTime'>
     readonly cdceId: FieldRef<"school", 'Int'>
-    readonly director_id: FieldRef<"school", 'Int'>
   }
     
 
@@ -6251,25 +6348,6 @@ export namespace Prisma {
   }
 
   /**
-   * school.director
-   */
-  export type school$directorArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the users
-     */
-    select?: usersSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the users
-     */
-    omit?: usersOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: usersInclude<ExtArgs> | null
-    where?: usersWhereInput
-  }
-
-  /**
    * school.sections
    */
   export type school$sectionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6435,6 +6513,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: Load_academicScalarFieldEnum | Load_academicScalarFieldEnum[]
+  }
+
+  /**
+   * school.user_schools
+   */
+  export type school$user_schoolsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the user_schools
+     */
+    select?: user_schoolsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the user_schools
+     */
+    omit?: user_schoolsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: user_schoolsInclude<ExtArgs> | null
+    where?: user_schoolsWhereInput
+    orderBy?: user_schoolsOrderByWithRelationInput | user_schoolsOrderByWithRelationInput[]
+    cursor?: user_schoolsWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: User_schoolsScalarFieldEnum | User_schoolsScalarFieldEnum[]
   }
 
   /**
@@ -9872,10 +9974,10 @@ export namespace Prisma {
     updated_at?: boolean
     role?: boolean | roleDefaultArgs<ExtArgs>
     teacher_profile?: boolean | users$teacher_profileArgs<ExtArgs>
-    supervised_school?: boolean | users$supervised_schoolArgs<ExtArgs>
     administrator_profile?: boolean | users$administrator_profileArgs<ExtArgs>
     student_profile?: boolean | users$student_profileArgs<ExtArgs>
     auth_tokens?: boolean | users$auth_tokensArgs<ExtArgs>
+    user_schools?: boolean | users$user_schoolsArgs<ExtArgs>
     _count?: boolean | UsersCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["users"]>
 
@@ -9900,10 +10002,10 @@ export namespace Prisma {
   export type usersInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     role?: boolean | roleDefaultArgs<ExtArgs>
     teacher_profile?: boolean | users$teacher_profileArgs<ExtArgs>
-    supervised_school?: boolean | users$supervised_schoolArgs<ExtArgs>
     administrator_profile?: boolean | users$administrator_profileArgs<ExtArgs>
     student_profile?: boolean | users$student_profileArgs<ExtArgs>
     auth_tokens?: boolean | users$auth_tokensArgs<ExtArgs>
+    user_schools?: boolean | users$user_schoolsArgs<ExtArgs>
     _count?: boolean | UsersCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -9912,10 +10014,10 @@ export namespace Prisma {
     objects: {
       role: Prisma.$rolePayload<ExtArgs>
       teacher_profile: Prisma.$teacherPayload<ExtArgs> | null
-      supervised_school: Prisma.$schoolPayload<ExtArgs> | null
       administrator_profile: Prisma.$administratorPayload<ExtArgs> | null
       student_profile: Prisma.$studentPayload<ExtArgs> | null
       auth_tokens: Prisma.$auth_tokenPayload<ExtArgs>[]
+      user_schools: Prisma.$user_schoolsPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -10272,10 +10374,10 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     role<T extends roleDefaultArgs<ExtArgs> = {}>(args?: Subset<T, roleDefaultArgs<ExtArgs>>): Prisma__roleClient<$Result.GetResult<Prisma.$rolePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     teacher_profile<T extends users$teacher_profileArgs<ExtArgs> = {}>(args?: Subset<T, users$teacher_profileArgs<ExtArgs>>): Prisma__teacherClient<$Result.GetResult<Prisma.$teacherPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-    supervised_school<T extends users$supervised_schoolArgs<ExtArgs> = {}>(args?: Subset<T, users$supervised_schoolArgs<ExtArgs>>): Prisma__schoolClient<$Result.GetResult<Prisma.$schoolPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     administrator_profile<T extends users$administrator_profileArgs<ExtArgs> = {}>(args?: Subset<T, users$administrator_profileArgs<ExtArgs>>): Prisma__administratorClient<$Result.GetResult<Prisma.$administratorPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     student_profile<T extends users$student_profileArgs<ExtArgs> = {}>(args?: Subset<T, users$student_profileArgs<ExtArgs>>): Prisma__studentClient<$Result.GetResult<Prisma.$studentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     auth_tokens<T extends users$auth_tokensArgs<ExtArgs> = {}>(args?: Subset<T, users$auth_tokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$auth_tokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    user_schools<T extends users$user_schoolsArgs<ExtArgs> = {}>(args?: Subset<T, users$user_schoolsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$user_schoolsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -10684,25 +10786,6 @@ export namespace Prisma {
   }
 
   /**
-   * users.supervised_school
-   */
-  export type users$supervised_schoolArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the school
-     */
-    select?: schoolSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the school
-     */
-    omit?: schoolOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: schoolInclude<ExtArgs> | null
-    where?: schoolWhereInput
-  }
-
-  /**
    * users.administrator_profile
    */
   export type users$administrator_profileArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -10765,6 +10848,30 @@ export namespace Prisma {
   }
 
   /**
+   * users.user_schools
+   */
+  export type users$user_schoolsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the user_schools
+     */
+    select?: user_schoolsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the user_schools
+     */
+    omit?: user_schoolsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: user_schoolsInclude<ExtArgs> | null
+    where?: user_schoolsWhereInput
+    orderBy?: user_schoolsOrderByWithRelationInput | user_schoolsOrderByWithRelationInput[]
+    cursor?: user_schoolsWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: User_schoolsScalarFieldEnum | User_schoolsScalarFieldEnum[]
+  }
+
+  /**
    * users without action
    */
   export type usersDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -10780,6 +10887,960 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: usersInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model user_schools
+   */
+
+  export type AggregateUser_schools = {
+    _count: User_schoolsCountAggregateOutputType | null
+    _avg: User_schoolsAvgAggregateOutputType | null
+    _sum: User_schoolsSumAggregateOutputType | null
+    _min: User_schoolsMinAggregateOutputType | null
+    _max: User_schoolsMaxAggregateOutputType | null
+  }
+
+  export type User_schoolsAvgAggregateOutputType = {
+    id: number | null
+    user_id: number | null
+  }
+
+  export type User_schoolsSumAggregateOutputType = {
+    id: number | null
+    user_id: number | null
+  }
+
+  export type User_schoolsMinAggregateOutputType = {
+    id: number | null
+    user_id: number | null
+    SIG: string | null
+  }
+
+  export type User_schoolsMaxAggregateOutputType = {
+    id: number | null
+    user_id: number | null
+    SIG: string | null
+  }
+
+  export type User_schoolsCountAggregateOutputType = {
+    id: number
+    user_id: number
+    SIG: number
+    _all: number
+  }
+
+
+  export type User_schoolsAvgAggregateInputType = {
+    id?: true
+    user_id?: true
+  }
+
+  export type User_schoolsSumAggregateInputType = {
+    id?: true
+    user_id?: true
+  }
+
+  export type User_schoolsMinAggregateInputType = {
+    id?: true
+    user_id?: true
+    SIG?: true
+  }
+
+  export type User_schoolsMaxAggregateInputType = {
+    id?: true
+    user_id?: true
+    SIG?: true
+  }
+
+  export type User_schoolsCountAggregateInputType = {
+    id?: true
+    user_id?: true
+    SIG?: true
+    _all?: true
+  }
+
+  export type User_schoolsAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which user_schools to aggregate.
+     */
+    where?: user_schoolsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of user_schools to fetch.
+     */
+    orderBy?: user_schoolsOrderByWithRelationInput | user_schoolsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: user_schoolsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` user_schools from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` user_schools.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned user_schools
+    **/
+    _count?: true | User_schoolsCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: User_schoolsAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: User_schoolsSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: User_schoolsMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: User_schoolsMaxAggregateInputType
+  }
+
+  export type GetUser_schoolsAggregateType<T extends User_schoolsAggregateArgs> = {
+        [P in keyof T & keyof AggregateUser_schools]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUser_schools[P]>
+      : GetScalarType<T[P], AggregateUser_schools[P]>
+  }
+
+
+
+
+  export type user_schoolsGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: user_schoolsWhereInput
+    orderBy?: user_schoolsOrderByWithAggregationInput | user_schoolsOrderByWithAggregationInput[]
+    by: User_schoolsScalarFieldEnum[] | User_schoolsScalarFieldEnum
+    having?: user_schoolsScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: User_schoolsCountAggregateInputType | true
+    _avg?: User_schoolsAvgAggregateInputType
+    _sum?: User_schoolsSumAggregateInputType
+    _min?: User_schoolsMinAggregateInputType
+    _max?: User_schoolsMaxAggregateInputType
+  }
+
+  export type User_schoolsGroupByOutputType = {
+    id: number
+    user_id: number
+    SIG: string
+    _count: User_schoolsCountAggregateOutputType | null
+    _avg: User_schoolsAvgAggregateOutputType | null
+    _sum: User_schoolsSumAggregateOutputType | null
+    _min: User_schoolsMinAggregateOutputType | null
+    _max: User_schoolsMaxAggregateOutputType | null
+  }
+
+  type GetUser_schoolsGroupByPayload<T extends user_schoolsGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<User_schoolsGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof User_schoolsGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], User_schoolsGroupByOutputType[P]>
+            : GetScalarType<T[P], User_schoolsGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type user_schoolsSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    user_id?: boolean
+    SIG?: boolean
+    user?: boolean | usersDefaultArgs<ExtArgs>
+    school?: boolean | schoolDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["user_schools"]>
+
+
+
+  export type user_schoolsSelectScalar = {
+    id?: boolean
+    user_id?: boolean
+    SIG?: boolean
+  }
+
+  export type user_schoolsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "user_id" | "SIG", ExtArgs["result"]["user_schools"]>
+  export type user_schoolsInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | usersDefaultArgs<ExtArgs>
+    school?: boolean | schoolDefaultArgs<ExtArgs>
+  }
+
+  export type $user_schoolsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "user_schools"
+    objects: {
+      user: Prisma.$usersPayload<ExtArgs>
+      school: Prisma.$schoolPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      user_id: number
+      SIG: string
+    }, ExtArgs["result"]["user_schools"]>
+    composites: {}
+  }
+
+  type user_schoolsGetPayload<S extends boolean | null | undefined | user_schoolsDefaultArgs> = $Result.GetResult<Prisma.$user_schoolsPayload, S>
+
+  type user_schoolsCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<user_schoolsFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: User_schoolsCountAggregateInputType | true
+    }
+
+  export interface user_schoolsDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['user_schools'], meta: { name: 'user_schools' } }
+    /**
+     * Find zero or one User_schools that matches the filter.
+     * @param {user_schoolsFindUniqueArgs} args - Arguments to find a User_schools
+     * @example
+     * // Get one User_schools
+     * const user_schools = await prisma.user_schools.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends user_schoolsFindUniqueArgs>(args: SelectSubset<T, user_schoolsFindUniqueArgs<ExtArgs>>): Prisma__user_schoolsClient<$Result.GetResult<Prisma.$user_schoolsPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one User_schools that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {user_schoolsFindUniqueOrThrowArgs} args - Arguments to find a User_schools
+     * @example
+     * // Get one User_schools
+     * const user_schools = await prisma.user_schools.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends user_schoolsFindUniqueOrThrowArgs>(args: SelectSubset<T, user_schoolsFindUniqueOrThrowArgs<ExtArgs>>): Prisma__user_schoolsClient<$Result.GetResult<Prisma.$user_schoolsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first User_schools that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {user_schoolsFindFirstArgs} args - Arguments to find a User_schools
+     * @example
+     * // Get one User_schools
+     * const user_schools = await prisma.user_schools.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends user_schoolsFindFirstArgs>(args?: SelectSubset<T, user_schoolsFindFirstArgs<ExtArgs>>): Prisma__user_schoolsClient<$Result.GetResult<Prisma.$user_schoolsPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first User_schools that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {user_schoolsFindFirstOrThrowArgs} args - Arguments to find a User_schools
+     * @example
+     * // Get one User_schools
+     * const user_schools = await prisma.user_schools.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends user_schoolsFindFirstOrThrowArgs>(args?: SelectSubset<T, user_schoolsFindFirstOrThrowArgs<ExtArgs>>): Prisma__user_schoolsClient<$Result.GetResult<Prisma.$user_schoolsPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more User_schools that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {user_schoolsFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all User_schools
+     * const user_schools = await prisma.user_schools.findMany()
+     * 
+     * // Get first 10 User_schools
+     * const user_schools = await prisma.user_schools.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const user_schoolsWithIdOnly = await prisma.user_schools.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends user_schoolsFindManyArgs>(args?: SelectSubset<T, user_schoolsFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$user_schoolsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a User_schools.
+     * @param {user_schoolsCreateArgs} args - Arguments to create a User_schools.
+     * @example
+     * // Create one User_schools
+     * const User_schools = await prisma.user_schools.create({
+     *   data: {
+     *     // ... data to create a User_schools
+     *   }
+     * })
+     * 
+     */
+    create<T extends user_schoolsCreateArgs>(args: SelectSubset<T, user_schoolsCreateArgs<ExtArgs>>): Prisma__user_schoolsClient<$Result.GetResult<Prisma.$user_schoolsPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many User_schools.
+     * @param {user_schoolsCreateManyArgs} args - Arguments to create many User_schools.
+     * @example
+     * // Create many User_schools
+     * const user_schools = await prisma.user_schools.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends user_schoolsCreateManyArgs>(args?: SelectSubset<T, user_schoolsCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a User_schools.
+     * @param {user_schoolsDeleteArgs} args - Arguments to delete one User_schools.
+     * @example
+     * // Delete one User_schools
+     * const User_schools = await prisma.user_schools.delete({
+     *   where: {
+     *     // ... filter to delete one User_schools
+     *   }
+     * })
+     * 
+     */
+    delete<T extends user_schoolsDeleteArgs>(args: SelectSubset<T, user_schoolsDeleteArgs<ExtArgs>>): Prisma__user_schoolsClient<$Result.GetResult<Prisma.$user_schoolsPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one User_schools.
+     * @param {user_schoolsUpdateArgs} args - Arguments to update one User_schools.
+     * @example
+     * // Update one User_schools
+     * const user_schools = await prisma.user_schools.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends user_schoolsUpdateArgs>(args: SelectSubset<T, user_schoolsUpdateArgs<ExtArgs>>): Prisma__user_schoolsClient<$Result.GetResult<Prisma.$user_schoolsPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more User_schools.
+     * @param {user_schoolsDeleteManyArgs} args - Arguments to filter User_schools to delete.
+     * @example
+     * // Delete a few User_schools
+     * const { count } = await prisma.user_schools.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends user_schoolsDeleteManyArgs>(args?: SelectSubset<T, user_schoolsDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more User_schools.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {user_schoolsUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many User_schools
+     * const user_schools = await prisma.user_schools.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends user_schoolsUpdateManyArgs>(args: SelectSubset<T, user_schoolsUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one User_schools.
+     * @param {user_schoolsUpsertArgs} args - Arguments to update or create a User_schools.
+     * @example
+     * // Update or create a User_schools
+     * const user_schools = await prisma.user_schools.upsert({
+     *   create: {
+     *     // ... data to create a User_schools
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the User_schools we want to update
+     *   }
+     * })
+     */
+    upsert<T extends user_schoolsUpsertArgs>(args: SelectSubset<T, user_schoolsUpsertArgs<ExtArgs>>): Prisma__user_schoolsClient<$Result.GetResult<Prisma.$user_schoolsPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of User_schools.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {user_schoolsCountArgs} args - Arguments to filter User_schools to count.
+     * @example
+     * // Count the number of User_schools
+     * const count = await prisma.user_schools.count({
+     *   where: {
+     *     // ... the filter for the User_schools we want to count
+     *   }
+     * })
+    **/
+    count<T extends user_schoolsCountArgs>(
+      args?: Subset<T, user_schoolsCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], User_schoolsCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a User_schools.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {User_schoolsAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends User_schoolsAggregateArgs>(args: Subset<T, User_schoolsAggregateArgs>): Prisma.PrismaPromise<GetUser_schoolsAggregateType<T>>
+
+    /**
+     * Group by User_schools.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {user_schoolsGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends user_schoolsGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: user_schoolsGroupByArgs['orderBy'] }
+        : { orderBy?: user_schoolsGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, user_schoolsGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUser_schoolsGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the user_schools model
+   */
+  readonly fields: user_schoolsFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for user_schools.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__user_schoolsClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends usersDefaultArgs<ExtArgs> = {}>(args?: Subset<T, usersDefaultArgs<ExtArgs>>): Prisma__usersClient<$Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    school<T extends schoolDefaultArgs<ExtArgs> = {}>(args?: Subset<T, schoolDefaultArgs<ExtArgs>>): Prisma__schoolClient<$Result.GetResult<Prisma.$schoolPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the user_schools model
+   */
+  interface user_schoolsFieldRefs {
+    readonly id: FieldRef<"user_schools", 'Int'>
+    readonly user_id: FieldRef<"user_schools", 'Int'>
+    readonly SIG: FieldRef<"user_schools", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * user_schools findUnique
+   */
+  export type user_schoolsFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the user_schools
+     */
+    select?: user_schoolsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the user_schools
+     */
+    omit?: user_schoolsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: user_schoolsInclude<ExtArgs> | null
+    /**
+     * Filter, which user_schools to fetch.
+     */
+    where: user_schoolsWhereUniqueInput
+  }
+
+  /**
+   * user_schools findUniqueOrThrow
+   */
+  export type user_schoolsFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the user_schools
+     */
+    select?: user_schoolsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the user_schools
+     */
+    omit?: user_schoolsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: user_schoolsInclude<ExtArgs> | null
+    /**
+     * Filter, which user_schools to fetch.
+     */
+    where: user_schoolsWhereUniqueInput
+  }
+
+  /**
+   * user_schools findFirst
+   */
+  export type user_schoolsFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the user_schools
+     */
+    select?: user_schoolsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the user_schools
+     */
+    omit?: user_schoolsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: user_schoolsInclude<ExtArgs> | null
+    /**
+     * Filter, which user_schools to fetch.
+     */
+    where?: user_schoolsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of user_schools to fetch.
+     */
+    orderBy?: user_schoolsOrderByWithRelationInput | user_schoolsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for user_schools.
+     */
+    cursor?: user_schoolsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` user_schools from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` user_schools.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of user_schools.
+     */
+    distinct?: User_schoolsScalarFieldEnum | User_schoolsScalarFieldEnum[]
+  }
+
+  /**
+   * user_schools findFirstOrThrow
+   */
+  export type user_schoolsFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the user_schools
+     */
+    select?: user_schoolsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the user_schools
+     */
+    omit?: user_schoolsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: user_schoolsInclude<ExtArgs> | null
+    /**
+     * Filter, which user_schools to fetch.
+     */
+    where?: user_schoolsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of user_schools to fetch.
+     */
+    orderBy?: user_schoolsOrderByWithRelationInput | user_schoolsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for user_schools.
+     */
+    cursor?: user_schoolsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` user_schools from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` user_schools.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of user_schools.
+     */
+    distinct?: User_schoolsScalarFieldEnum | User_schoolsScalarFieldEnum[]
+  }
+
+  /**
+   * user_schools findMany
+   */
+  export type user_schoolsFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the user_schools
+     */
+    select?: user_schoolsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the user_schools
+     */
+    omit?: user_schoolsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: user_schoolsInclude<ExtArgs> | null
+    /**
+     * Filter, which user_schools to fetch.
+     */
+    where?: user_schoolsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of user_schools to fetch.
+     */
+    orderBy?: user_schoolsOrderByWithRelationInput | user_schoolsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing user_schools.
+     */
+    cursor?: user_schoolsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` user_schools from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` user_schools.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of user_schools.
+     */
+    distinct?: User_schoolsScalarFieldEnum | User_schoolsScalarFieldEnum[]
+  }
+
+  /**
+   * user_schools create
+   */
+  export type user_schoolsCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the user_schools
+     */
+    select?: user_schoolsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the user_schools
+     */
+    omit?: user_schoolsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: user_schoolsInclude<ExtArgs> | null
+    /**
+     * The data needed to create a user_schools.
+     */
+    data: XOR<user_schoolsCreateInput, user_schoolsUncheckedCreateInput>
+  }
+
+  /**
+   * user_schools createMany
+   */
+  export type user_schoolsCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many user_schools.
+     */
+    data: user_schoolsCreateManyInput | user_schoolsCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * user_schools update
+   */
+  export type user_schoolsUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the user_schools
+     */
+    select?: user_schoolsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the user_schools
+     */
+    omit?: user_schoolsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: user_schoolsInclude<ExtArgs> | null
+    /**
+     * The data needed to update a user_schools.
+     */
+    data: XOR<user_schoolsUpdateInput, user_schoolsUncheckedUpdateInput>
+    /**
+     * Choose, which user_schools to update.
+     */
+    where: user_schoolsWhereUniqueInput
+  }
+
+  /**
+   * user_schools updateMany
+   */
+  export type user_schoolsUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update user_schools.
+     */
+    data: XOR<user_schoolsUpdateManyMutationInput, user_schoolsUncheckedUpdateManyInput>
+    /**
+     * Filter which user_schools to update
+     */
+    where?: user_schoolsWhereInput
+    /**
+     * Limit how many user_schools to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * user_schools upsert
+   */
+  export type user_schoolsUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the user_schools
+     */
+    select?: user_schoolsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the user_schools
+     */
+    omit?: user_schoolsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: user_schoolsInclude<ExtArgs> | null
+    /**
+     * The filter to search for the user_schools to update in case it exists.
+     */
+    where: user_schoolsWhereUniqueInput
+    /**
+     * In case the user_schools found by the `where` argument doesn't exist, create a new user_schools with this data.
+     */
+    create: XOR<user_schoolsCreateInput, user_schoolsUncheckedCreateInput>
+    /**
+     * In case the user_schools was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<user_schoolsUpdateInput, user_schoolsUncheckedUpdateInput>
+  }
+
+  /**
+   * user_schools delete
+   */
+  export type user_schoolsDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the user_schools
+     */
+    select?: user_schoolsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the user_schools
+     */
+    omit?: user_schoolsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: user_schoolsInclude<ExtArgs> | null
+    /**
+     * Filter which user_schools to delete.
+     */
+    where: user_schoolsWhereUniqueInput
+  }
+
+  /**
+   * user_schools deleteMany
+   */
+  export type user_schoolsDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which user_schools to delete
+     */
+    where?: user_schoolsWhereInput
+    /**
+     * Limit how many user_schools to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * user_schools without action
+   */
+  export type user_schoolsDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the user_schools
+     */
+    select?: user_schoolsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the user_schools
+     */
+    omit?: user_schoolsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: user_schoolsInclude<ExtArgs> | null
   }
 
 
@@ -25433,10 +26494,10 @@ export namespace Prisma {
     DEA_CODE: 'DEA_CODE',
     RIF: 'RIF',
     is_active: 'is_active',
+    subdomain: 'subdomain',
     created_at: 'created_at',
     updated_at: 'updated_at',
-    cdceId: 'cdceId',
-    director_id: 'director_id'
+    cdceId: 'cdceId'
   };
 
   export type SchoolScalarFieldEnum = (typeof SchoolScalarFieldEnum)[keyof typeof SchoolScalarFieldEnum]
@@ -25497,6 +26558,15 @@ export namespace Prisma {
   };
 
   export type UsersScalarFieldEnum = (typeof UsersScalarFieldEnum)[keyof typeof UsersScalarFieldEnum]
+
+
+  export const User_schoolsScalarFieldEnum: {
+    id: 'id',
+    user_id: 'user_id',
+    SIG: 'SIG'
+  };
+
+  export type User_schoolsScalarFieldEnum = (typeof User_schoolsScalarFieldEnum)[keyof typeof User_schoolsScalarFieldEnum]
 
 
   export const RoleScalarFieldEnum: {
@@ -25725,7 +26795,8 @@ export namespace Prisma {
     phone: 'phone',
     email: 'email',
     DEA_CODE: 'DEA_CODE',
-    RIF: 'RIF'
+    RIF: 'RIF',
+    subdomain: 'subdomain'
   };
 
   export type schoolOrderByRelevanceFieldEnum = (typeof schoolOrderByRelevanceFieldEnum)[keyof typeof schoolOrderByRelevanceFieldEnum]
@@ -25766,6 +26837,13 @@ export namespace Prisma {
   };
 
   export type usersOrderByRelevanceFieldEnum = (typeof usersOrderByRelevanceFieldEnum)[keyof typeof usersOrderByRelevanceFieldEnum]
+
+
+  export const user_schoolsOrderByRelevanceFieldEnum: {
+    SIG: 'SIG'
+  };
+
+  export type user_schoolsOrderByRelevanceFieldEnum = (typeof user_schoolsOrderByRelevanceFieldEnum)[keyof typeof user_schoolsOrderByRelevanceFieldEnum]
 
 
   export const roleOrderByRelevanceFieldEnum: {
@@ -26052,13 +27130,12 @@ export namespace Prisma {
     DEA_CODE?: StringFilter<"school"> | string
     RIF?: StringNullableFilter<"school"> | string | null
     is_active?: BoolFilter<"school"> | boolean
+    subdomain?: StringNullableFilter<"school"> | string | null
     created_at?: DateTimeFilter<"school"> | Date | string
     updated_at?: DateTimeFilter<"school"> | Date | string
     cdceId?: IntFilter<"school"> | number
-    director_id?: IntNullableFilter<"school"> | number | null
     cdcee?: XOR<CdceeScalarRelationFilter, cdceeWhereInput>
     students?: StudentListRelationFilter
-    director?: XOR<UsersNullableScalarRelationFilter, usersWhereInput> | null
     sections?: SectionListRelationFilter
     academic_periods?: Academic_periodsListRelationFilter
     teachers?: TeacherListRelationFilter
@@ -26066,6 +27143,7 @@ export namespace Prisma {
     administrators?: AdministratorListRelationFilter
     subjects?: SubjectListRelationFilter
     load_academics?: Load_academicListRelationFilter
+    user_schools?: User_schoolsListRelationFilter
   }
 
   export type schoolOrderByWithRelationInput = {
@@ -26082,13 +27160,12 @@ export namespace Prisma {
     DEA_CODE?: SortOrder
     RIF?: SortOrderInput | SortOrder
     is_active?: SortOrder
+    subdomain?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     cdceId?: SortOrder
-    director_id?: SortOrderInput | SortOrder
     cdcee?: cdceeOrderByWithRelationInput
     students?: studentOrderByRelationAggregateInput
-    director?: usersOrderByWithRelationInput
     sections?: sectionOrderByRelationAggregateInput
     academic_periods?: academic_periodsOrderByRelationAggregateInput
     teachers?: teacherOrderByRelationAggregateInput
@@ -26096,12 +27173,13 @@ export namespace Prisma {
     administrators?: administratorOrderByRelationAggregateInput
     subjects?: subjectOrderByRelationAggregateInput
     load_academics?: load_academicOrderByRelationAggregateInput
+    user_schools?: user_schoolsOrderByRelationAggregateInput
     _relevance?: schoolOrderByRelevanceInput
   }
 
   export type schoolWhereUniqueInput = Prisma.AtLeast<{
     SIG?: string
-    director_id?: number
+    subdomain?: string
     AND?: schoolWhereInput | schoolWhereInput[]
     OR?: schoolWhereInput[]
     NOT?: schoolWhereInput | schoolWhereInput[]
@@ -26122,7 +27200,6 @@ export namespace Prisma {
     cdceId?: IntFilter<"school"> | number
     cdcee?: XOR<CdceeScalarRelationFilter, cdceeWhereInput>
     students?: StudentListRelationFilter
-    director?: XOR<UsersNullableScalarRelationFilter, usersWhereInput> | null
     sections?: SectionListRelationFilter
     academic_periods?: Academic_periodsListRelationFilter
     teachers?: TeacherListRelationFilter
@@ -26130,7 +27207,8 @@ export namespace Prisma {
     administrators?: AdministratorListRelationFilter
     subjects?: SubjectListRelationFilter
     load_academics?: Load_academicListRelationFilter
-  }, "SIG" | "director_id">
+    user_schools?: User_schoolsListRelationFilter
+  }, "SIG" | "subdomain">
 
   export type schoolOrderByWithAggregationInput = {
     SIG?: SortOrder
@@ -26146,10 +27224,10 @@ export namespace Prisma {
     DEA_CODE?: SortOrder
     RIF?: SortOrderInput | SortOrder
     is_active?: SortOrder
+    subdomain?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     cdceId?: SortOrder
-    director_id?: SortOrderInput | SortOrder
     _count?: schoolCountOrderByAggregateInput
     _avg?: schoolAvgOrderByAggregateInput
     _max?: schoolMaxOrderByAggregateInput
@@ -26174,10 +27252,10 @@ export namespace Prisma {
     DEA_CODE?: StringWithAggregatesFilter<"school"> | string
     RIF?: StringNullableWithAggregatesFilter<"school"> | string | null
     is_active?: BoolWithAggregatesFilter<"school"> | boolean
+    subdomain?: StringNullableWithAggregatesFilter<"school"> | string | null
     created_at?: DateTimeWithAggregatesFilter<"school"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"school"> | Date | string
     cdceId?: IntWithAggregatesFilter<"school"> | number
-    director_id?: IntNullableWithAggregatesFilter<"school"> | number | null
   }
 
   export type subjectWhereInput = {
@@ -26423,10 +27501,10 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<"users"> | Date | string
     role?: XOR<RoleScalarRelationFilter, roleWhereInput>
     teacher_profile?: XOR<TeacherNullableScalarRelationFilter, teacherWhereInput> | null
-    supervised_school?: XOR<SchoolNullableScalarRelationFilter, schoolWhereInput> | null
     administrator_profile?: XOR<AdministratorNullableScalarRelationFilter, administratorWhereInput> | null
     student_profile?: XOR<StudentNullableScalarRelationFilter, studentWhereInput> | null
     auth_tokens?: Auth_tokenListRelationFilter
+    user_schools?: User_schoolsListRelationFilter
   }
 
   export type usersOrderByWithRelationInput = {
@@ -26444,10 +27522,10 @@ export namespace Prisma {
     updated_at?: SortOrder
     role?: roleOrderByWithRelationInput
     teacher_profile?: teacherOrderByWithRelationInput
-    supervised_school?: schoolOrderByWithRelationInput
     administrator_profile?: administratorOrderByWithRelationInput
     student_profile?: studentOrderByWithRelationInput
     auth_tokens?: auth_tokenOrderByRelationAggregateInput
+    user_schools?: user_schoolsOrderByRelationAggregateInput
     _relevance?: usersOrderByRelevanceInput
   }
 
@@ -26469,10 +27547,10 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<"users"> | Date | string
     role?: XOR<RoleScalarRelationFilter, roleWhereInput>
     teacher_profile?: XOR<TeacherNullableScalarRelationFilter, teacherWhereInput> | null
-    supervised_school?: XOR<SchoolNullableScalarRelationFilter, schoolWhereInput> | null
     administrator_profile?: XOR<AdministratorNullableScalarRelationFilter, administratorWhereInput> | null
     student_profile?: XOR<StudentNullableScalarRelationFilter, studentWhereInput> | null
     auth_tokens?: Auth_tokenListRelationFilter
+    user_schools?: User_schoolsListRelationFilter
   }, "id" | "email">
 
   export type usersOrderByWithAggregationInput = {
@@ -26511,6 +27589,57 @@ export namespace Prisma {
     is_active?: BoolWithAggregatesFilter<"users"> | boolean
     created_at?: DateTimeWithAggregatesFilter<"users"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"users"> | Date | string
+  }
+
+  export type user_schoolsWhereInput = {
+    AND?: user_schoolsWhereInput | user_schoolsWhereInput[]
+    OR?: user_schoolsWhereInput[]
+    NOT?: user_schoolsWhereInput | user_schoolsWhereInput[]
+    id?: IntFilter<"user_schools"> | number
+    user_id?: IntFilter<"user_schools"> | number
+    SIG?: StringFilter<"user_schools"> | string
+    user?: XOR<UsersScalarRelationFilter, usersWhereInput>
+    school?: XOR<SchoolScalarRelationFilter, schoolWhereInput>
+  }
+
+  export type user_schoolsOrderByWithRelationInput = {
+    id?: SortOrder
+    user_id?: SortOrder
+    SIG?: SortOrder
+    user?: usersOrderByWithRelationInput
+    school?: schoolOrderByWithRelationInput
+    _relevance?: user_schoolsOrderByRelevanceInput
+  }
+
+  export type user_schoolsWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: user_schoolsWhereInput | user_schoolsWhereInput[]
+    OR?: user_schoolsWhereInput[]
+    NOT?: user_schoolsWhereInput | user_schoolsWhereInput[]
+    user_id?: IntFilter<"user_schools"> | number
+    SIG?: StringFilter<"user_schools"> | string
+    user?: XOR<UsersScalarRelationFilter, usersWhereInput>
+    school?: XOR<SchoolScalarRelationFilter, schoolWhereInput>
+  }, "id">
+
+  export type user_schoolsOrderByWithAggregationInput = {
+    id?: SortOrder
+    user_id?: SortOrder
+    SIG?: SortOrder
+    _count?: user_schoolsCountOrderByAggregateInput
+    _avg?: user_schoolsAvgOrderByAggregateInput
+    _max?: user_schoolsMaxOrderByAggregateInput
+    _min?: user_schoolsMinOrderByAggregateInput
+    _sum?: user_schoolsSumOrderByAggregateInput
+  }
+
+  export type user_schoolsScalarWhereWithAggregatesInput = {
+    AND?: user_schoolsScalarWhereWithAggregatesInput | user_schoolsScalarWhereWithAggregatesInput[]
+    OR?: user_schoolsScalarWhereWithAggregatesInput[]
+    NOT?: user_schoolsScalarWhereWithAggregatesInput | user_schoolsScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"user_schools"> | number
+    user_id?: IntWithAggregatesFilter<"user_schools"> | number
+    SIG?: StringWithAggregatesFilter<"user_schools"> | string
   }
 
   export type roleWhereInput = {
@@ -27666,11 +28795,11 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
     students?: studentCreateNestedManyWithoutSchoolInput
-    director?: usersCreateNestedOneWithoutSupervised_schoolInput
     sections?: sectionCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsCreateNestedManyWithoutSchoolInput
     teachers?: teacherCreateNestedManyWithoutSchoolInput
@@ -27678,6 +28807,7 @@ export namespace Prisma {
     administrators?: administratorCreateNestedManyWithoutSchoolInput
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateInput = {
@@ -27694,10 +28824,10 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
-    director_id?: number | null
     students?: studentUncheckedCreateNestedManyWithoutSchoolInput
     sections?: sectionUncheckedCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsUncheckedCreateNestedManyWithoutSchoolInput
@@ -27706,6 +28836,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUpdateInput = {
@@ -27722,11 +28853,11 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
     students?: studentUpdateManyWithoutSchoolNestedInput
-    director?: usersUpdateOneWithoutSupervised_schoolNestedInput
     sections?: sectionUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUpdateManyWithoutSchoolNestedInput
     teachers?: teacherUpdateManyWithoutSchoolNestedInput
@@ -27734,6 +28865,7 @@ export namespace Prisma {
     administrators?: administratorUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateInput = {
@@ -27750,10 +28882,10 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
-    director_id?: NullableIntFieldUpdateOperationsInput | number | null
     students?: studentUncheckedUpdateManyWithoutSchoolNestedInput
     sections?: sectionUncheckedUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUncheckedUpdateManyWithoutSchoolNestedInput
@@ -27762,6 +28894,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolCreateManyInput = {
@@ -27778,10 +28911,10 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
-    director_id?: number | null
   }
 
   export type schoolUpdateManyMutationInput = {
@@ -27798,6 +28931,7 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -27816,10 +28950,10 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
-    director_id?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type subjectCreateInput = {
@@ -28059,10 +29193,10 @@ export namespace Prisma {
     updated_at?: Date | string
     role: roleCreateNestedOneWithoutUsersInput
     teacher_profile?: teacherCreateNestedOneWithoutUserInput
-    supervised_school?: schoolCreateNestedOneWithoutDirectorInput
     administrator_profile?: administratorCreateNestedOneWithoutUserInput
     student_profile?: studentCreateNestedOneWithoutUserInput
     auth_tokens?: auth_tokenCreateNestedManyWithoutUserInput
+    user_schools?: user_schoolsCreateNestedManyWithoutUserInput
   }
 
   export type usersUncheckedCreateInput = {
@@ -28079,10 +29213,10 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     teacher_profile?: teacherUncheckedCreateNestedOneWithoutUserInput
-    supervised_school?: schoolUncheckedCreateNestedOneWithoutDirectorInput
     administrator_profile?: administratorUncheckedCreateNestedOneWithoutUserInput
     student_profile?: studentUncheckedCreateNestedOneWithoutUserInput
     auth_tokens?: auth_tokenUncheckedCreateNestedManyWithoutUserInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type usersUpdateInput = {
@@ -28098,10 +29232,10 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: roleUpdateOneRequiredWithoutUsersNestedInput
     teacher_profile?: teacherUpdateOneWithoutUserNestedInput
-    supervised_school?: schoolUpdateOneWithoutDirectorNestedInput
     administrator_profile?: administratorUpdateOneWithoutUserNestedInput
     student_profile?: studentUpdateOneWithoutUserNestedInput
     auth_tokens?: auth_tokenUpdateManyWithoutUserNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutUserNestedInput
   }
 
   export type usersUncheckedUpdateInput = {
@@ -28118,10 +29252,10 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     teacher_profile?: teacherUncheckedUpdateOneWithoutUserNestedInput
-    supervised_school?: schoolUncheckedUpdateOneWithoutDirectorNestedInput
     administrator_profile?: administratorUncheckedUpdateOneWithoutUserNestedInput
     student_profile?: studentUncheckedUpdateOneWithoutUserNestedInput
     auth_tokens?: auth_tokenUncheckedUpdateManyWithoutUserNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type usersCreateManyInput = {
@@ -28165,6 +29299,44 @@ export namespace Prisma {
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type user_schoolsCreateInput = {
+    user: usersCreateNestedOneWithoutUser_schoolsInput
+    school: schoolCreateNestedOneWithoutUser_schoolsInput
+  }
+
+  export type user_schoolsUncheckedCreateInput = {
+    id?: number
+    user_id: number
+    SIG: string
+  }
+
+  export type user_schoolsUpdateInput = {
+    user?: usersUpdateOneRequiredWithoutUser_schoolsNestedInput
+    school?: schoolUpdateOneRequiredWithoutUser_schoolsNestedInput
+  }
+
+  export type user_schoolsUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    user_id?: IntFieldUpdateOperationsInput | number
+    SIG?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type user_schoolsCreateManyInput = {
+    id?: number
+    user_id: number
+    SIG: string
+  }
+
+  export type user_schoolsUpdateManyMutationInput = {
+
+  }
+
+  export type user_schoolsUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    user_id?: IntFieldUpdateOperationsInput | number
+    SIG?: StringFieldUpdateOperationsInput | string
   }
 
   export type roleCreateInput = {
@@ -29349,17 +30521,6 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
   export type CdceeScalarRelationFilter = {
     is?: cdceeWhereInput
     isNot?: cdceeWhereInput
@@ -29369,11 +30530,6 @@ export namespace Prisma {
     every?: studentWhereInput
     some?: studentWhereInput
     none?: studentWhereInput
-  }
-
-  export type UsersNullableScalarRelationFilter = {
-    is?: usersWhereInput | null
-    isNot?: usersWhereInput | null
   }
 
   export type SectionListRelationFilter = {
@@ -29418,6 +30574,12 @@ export namespace Prisma {
     none?: load_academicWhereInput
   }
 
+  export type User_schoolsListRelationFilter = {
+    every?: user_schoolsWhereInput
+    some?: user_schoolsWhereInput
+    none?: user_schoolsWhereInput
+  }
+
   export type studentOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -29450,6 +30612,10 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type user_schoolsOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type schoolOrderByRelevanceInput = {
     fields: schoolOrderByRelevanceFieldEnum | schoolOrderByRelevanceFieldEnum[]
     sort: SortOrder
@@ -29470,15 +30636,14 @@ export namespace Prisma {
     DEA_CODE?: SortOrder
     RIF?: SortOrder
     is_active?: SortOrder
+    subdomain?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     cdceId?: SortOrder
-    director_id?: SortOrder
   }
 
   export type schoolAvgOrderByAggregateInput = {
     cdceId?: SortOrder
-    director_id?: SortOrder
   }
 
   export type schoolMaxOrderByAggregateInput = {
@@ -29495,10 +30660,10 @@ export namespace Prisma {
     DEA_CODE?: SortOrder
     RIF?: SortOrder
     is_active?: SortOrder
+    subdomain?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     cdceId?: SortOrder
-    director_id?: SortOrder
   }
 
   export type schoolMinOrderByAggregateInput = {
@@ -29515,15 +30680,14 @@ export namespace Prisma {
     DEA_CODE?: SortOrder
     RIF?: SortOrder
     is_active?: SortOrder
+    subdomain?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     cdceId?: SortOrder
-    director_id?: SortOrder
   }
 
   export type schoolSumOrderByAggregateInput = {
     cdceId?: SortOrder
-    director_id?: SortOrder
   }
 
   export type Enumschool_typeWithAggregatesFilter<$PrismaModel = never> = {
@@ -29556,22 +30720,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
-  }
-
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type SchoolScalarRelationFilter = {
@@ -29702,6 +30850,17 @@ export namespace Prisma {
     id_period?: SortOrder
   }
 
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type EnrollmentListRelationFilter = {
     every?: enrollmentWhereInput
     some?: enrollmentWhereInput
@@ -29755,6 +30914,22 @@ export namespace Prisma {
     order_year?: SortOrder
   }
 
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
   export type RoleScalarRelationFilter = {
     is?: roleWhereInput
     isNot?: roleWhereInput
@@ -29763,11 +30938,6 @@ export namespace Prisma {
   export type TeacherNullableScalarRelationFilter = {
     is?: teacherWhereInput | null
     isNot?: teacherWhereInput | null
-  }
-
-  export type SchoolNullableScalarRelationFilter = {
-    is?: schoolWhereInput | null
-    isNot?: schoolWhereInput | null
   }
 
   export type AdministratorNullableScalarRelationFilter = {
@@ -29849,6 +31019,45 @@ export namespace Prisma {
   export type usersSumOrderByAggregateInput = {
     id?: SortOrder
     role_id?: SortOrder
+  }
+
+  export type UsersScalarRelationFilter = {
+    is?: usersWhereInput
+    isNot?: usersWhereInput
+  }
+
+  export type user_schoolsOrderByRelevanceInput = {
+    fields: user_schoolsOrderByRelevanceFieldEnum | user_schoolsOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type user_schoolsCountOrderByAggregateInput = {
+    id?: SortOrder
+    user_id?: SortOrder
+    SIG?: SortOrder
+  }
+
+  export type user_schoolsAvgOrderByAggregateInput = {
+    id?: SortOrder
+    user_id?: SortOrder
+  }
+
+  export type user_schoolsMaxOrderByAggregateInput = {
+    id?: SortOrder
+    user_id?: SortOrder
+    SIG?: SortOrder
+  }
+
+  export type user_schoolsMinOrderByAggregateInput = {
+    id?: SortOrder
+    user_id?: SortOrder
+    SIG?: SortOrder
+  }
+
+  export type user_schoolsSumOrderByAggregateInput = {
+    id?: SortOrder
+    user_id?: SortOrder
   }
 
   export type UsersListRelationFilter = {
@@ -29939,11 +31148,6 @@ export namespace Prisma {
 
   export type academic_periodsSumOrderByAggregateInput = {
     id?: SortOrder
-  }
-
-  export type UsersScalarRelationFilter = {
-    is?: usersWhereInput
-    isNot?: usersWhereInput
   }
 
   export type administratorOrderByRelevanceInput = {
@@ -30795,12 +31999,6 @@ export namespace Prisma {
     connect?: studentWhereUniqueInput | studentWhereUniqueInput[]
   }
 
-  export type usersCreateNestedOneWithoutSupervised_schoolInput = {
-    create?: XOR<usersCreateWithoutSupervised_schoolInput, usersUncheckedCreateWithoutSupervised_schoolInput>
-    connectOrCreate?: usersCreateOrConnectWithoutSupervised_schoolInput
-    connect?: usersWhereUniqueInput
-  }
-
   export type sectionCreateNestedManyWithoutSchoolInput = {
     create?: XOR<sectionCreateWithoutSchoolInput, sectionUncheckedCreateWithoutSchoolInput> | sectionCreateWithoutSchoolInput[] | sectionUncheckedCreateWithoutSchoolInput[]
     connectOrCreate?: sectionCreateOrConnectWithoutSchoolInput | sectionCreateOrConnectWithoutSchoolInput[]
@@ -30848,6 +32046,13 @@ export namespace Prisma {
     connectOrCreate?: load_academicCreateOrConnectWithoutSchoolInput | load_academicCreateOrConnectWithoutSchoolInput[]
     createMany?: load_academicCreateManySchoolInputEnvelope
     connect?: load_academicWhereUniqueInput | load_academicWhereUniqueInput[]
+  }
+
+  export type user_schoolsCreateNestedManyWithoutSchoolInput = {
+    create?: XOR<user_schoolsCreateWithoutSchoolInput, user_schoolsUncheckedCreateWithoutSchoolInput> | user_schoolsCreateWithoutSchoolInput[] | user_schoolsUncheckedCreateWithoutSchoolInput[]
+    connectOrCreate?: user_schoolsCreateOrConnectWithoutSchoolInput | user_schoolsCreateOrConnectWithoutSchoolInput[]
+    createMany?: user_schoolsCreateManySchoolInputEnvelope
+    connect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
   }
 
   export type studentUncheckedCreateNestedManyWithoutSchoolInput = {
@@ -30906,6 +32111,13 @@ export namespace Prisma {
     connect?: load_academicWhereUniqueInput | load_academicWhereUniqueInput[]
   }
 
+  export type user_schoolsUncheckedCreateNestedManyWithoutSchoolInput = {
+    create?: XOR<user_schoolsCreateWithoutSchoolInput, user_schoolsUncheckedCreateWithoutSchoolInput> | user_schoolsCreateWithoutSchoolInput[] | user_schoolsUncheckedCreateWithoutSchoolInput[]
+    connectOrCreate?: user_schoolsCreateOrConnectWithoutSchoolInput | user_schoolsCreateOrConnectWithoutSchoolInput[]
+    createMany?: user_schoolsCreateManySchoolInputEnvelope
+    connect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+  }
+
   export type Enumschool_typeFieldUpdateOperationsInput = {
     set?: $Enums.school_type
   }
@@ -30938,16 +32150,6 @@ export namespace Prisma {
     update?: studentUpdateWithWhereUniqueWithoutSchoolInput | studentUpdateWithWhereUniqueWithoutSchoolInput[]
     updateMany?: studentUpdateManyWithWhereWithoutSchoolInput | studentUpdateManyWithWhereWithoutSchoolInput[]
     deleteMany?: studentScalarWhereInput | studentScalarWhereInput[]
-  }
-
-  export type usersUpdateOneWithoutSupervised_schoolNestedInput = {
-    create?: XOR<usersCreateWithoutSupervised_schoolInput, usersUncheckedCreateWithoutSupervised_schoolInput>
-    connectOrCreate?: usersCreateOrConnectWithoutSupervised_schoolInput
-    upsert?: usersUpsertWithoutSupervised_schoolInput
-    disconnect?: usersWhereInput | boolean
-    delete?: usersWhereInput | boolean
-    connect?: usersWhereUniqueInput
-    update?: XOR<XOR<usersUpdateToOneWithWhereWithoutSupervised_schoolInput, usersUpdateWithoutSupervised_schoolInput>, usersUncheckedUpdateWithoutSupervised_schoolInput>
   }
 
   export type sectionUpdateManyWithoutSchoolNestedInput = {
@@ -31048,12 +32250,18 @@ export namespace Prisma {
     deleteMany?: load_academicScalarWhereInput | load_academicScalarWhereInput[]
   }
 
-  export type NullableIntFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
+  export type user_schoolsUpdateManyWithoutSchoolNestedInput = {
+    create?: XOR<user_schoolsCreateWithoutSchoolInput, user_schoolsUncheckedCreateWithoutSchoolInput> | user_schoolsCreateWithoutSchoolInput[] | user_schoolsUncheckedCreateWithoutSchoolInput[]
+    connectOrCreate?: user_schoolsCreateOrConnectWithoutSchoolInput | user_schoolsCreateOrConnectWithoutSchoolInput[]
+    upsert?: user_schoolsUpsertWithWhereUniqueWithoutSchoolInput | user_schoolsUpsertWithWhereUniqueWithoutSchoolInput[]
+    createMany?: user_schoolsCreateManySchoolInputEnvelope
+    set?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    disconnect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    delete?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    connect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    update?: user_schoolsUpdateWithWhereUniqueWithoutSchoolInput | user_schoolsUpdateWithWhereUniqueWithoutSchoolInput[]
+    updateMany?: user_schoolsUpdateManyWithWhereWithoutSchoolInput | user_schoolsUpdateManyWithWhereWithoutSchoolInput[]
+    deleteMany?: user_schoolsScalarWhereInput | user_schoolsScalarWhereInput[]
   }
 
   export type studentUncheckedUpdateManyWithoutSchoolNestedInput = {
@@ -31166,6 +32374,20 @@ export namespace Prisma {
     update?: load_academicUpdateWithWhereUniqueWithoutSchoolInput | load_academicUpdateWithWhereUniqueWithoutSchoolInput[]
     updateMany?: load_academicUpdateManyWithWhereWithoutSchoolInput | load_academicUpdateManyWithWhereWithoutSchoolInput[]
     deleteMany?: load_academicScalarWhereInput | load_academicScalarWhereInput[]
+  }
+
+  export type user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput = {
+    create?: XOR<user_schoolsCreateWithoutSchoolInput, user_schoolsUncheckedCreateWithoutSchoolInput> | user_schoolsCreateWithoutSchoolInput[] | user_schoolsUncheckedCreateWithoutSchoolInput[]
+    connectOrCreate?: user_schoolsCreateOrConnectWithoutSchoolInput | user_schoolsCreateOrConnectWithoutSchoolInput[]
+    upsert?: user_schoolsUpsertWithWhereUniqueWithoutSchoolInput | user_schoolsUpsertWithWhereUniqueWithoutSchoolInput[]
+    createMany?: user_schoolsCreateManySchoolInputEnvelope
+    set?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    disconnect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    delete?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    connect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    update?: user_schoolsUpdateWithWhereUniqueWithoutSchoolInput | user_schoolsUpdateWithWhereUniqueWithoutSchoolInput[]
+    updateMany?: user_schoolsUpdateManyWithWhereWithoutSchoolInput | user_schoolsUpdateManyWithWhereWithoutSchoolInput[]
+    deleteMany?: user_schoolsScalarWhereInput | user_schoolsScalarWhereInput[]
   }
 
   export type schoolCreateNestedOneWithoutSubjectsInput = {
@@ -31384,6 +32606,14 @@ export namespace Prisma {
     connect?: enrollmentWhereUniqueInput | enrollmentWhereUniqueInput[]
   }
 
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type subjectUpdateManyWithoutYearNestedInput = {
     create?: XOR<subjectCreateWithoutYearInput, subjectUncheckedCreateWithoutYearInput> | subjectCreateWithoutYearInput[] | subjectUncheckedCreateWithoutYearInput[]
     connectOrCreate?: subjectCreateOrConnectWithoutYearInput | subjectCreateOrConnectWithoutYearInput[]
@@ -31488,12 +32718,6 @@ export namespace Prisma {
     connect?: teacherWhereUniqueInput
   }
 
-  export type schoolCreateNestedOneWithoutDirectorInput = {
-    create?: XOR<schoolCreateWithoutDirectorInput, schoolUncheckedCreateWithoutDirectorInput>
-    connectOrCreate?: schoolCreateOrConnectWithoutDirectorInput
-    connect?: schoolWhereUniqueInput
-  }
-
   export type administratorCreateNestedOneWithoutUserInput = {
     create?: XOR<administratorCreateWithoutUserInput, administratorUncheckedCreateWithoutUserInput>
     connectOrCreate?: administratorCreateOrConnectWithoutUserInput
@@ -31513,16 +32737,17 @@ export namespace Prisma {
     connect?: auth_tokenWhereUniqueInput | auth_tokenWhereUniqueInput[]
   }
 
+  export type user_schoolsCreateNestedManyWithoutUserInput = {
+    create?: XOR<user_schoolsCreateWithoutUserInput, user_schoolsUncheckedCreateWithoutUserInput> | user_schoolsCreateWithoutUserInput[] | user_schoolsUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: user_schoolsCreateOrConnectWithoutUserInput | user_schoolsCreateOrConnectWithoutUserInput[]
+    createMany?: user_schoolsCreateManyUserInputEnvelope
+    connect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+  }
+
   export type teacherUncheckedCreateNestedOneWithoutUserInput = {
     create?: XOR<teacherCreateWithoutUserInput, teacherUncheckedCreateWithoutUserInput>
     connectOrCreate?: teacherCreateOrConnectWithoutUserInput
     connect?: teacherWhereUniqueInput
-  }
-
-  export type schoolUncheckedCreateNestedOneWithoutDirectorInput = {
-    create?: XOR<schoolCreateWithoutDirectorInput, schoolUncheckedCreateWithoutDirectorInput>
-    connectOrCreate?: schoolCreateOrConnectWithoutDirectorInput
-    connect?: schoolWhereUniqueInput
   }
 
   export type administratorUncheckedCreateNestedOneWithoutUserInput = {
@@ -31544,6 +32769,13 @@ export namespace Prisma {
     connect?: auth_tokenWhereUniqueInput | auth_tokenWhereUniqueInput[]
   }
 
+  export type user_schoolsUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<user_schoolsCreateWithoutUserInput, user_schoolsUncheckedCreateWithoutUserInput> | user_schoolsCreateWithoutUserInput[] | user_schoolsUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: user_schoolsCreateOrConnectWithoutUserInput | user_schoolsCreateOrConnectWithoutUserInput[]
+    createMany?: user_schoolsCreateManyUserInputEnvelope
+    connect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+  }
+
   export type roleUpdateOneRequiredWithoutUsersNestedInput = {
     create?: XOR<roleCreateWithoutUsersInput, roleUncheckedCreateWithoutUsersInput>
     connectOrCreate?: roleCreateOrConnectWithoutUsersInput
@@ -31560,16 +32792,6 @@ export namespace Prisma {
     delete?: teacherWhereInput | boolean
     connect?: teacherWhereUniqueInput
     update?: XOR<XOR<teacherUpdateToOneWithWhereWithoutUserInput, teacherUpdateWithoutUserInput>, teacherUncheckedUpdateWithoutUserInput>
-  }
-
-  export type schoolUpdateOneWithoutDirectorNestedInput = {
-    create?: XOR<schoolCreateWithoutDirectorInput, schoolUncheckedCreateWithoutDirectorInput>
-    connectOrCreate?: schoolCreateOrConnectWithoutDirectorInput
-    upsert?: schoolUpsertWithoutDirectorInput
-    disconnect?: schoolWhereInput | boolean
-    delete?: schoolWhereInput | boolean
-    connect?: schoolWhereUniqueInput
-    update?: XOR<XOR<schoolUpdateToOneWithWhereWithoutDirectorInput, schoolUpdateWithoutDirectorInput>, schoolUncheckedUpdateWithoutDirectorInput>
   }
 
   export type administratorUpdateOneWithoutUserNestedInput = {
@@ -31606,6 +32828,20 @@ export namespace Prisma {
     deleteMany?: auth_tokenScalarWhereInput | auth_tokenScalarWhereInput[]
   }
 
+  export type user_schoolsUpdateManyWithoutUserNestedInput = {
+    create?: XOR<user_schoolsCreateWithoutUserInput, user_schoolsUncheckedCreateWithoutUserInput> | user_schoolsCreateWithoutUserInput[] | user_schoolsUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: user_schoolsCreateOrConnectWithoutUserInput | user_schoolsCreateOrConnectWithoutUserInput[]
+    upsert?: user_schoolsUpsertWithWhereUniqueWithoutUserInput | user_schoolsUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: user_schoolsCreateManyUserInputEnvelope
+    set?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    disconnect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    delete?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    connect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    update?: user_schoolsUpdateWithWhereUniqueWithoutUserInput | user_schoolsUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: user_schoolsUpdateManyWithWhereWithoutUserInput | user_schoolsUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: user_schoolsScalarWhereInput | user_schoolsScalarWhereInput[]
+  }
+
   export type teacherUncheckedUpdateOneWithoutUserNestedInput = {
     create?: XOR<teacherCreateWithoutUserInput, teacherUncheckedCreateWithoutUserInput>
     connectOrCreate?: teacherCreateOrConnectWithoutUserInput
@@ -31614,16 +32850,6 @@ export namespace Prisma {
     delete?: teacherWhereInput | boolean
     connect?: teacherWhereUniqueInput
     update?: XOR<XOR<teacherUpdateToOneWithWhereWithoutUserInput, teacherUpdateWithoutUserInput>, teacherUncheckedUpdateWithoutUserInput>
-  }
-
-  export type schoolUncheckedUpdateOneWithoutDirectorNestedInput = {
-    create?: XOR<schoolCreateWithoutDirectorInput, schoolUncheckedCreateWithoutDirectorInput>
-    connectOrCreate?: schoolCreateOrConnectWithoutDirectorInput
-    upsert?: schoolUpsertWithoutDirectorInput
-    disconnect?: schoolWhereInput | boolean
-    delete?: schoolWhereInput | boolean
-    connect?: schoolWhereUniqueInput
-    update?: XOR<XOR<schoolUpdateToOneWithWhereWithoutDirectorInput, schoolUpdateWithoutDirectorInput>, schoolUncheckedUpdateWithoutDirectorInput>
   }
 
   export type administratorUncheckedUpdateOneWithoutUserNestedInput = {
@@ -31658,6 +32884,48 @@ export namespace Prisma {
     update?: auth_tokenUpdateWithWhereUniqueWithoutUserInput | auth_tokenUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: auth_tokenUpdateManyWithWhereWithoutUserInput | auth_tokenUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: auth_tokenScalarWhereInput | auth_tokenScalarWhereInput[]
+  }
+
+  export type user_schoolsUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<user_schoolsCreateWithoutUserInput, user_schoolsUncheckedCreateWithoutUserInput> | user_schoolsCreateWithoutUserInput[] | user_schoolsUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: user_schoolsCreateOrConnectWithoutUserInput | user_schoolsCreateOrConnectWithoutUserInput[]
+    upsert?: user_schoolsUpsertWithWhereUniqueWithoutUserInput | user_schoolsUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: user_schoolsCreateManyUserInputEnvelope
+    set?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    disconnect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    delete?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    connect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+    update?: user_schoolsUpdateWithWhereUniqueWithoutUserInput | user_schoolsUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: user_schoolsUpdateManyWithWhereWithoutUserInput | user_schoolsUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: user_schoolsScalarWhereInput | user_schoolsScalarWhereInput[]
+  }
+
+  export type usersCreateNestedOneWithoutUser_schoolsInput = {
+    create?: XOR<usersCreateWithoutUser_schoolsInput, usersUncheckedCreateWithoutUser_schoolsInput>
+    connectOrCreate?: usersCreateOrConnectWithoutUser_schoolsInput
+    connect?: usersWhereUniqueInput
+  }
+
+  export type schoolCreateNestedOneWithoutUser_schoolsInput = {
+    create?: XOR<schoolCreateWithoutUser_schoolsInput, schoolUncheckedCreateWithoutUser_schoolsInput>
+    connectOrCreate?: schoolCreateOrConnectWithoutUser_schoolsInput
+    connect?: schoolWhereUniqueInput
+  }
+
+  export type usersUpdateOneRequiredWithoutUser_schoolsNestedInput = {
+    create?: XOR<usersCreateWithoutUser_schoolsInput, usersUncheckedCreateWithoutUser_schoolsInput>
+    connectOrCreate?: usersCreateOrConnectWithoutUser_schoolsInput
+    upsert?: usersUpsertWithoutUser_schoolsInput
+    connect?: usersWhereUniqueInput
+    update?: XOR<XOR<usersUpdateToOneWithWhereWithoutUser_schoolsInput, usersUpdateWithoutUser_schoolsInput>, usersUncheckedUpdateWithoutUser_schoolsInput>
+  }
+
+  export type schoolUpdateOneRequiredWithoutUser_schoolsNestedInput = {
+    create?: XOR<schoolCreateWithoutUser_schoolsInput, schoolUncheckedCreateWithoutUser_schoolsInput>
+    connectOrCreate?: schoolCreateOrConnectWithoutUser_schoolsInput
+    upsert?: schoolUpsertWithoutUser_schoolsInput
+    connect?: schoolWhereUniqueInput
+    update?: XOR<XOR<schoolUpdateToOneWithWhereWithoutUser_schoolsInput, schoolUpdateWithoutUser_schoolsInput>, schoolUncheckedUpdateWithoutUser_schoolsInput>
   }
 
   export type usersCreateNestedManyWithoutRoleInput = {
@@ -33130,10 +34398,10 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     students?: studentCreateNestedManyWithoutSchoolInput
-    director?: usersCreateNestedOneWithoutSupervised_schoolInput
     sections?: sectionCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsCreateNestedManyWithoutSchoolInput
     teachers?: teacherCreateNestedManyWithoutSchoolInput
@@ -33141,6 +34409,7 @@ export namespace Prisma {
     administrators?: administratorCreateNestedManyWithoutSchoolInput
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutCdceeInput = {
@@ -33157,9 +34426,9 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
-    director_id?: number | null
     students?: studentUncheckedCreateNestedManyWithoutSchoolInput
     sections?: sectionUncheckedCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsUncheckedCreateNestedManyWithoutSchoolInput
@@ -33168,6 +34437,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutCdceeInput = {
@@ -33213,10 +34483,10 @@ export namespace Prisma {
     DEA_CODE?: StringFilter<"school"> | string
     RIF?: StringNullableFilter<"school"> | string | null
     is_active?: BoolFilter<"school"> | boolean
+    subdomain?: StringNullableFilter<"school"> | string | null
     created_at?: DateTimeFilter<"school"> | Date | string
     updated_at?: DateTimeFilter<"school"> | Date | string
     cdceId?: IntFilter<"school"> | number
-    director_id?: IntNullableFilter<"school"> | number | null
   }
 
   export type cdceeCreateWithoutSchoolsInput = {
@@ -33284,48 +34554,6 @@ export namespace Prisma {
   export type studentCreateManySchoolInputEnvelope = {
     data: studentCreateManySchoolInput | studentCreateManySchoolInput[]
     skipDuplicates?: boolean
-  }
-
-  export type usersCreateWithoutSupervised_schoolInput = {
-    id_card: string
-    name: string
-    last_name: string
-    email: string
-    phone: string
-    pass: string
-    is_first_login?: boolean
-    is_active?: boolean
-    created_at?: Date | string
-    updated_at?: Date | string
-    role: roleCreateNestedOneWithoutUsersInput
-    teacher_profile?: teacherCreateNestedOneWithoutUserInput
-    administrator_profile?: administratorCreateNestedOneWithoutUserInput
-    student_profile?: studentCreateNestedOneWithoutUserInput
-    auth_tokens?: auth_tokenCreateNestedManyWithoutUserInput
-  }
-
-  export type usersUncheckedCreateWithoutSupervised_schoolInput = {
-    id?: number
-    id_card: string
-    name: string
-    last_name: string
-    email: string
-    phone: string
-    pass: string
-    role_id: number
-    is_first_login?: boolean
-    is_active?: boolean
-    created_at?: Date | string
-    updated_at?: Date | string
-    teacher_profile?: teacherUncheckedCreateNestedOneWithoutUserInput
-    administrator_profile?: administratorUncheckedCreateNestedOneWithoutUserInput
-    student_profile?: studentUncheckedCreateNestedOneWithoutUserInput
-    auth_tokens?: auth_tokenUncheckedCreateNestedManyWithoutUserInput
-  }
-
-  export type usersCreateOrConnectWithoutSupervised_schoolInput = {
-    where: usersWhereUniqueInput
-    create: XOR<usersCreateWithoutSupervised_schoolInput, usersUncheckedCreateWithoutSupervised_schoolInput>
   }
 
   export type sectionCreateWithoutSchoolInput = {
@@ -33542,6 +34770,25 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type user_schoolsCreateWithoutSchoolInput = {
+    user: usersCreateNestedOneWithoutUser_schoolsInput
+  }
+
+  export type user_schoolsUncheckedCreateWithoutSchoolInput = {
+    id?: number
+    user_id: number
+  }
+
+  export type user_schoolsCreateOrConnectWithoutSchoolInput = {
+    where: user_schoolsWhereUniqueInput
+    create: XOR<user_schoolsCreateWithoutSchoolInput, user_schoolsUncheckedCreateWithoutSchoolInput>
+  }
+
+  export type user_schoolsCreateManySchoolInputEnvelope = {
+    data: user_schoolsCreateManySchoolInput | user_schoolsCreateManySchoolInput[]
+    skipDuplicates?: boolean
+  }
+
   export type cdceeUpsertWithoutSchoolsInput = {
     update: XOR<cdceeUpdateWithoutSchoolsInput, cdceeUncheckedUpdateWithoutSchoolsInput>
     create: XOR<cdceeCreateWithoutSchoolsInput, cdceeUncheckedCreateWithoutSchoolsInput>
@@ -33599,54 +34846,6 @@ export namespace Prisma {
     condition?: Enumstudent_conditionFilter<"student"> | $Enums.student_condition
     created_at?: DateTimeFilter<"student"> | Date | string
     updated_at?: DateTimeFilter<"student"> | Date | string
-  }
-
-  export type usersUpsertWithoutSupervised_schoolInput = {
-    update: XOR<usersUpdateWithoutSupervised_schoolInput, usersUncheckedUpdateWithoutSupervised_schoolInput>
-    create: XOR<usersCreateWithoutSupervised_schoolInput, usersUncheckedCreateWithoutSupervised_schoolInput>
-    where?: usersWhereInput
-  }
-
-  export type usersUpdateToOneWithWhereWithoutSupervised_schoolInput = {
-    where?: usersWhereInput
-    data: XOR<usersUpdateWithoutSupervised_schoolInput, usersUncheckedUpdateWithoutSupervised_schoolInput>
-  }
-
-  export type usersUpdateWithoutSupervised_schoolInput = {
-    id_card?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    last_name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    phone?: StringFieldUpdateOperationsInput | string
-    pass?: StringFieldUpdateOperationsInput | string
-    is_first_login?: BoolFieldUpdateOperationsInput | boolean
-    is_active?: BoolFieldUpdateOperationsInput | boolean
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: roleUpdateOneRequiredWithoutUsersNestedInput
-    teacher_profile?: teacherUpdateOneWithoutUserNestedInput
-    administrator_profile?: administratorUpdateOneWithoutUserNestedInput
-    student_profile?: studentUpdateOneWithoutUserNestedInput
-    auth_tokens?: auth_tokenUpdateManyWithoutUserNestedInput
-  }
-
-  export type usersUncheckedUpdateWithoutSupervised_schoolInput = {
-    id?: IntFieldUpdateOperationsInput | number
-    id_card?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    last_name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    phone?: StringFieldUpdateOperationsInput | string
-    pass?: StringFieldUpdateOperationsInput | string
-    role_id?: IntFieldUpdateOperationsInput | number
-    is_first_login?: BoolFieldUpdateOperationsInput | boolean
-    is_active?: BoolFieldUpdateOperationsInput | boolean
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    teacher_profile?: teacherUncheckedUpdateOneWithoutUserNestedInput
-    administrator_profile?: administratorUncheckedUpdateOneWithoutUserNestedInput
-    student_profile?: studentUncheckedUpdateOneWithoutUserNestedInput
-    auth_tokens?: auth_tokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type sectionUpsertWithWhereUniqueWithoutSchoolInput = {
@@ -33849,6 +35048,31 @@ export namespace Prisma {
     created_at?: DateTimeFilter<"load_academic"> | Date | string
   }
 
+  export type user_schoolsUpsertWithWhereUniqueWithoutSchoolInput = {
+    where: user_schoolsWhereUniqueInput
+    update: XOR<user_schoolsUpdateWithoutSchoolInput, user_schoolsUncheckedUpdateWithoutSchoolInput>
+    create: XOR<user_schoolsCreateWithoutSchoolInput, user_schoolsUncheckedCreateWithoutSchoolInput>
+  }
+
+  export type user_schoolsUpdateWithWhereUniqueWithoutSchoolInput = {
+    where: user_schoolsWhereUniqueInput
+    data: XOR<user_schoolsUpdateWithoutSchoolInput, user_schoolsUncheckedUpdateWithoutSchoolInput>
+  }
+
+  export type user_schoolsUpdateManyWithWhereWithoutSchoolInput = {
+    where: user_schoolsScalarWhereInput
+    data: XOR<user_schoolsUpdateManyMutationInput, user_schoolsUncheckedUpdateManyWithoutSchoolInput>
+  }
+
+  export type user_schoolsScalarWhereInput = {
+    AND?: user_schoolsScalarWhereInput | user_schoolsScalarWhereInput[]
+    OR?: user_schoolsScalarWhereInput[]
+    NOT?: user_schoolsScalarWhereInput | user_schoolsScalarWhereInput[]
+    id?: IntFilter<"user_schools"> | number
+    user_id?: IntFilter<"user_schools"> | number
+    SIG?: StringFilter<"user_schools"> | string
+  }
+
   export type schoolCreateWithoutSubjectsInput = {
     SIG: string
     school_name: string
@@ -33863,17 +35087,18 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
     students?: studentCreateNestedManyWithoutSchoolInput
-    director?: usersCreateNestedOneWithoutSupervised_schoolInput
     sections?: sectionCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsCreateNestedManyWithoutSchoolInput
     teachers?: teacherCreateNestedManyWithoutSchoolInput
     years?: yearCreateNestedManyWithoutSchoolInput
     administrators?: administratorCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutSubjectsInput = {
@@ -33890,10 +35115,10 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
-    director_id?: number | null
     students?: studentUncheckedCreateNestedManyWithoutSchoolInput
     sections?: sectionUncheckedCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsUncheckedCreateNestedManyWithoutSchoolInput
@@ -33901,6 +35126,7 @@ export namespace Prisma {
     years?: yearUncheckedCreateNestedManyWithoutSchoolInput
     administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutSubjectsInput = {
@@ -34011,17 +35237,18 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
     students?: studentUpdateManyWithoutSchoolNestedInput
-    director?: usersUpdateOneWithoutSupervised_schoolNestedInput
     sections?: sectionUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUpdateManyWithoutSchoolNestedInput
     teachers?: teacherUpdateManyWithoutSchoolNestedInput
     years?: yearUpdateManyWithoutSchoolNestedInput
     administrators?: administratorUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutSubjectsInput = {
@@ -34038,10 +35265,10 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
-    director_id?: NullableIntFieldUpdateOperationsInput | number | null
     students?: studentUncheckedUpdateManyWithoutSchoolNestedInput
     sections?: sectionUncheckedUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUncheckedUpdateManyWithoutSchoolNestedInput
@@ -34049,6 +35276,7 @@ export namespace Prisma {
     years?: yearUncheckedUpdateManyWithoutSchoolNestedInput
     administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type yearUpsertWithoutSubjectsInput = {
@@ -34290,17 +35518,18 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
     students?: studentCreateNestedManyWithoutSchoolInput
-    director?: usersCreateNestedOneWithoutSupervised_schoolInput
     sections?: sectionCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsCreateNestedManyWithoutSchoolInput
     teachers?: teacherCreateNestedManyWithoutSchoolInput
     administrators?: administratorCreateNestedManyWithoutSchoolInput
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutYearsInput = {
@@ -34317,10 +35546,10 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
-    director_id?: number | null
     students?: studentUncheckedCreateNestedManyWithoutSchoolInput
     sections?: sectionUncheckedCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsUncheckedCreateNestedManyWithoutSchoolInput
@@ -34328,6 +35557,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutYearsInput = {
@@ -34440,17 +35670,18 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
     students?: studentUpdateManyWithoutSchoolNestedInput
-    director?: usersUpdateOneWithoutSupervised_schoolNestedInput
     sections?: sectionUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUpdateManyWithoutSchoolNestedInput
     teachers?: teacherUpdateManyWithoutSchoolNestedInput
     administrators?: administratorUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutYearsInput = {
@@ -34467,10 +35698,10 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
-    director_id?: NullableIntFieldUpdateOperationsInput | number | null
     students?: studentUncheckedUpdateManyWithoutSchoolNestedInput
     sections?: sectionUncheckedUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUncheckedUpdateManyWithoutSchoolNestedInput
@@ -34478,6 +35709,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type sectionUpsertWithWhereUniqueWithoutYearInput = {
@@ -34562,65 +35794,6 @@ export namespace Prisma {
   export type teacherCreateOrConnectWithoutUserInput = {
     where: teacherWhereUniqueInput
     create: XOR<teacherCreateWithoutUserInput, teacherUncheckedCreateWithoutUserInput>
-  }
-
-  export type schoolCreateWithoutDirectorInput = {
-    SIG: string
-    school_name: string
-    type: $Enums.school_type
-    company_name?: string | null
-    address: string
-    city: string
-    municipality: string
-    state: string
-    phone: string
-    email: string
-    DEA_CODE: string
-    RIF?: string | null
-    is_active?: boolean
-    created_at?: Date | string
-    updated_at?: Date | string
-    cdcee: cdceeCreateNestedOneWithoutSchoolsInput
-    students?: studentCreateNestedManyWithoutSchoolInput
-    sections?: sectionCreateNestedManyWithoutSchoolInput
-    academic_periods?: academic_periodsCreateNestedManyWithoutSchoolInput
-    teachers?: teacherCreateNestedManyWithoutSchoolInput
-    years?: yearCreateNestedManyWithoutSchoolInput
-    administrators?: administratorCreateNestedManyWithoutSchoolInput
-    subjects?: subjectCreateNestedManyWithoutSchoolInput
-    load_academics?: load_academicCreateNestedManyWithoutSchoolInput
-  }
-
-  export type schoolUncheckedCreateWithoutDirectorInput = {
-    SIG: string
-    school_name: string
-    type: $Enums.school_type
-    company_name?: string | null
-    address: string
-    city: string
-    municipality: string
-    state: string
-    phone: string
-    email: string
-    DEA_CODE: string
-    RIF?: string | null
-    is_active?: boolean
-    created_at?: Date | string
-    updated_at?: Date | string
-    cdceId: number
-    students?: studentUncheckedCreateNestedManyWithoutSchoolInput
-    sections?: sectionUncheckedCreateNestedManyWithoutSchoolInput
-    academic_periods?: academic_periodsUncheckedCreateNestedManyWithoutSchoolInput
-    teachers?: teacherUncheckedCreateNestedManyWithoutSchoolInput
-    years?: yearUncheckedCreateNestedManyWithoutSchoolInput
-    administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
-    subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
-    load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
-  }
-
-  export type schoolCreateOrConnectWithoutDirectorInput = {
-    where: schoolWhereUniqueInput
-    create: XOR<schoolCreateWithoutDirectorInput, schoolUncheckedCreateWithoutDirectorInput>
   }
 
   export type administratorCreateWithoutUserInput = {
@@ -34712,6 +35885,25 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type user_schoolsCreateWithoutUserInput = {
+    school: schoolCreateNestedOneWithoutUser_schoolsInput
+  }
+
+  export type user_schoolsUncheckedCreateWithoutUserInput = {
+    id?: number
+    SIG: string
+  }
+
+  export type user_schoolsCreateOrConnectWithoutUserInput = {
+    where: user_schoolsWhereUniqueInput
+    create: XOR<user_schoolsCreateWithoutUserInput, user_schoolsUncheckedCreateWithoutUserInput>
+  }
+
+  export type user_schoolsCreateManyUserInputEnvelope = {
+    data: user_schoolsCreateManyUserInput | user_schoolsCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type roleUpsertWithoutUsersInput = {
     update: XOR<roleUpdateWithoutUsersInput, roleUncheckedUpdateWithoutUsersInput>
     create: XOR<roleCreateWithoutUsersInput, roleUncheckedCreateWithoutUsersInput>
@@ -34760,71 +35952,6 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     guided_sections?: sectionUncheckedUpdateManyWithoutGuideNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutTeacherNestedInput
-  }
-
-  export type schoolUpsertWithoutDirectorInput = {
-    update: XOR<schoolUpdateWithoutDirectorInput, schoolUncheckedUpdateWithoutDirectorInput>
-    create: XOR<schoolCreateWithoutDirectorInput, schoolUncheckedCreateWithoutDirectorInput>
-    where?: schoolWhereInput
-  }
-
-  export type schoolUpdateToOneWithWhereWithoutDirectorInput = {
-    where?: schoolWhereInput
-    data: XOR<schoolUpdateWithoutDirectorInput, schoolUncheckedUpdateWithoutDirectorInput>
-  }
-
-  export type schoolUpdateWithoutDirectorInput = {
-    SIG?: StringFieldUpdateOperationsInput | string
-    school_name?: StringFieldUpdateOperationsInput | string
-    type?: Enumschool_typeFieldUpdateOperationsInput | $Enums.school_type
-    company_name?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: StringFieldUpdateOperationsInput | string
-    city?: StringFieldUpdateOperationsInput | string
-    municipality?: StringFieldUpdateOperationsInput | string
-    state?: StringFieldUpdateOperationsInput | string
-    phone?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    DEA_CODE?: StringFieldUpdateOperationsInput | string
-    RIF?: NullableStringFieldUpdateOperationsInput | string | null
-    is_active?: BoolFieldUpdateOperationsInput | boolean
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
-    students?: studentUpdateManyWithoutSchoolNestedInput
-    sections?: sectionUpdateManyWithoutSchoolNestedInput
-    academic_periods?: academic_periodsUpdateManyWithoutSchoolNestedInput
-    teachers?: teacherUpdateManyWithoutSchoolNestedInput
-    years?: yearUpdateManyWithoutSchoolNestedInput
-    administrators?: administratorUpdateManyWithoutSchoolNestedInput
-    subjects?: subjectUpdateManyWithoutSchoolNestedInput
-    load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
-  }
-
-  export type schoolUncheckedUpdateWithoutDirectorInput = {
-    SIG?: StringFieldUpdateOperationsInput | string
-    school_name?: StringFieldUpdateOperationsInput | string
-    type?: Enumschool_typeFieldUpdateOperationsInput | $Enums.school_type
-    company_name?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: StringFieldUpdateOperationsInput | string
-    city?: StringFieldUpdateOperationsInput | string
-    municipality?: StringFieldUpdateOperationsInput | string
-    state?: StringFieldUpdateOperationsInput | string
-    phone?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    DEA_CODE?: StringFieldUpdateOperationsInput | string
-    RIF?: NullableStringFieldUpdateOperationsInput | string | null
-    is_active?: BoolFieldUpdateOperationsInput | boolean
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    cdceId?: IntFieldUpdateOperationsInput | number
-    students?: studentUncheckedUpdateManyWithoutSchoolNestedInput
-    sections?: sectionUncheckedUpdateManyWithoutSchoolNestedInput
-    academic_periods?: academic_periodsUncheckedUpdateManyWithoutSchoolNestedInput
-    teachers?: teacherUncheckedUpdateManyWithoutSchoolNestedInput
-    years?: yearUncheckedUpdateManyWithoutSchoolNestedInput
-    administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
-    subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
-    load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type administratorUpsertWithoutUserInput = {
@@ -34932,6 +36059,240 @@ export namespace Prisma {
     created_at?: DateTimeFilter<"auth_token"> | Date | string
   }
 
+  export type user_schoolsUpsertWithWhereUniqueWithoutUserInput = {
+    where: user_schoolsWhereUniqueInput
+    update: XOR<user_schoolsUpdateWithoutUserInput, user_schoolsUncheckedUpdateWithoutUserInput>
+    create: XOR<user_schoolsCreateWithoutUserInput, user_schoolsUncheckedCreateWithoutUserInput>
+  }
+
+  export type user_schoolsUpdateWithWhereUniqueWithoutUserInput = {
+    where: user_schoolsWhereUniqueInput
+    data: XOR<user_schoolsUpdateWithoutUserInput, user_schoolsUncheckedUpdateWithoutUserInput>
+  }
+
+  export type user_schoolsUpdateManyWithWhereWithoutUserInput = {
+    where: user_schoolsScalarWhereInput
+    data: XOR<user_schoolsUpdateManyMutationInput, user_schoolsUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type usersCreateWithoutUser_schoolsInput = {
+    id_card: string
+    name: string
+    last_name: string
+    email: string
+    phone: string
+    pass: string
+    is_first_login?: boolean
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    role: roleCreateNestedOneWithoutUsersInput
+    teacher_profile?: teacherCreateNestedOneWithoutUserInput
+    administrator_profile?: administratorCreateNestedOneWithoutUserInput
+    student_profile?: studentCreateNestedOneWithoutUserInput
+    auth_tokens?: auth_tokenCreateNestedManyWithoutUserInput
+  }
+
+  export type usersUncheckedCreateWithoutUser_schoolsInput = {
+    id?: number
+    id_card: string
+    name: string
+    last_name: string
+    email: string
+    phone: string
+    pass: string
+    role_id: number
+    is_first_login?: boolean
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    teacher_profile?: teacherUncheckedCreateNestedOneWithoutUserInput
+    administrator_profile?: administratorUncheckedCreateNestedOneWithoutUserInput
+    student_profile?: studentUncheckedCreateNestedOneWithoutUserInput
+    auth_tokens?: auth_tokenUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type usersCreateOrConnectWithoutUser_schoolsInput = {
+    where: usersWhereUniqueInput
+    create: XOR<usersCreateWithoutUser_schoolsInput, usersUncheckedCreateWithoutUser_schoolsInput>
+  }
+
+  export type schoolCreateWithoutUser_schoolsInput = {
+    SIG: string
+    school_name: string
+    type: $Enums.school_type
+    company_name?: string | null
+    address: string
+    city: string
+    municipality: string
+    state: string
+    phone: string
+    email: string
+    DEA_CODE: string
+    RIF?: string | null
+    is_active?: boolean
+    subdomain?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    cdcee: cdceeCreateNestedOneWithoutSchoolsInput
+    students?: studentCreateNestedManyWithoutSchoolInput
+    sections?: sectionCreateNestedManyWithoutSchoolInput
+    academic_periods?: academic_periodsCreateNestedManyWithoutSchoolInput
+    teachers?: teacherCreateNestedManyWithoutSchoolInput
+    years?: yearCreateNestedManyWithoutSchoolInput
+    administrators?: administratorCreateNestedManyWithoutSchoolInput
+    subjects?: subjectCreateNestedManyWithoutSchoolInput
+    load_academics?: load_academicCreateNestedManyWithoutSchoolInput
+  }
+
+  export type schoolUncheckedCreateWithoutUser_schoolsInput = {
+    SIG: string
+    school_name: string
+    type: $Enums.school_type
+    company_name?: string | null
+    address: string
+    city: string
+    municipality: string
+    state: string
+    phone: string
+    email: string
+    DEA_CODE: string
+    RIF?: string | null
+    is_active?: boolean
+    subdomain?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    cdceId: number
+    students?: studentUncheckedCreateNestedManyWithoutSchoolInput
+    sections?: sectionUncheckedCreateNestedManyWithoutSchoolInput
+    academic_periods?: academic_periodsUncheckedCreateNestedManyWithoutSchoolInput
+    teachers?: teacherUncheckedCreateNestedManyWithoutSchoolInput
+    years?: yearUncheckedCreateNestedManyWithoutSchoolInput
+    administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
+    subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
+    load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
+  }
+
+  export type schoolCreateOrConnectWithoutUser_schoolsInput = {
+    where: schoolWhereUniqueInput
+    create: XOR<schoolCreateWithoutUser_schoolsInput, schoolUncheckedCreateWithoutUser_schoolsInput>
+  }
+
+  export type usersUpsertWithoutUser_schoolsInput = {
+    update: XOR<usersUpdateWithoutUser_schoolsInput, usersUncheckedUpdateWithoutUser_schoolsInput>
+    create: XOR<usersCreateWithoutUser_schoolsInput, usersUncheckedCreateWithoutUser_schoolsInput>
+    where?: usersWhereInput
+  }
+
+  export type usersUpdateToOneWithWhereWithoutUser_schoolsInput = {
+    where?: usersWhereInput
+    data: XOR<usersUpdateWithoutUser_schoolsInput, usersUncheckedUpdateWithoutUser_schoolsInput>
+  }
+
+  export type usersUpdateWithoutUser_schoolsInput = {
+    id_card?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    last_name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    pass?: StringFieldUpdateOperationsInput | string
+    is_first_login?: BoolFieldUpdateOperationsInput | boolean
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: roleUpdateOneRequiredWithoutUsersNestedInput
+    teacher_profile?: teacherUpdateOneWithoutUserNestedInput
+    administrator_profile?: administratorUpdateOneWithoutUserNestedInput
+    student_profile?: studentUpdateOneWithoutUserNestedInput
+    auth_tokens?: auth_tokenUpdateManyWithoutUserNestedInput
+  }
+
+  export type usersUncheckedUpdateWithoutUser_schoolsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    id_card?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    last_name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    pass?: StringFieldUpdateOperationsInput | string
+    role_id?: IntFieldUpdateOperationsInput | number
+    is_first_login?: BoolFieldUpdateOperationsInput | boolean
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacher_profile?: teacherUncheckedUpdateOneWithoutUserNestedInput
+    administrator_profile?: administratorUncheckedUpdateOneWithoutUserNestedInput
+    student_profile?: studentUncheckedUpdateOneWithoutUserNestedInput
+    auth_tokens?: auth_tokenUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type schoolUpsertWithoutUser_schoolsInput = {
+    update: XOR<schoolUpdateWithoutUser_schoolsInput, schoolUncheckedUpdateWithoutUser_schoolsInput>
+    create: XOR<schoolCreateWithoutUser_schoolsInput, schoolUncheckedCreateWithoutUser_schoolsInput>
+    where?: schoolWhereInput
+  }
+
+  export type schoolUpdateToOneWithWhereWithoutUser_schoolsInput = {
+    where?: schoolWhereInput
+    data: XOR<schoolUpdateWithoutUser_schoolsInput, schoolUncheckedUpdateWithoutUser_schoolsInput>
+  }
+
+  export type schoolUpdateWithoutUser_schoolsInput = {
+    SIG?: StringFieldUpdateOperationsInput | string
+    school_name?: StringFieldUpdateOperationsInput | string
+    type?: Enumschool_typeFieldUpdateOperationsInput | $Enums.school_type
+    company_name?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: StringFieldUpdateOperationsInput | string
+    city?: StringFieldUpdateOperationsInput | string
+    municipality?: StringFieldUpdateOperationsInput | string
+    state?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    DEA_CODE?: StringFieldUpdateOperationsInput | string
+    RIF?: NullableStringFieldUpdateOperationsInput | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
+    students?: studentUpdateManyWithoutSchoolNestedInput
+    sections?: sectionUpdateManyWithoutSchoolNestedInput
+    academic_periods?: academic_periodsUpdateManyWithoutSchoolNestedInput
+    teachers?: teacherUpdateManyWithoutSchoolNestedInput
+    years?: yearUpdateManyWithoutSchoolNestedInput
+    administrators?: administratorUpdateManyWithoutSchoolNestedInput
+    subjects?: subjectUpdateManyWithoutSchoolNestedInput
+    load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
+  }
+
+  export type schoolUncheckedUpdateWithoutUser_schoolsInput = {
+    SIG?: StringFieldUpdateOperationsInput | string
+    school_name?: StringFieldUpdateOperationsInput | string
+    type?: Enumschool_typeFieldUpdateOperationsInput | $Enums.school_type
+    company_name?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: StringFieldUpdateOperationsInput | string
+    city?: StringFieldUpdateOperationsInput | string
+    municipality?: StringFieldUpdateOperationsInput | string
+    state?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    DEA_CODE?: StringFieldUpdateOperationsInput | string
+    RIF?: NullableStringFieldUpdateOperationsInput | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    cdceId?: IntFieldUpdateOperationsInput | number
+    students?: studentUncheckedUpdateManyWithoutSchoolNestedInput
+    sections?: sectionUncheckedUpdateManyWithoutSchoolNestedInput
+    academic_periods?: academic_periodsUncheckedUpdateManyWithoutSchoolNestedInput
+    teachers?: teacherUncheckedUpdateManyWithoutSchoolNestedInput
+    years?: yearUncheckedUpdateManyWithoutSchoolNestedInput
+    administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
+    subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
+    load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
+  }
+
   export type usersCreateWithoutRoleInput = {
     id_card: string
     name: string
@@ -34944,10 +36305,10 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     teacher_profile?: teacherCreateNestedOneWithoutUserInput
-    supervised_school?: schoolCreateNestedOneWithoutDirectorInput
     administrator_profile?: administratorCreateNestedOneWithoutUserInput
     student_profile?: studentCreateNestedOneWithoutUserInput
     auth_tokens?: auth_tokenCreateNestedManyWithoutUserInput
+    user_schools?: user_schoolsCreateNestedManyWithoutUserInput
   }
 
   export type usersUncheckedCreateWithoutRoleInput = {
@@ -34963,10 +36324,10 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     teacher_profile?: teacherUncheckedCreateNestedOneWithoutUserInput
-    supervised_school?: schoolUncheckedCreateNestedOneWithoutDirectorInput
     administrator_profile?: administratorUncheckedCreateNestedOneWithoutUserInput
     student_profile?: studentUncheckedCreateNestedOneWithoutUserInput
     auth_tokens?: auth_tokenUncheckedCreateNestedManyWithoutUserInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type usersCreateOrConnectWithoutRoleInput = {
@@ -35027,17 +36388,18 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
     students?: studentCreateNestedManyWithoutSchoolInput
-    director?: usersCreateNestedOneWithoutSupervised_schoolInput
     sections?: sectionCreateNestedManyWithoutSchoolInput
     teachers?: teacherCreateNestedManyWithoutSchoolInput
     years?: yearCreateNestedManyWithoutSchoolInput
     administrators?: administratorCreateNestedManyWithoutSchoolInput
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutAcademic_periodsInput = {
@@ -35054,10 +36416,10 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
-    director_id?: number | null
     students?: studentUncheckedCreateNestedManyWithoutSchoolInput
     sections?: sectionUncheckedCreateNestedManyWithoutSchoolInput
     teachers?: teacherUncheckedCreateNestedManyWithoutSchoolInput
@@ -35065,6 +36427,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutAcademic_periodsInput = {
@@ -35244,17 +36607,18 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
     students?: studentUpdateManyWithoutSchoolNestedInput
-    director?: usersUpdateOneWithoutSupervised_schoolNestedInput
     sections?: sectionUpdateManyWithoutSchoolNestedInput
     teachers?: teacherUpdateManyWithoutSchoolNestedInput
     years?: yearUpdateManyWithoutSchoolNestedInput
     administrators?: administratorUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutAcademic_periodsInput = {
@@ -35271,10 +36635,10 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
-    director_id?: NullableIntFieldUpdateOperationsInput | number | null
     students?: studentUncheckedUpdateManyWithoutSchoolNestedInput
     sections?: sectionUncheckedUpdateManyWithoutSchoolNestedInput
     teachers?: teacherUncheckedUpdateManyWithoutSchoolNestedInput
@@ -35282,6 +36646,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type enrollmentUpsertWithWhereUniqueWithoutPeriodInput = {
@@ -35391,9 +36756,9 @@ export namespace Prisma {
     updated_at?: Date | string
     role: roleCreateNestedOneWithoutUsersInput
     teacher_profile?: teacherCreateNestedOneWithoutUserInput
-    supervised_school?: schoolCreateNestedOneWithoutDirectorInput
     student_profile?: studentCreateNestedOneWithoutUserInput
     auth_tokens?: auth_tokenCreateNestedManyWithoutUserInput
+    user_schools?: user_schoolsCreateNestedManyWithoutUserInput
   }
 
   export type usersUncheckedCreateWithoutAdministrator_profileInput = {
@@ -35410,9 +36775,9 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     teacher_profile?: teacherUncheckedCreateNestedOneWithoutUserInput
-    supervised_school?: schoolUncheckedCreateNestedOneWithoutDirectorInput
     student_profile?: studentUncheckedCreateNestedOneWithoutUserInput
     auth_tokens?: auth_tokenUncheckedCreateNestedManyWithoutUserInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type usersCreateOrConnectWithoutAdministrator_profileInput = {
@@ -35434,17 +36799,18 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
     students?: studentCreateNestedManyWithoutSchoolInput
-    director?: usersCreateNestedOneWithoutSupervised_schoolInput
     sections?: sectionCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsCreateNestedManyWithoutSchoolInput
     teachers?: teacherCreateNestedManyWithoutSchoolInput
     years?: yearCreateNestedManyWithoutSchoolInput
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutAdministratorsInput = {
@@ -35461,10 +36827,10 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
-    director_id?: number | null
     students?: studentUncheckedCreateNestedManyWithoutSchoolInput
     sections?: sectionUncheckedCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsUncheckedCreateNestedManyWithoutSchoolInput
@@ -35472,6 +36838,7 @@ export namespace Prisma {
     years?: yearUncheckedCreateNestedManyWithoutSchoolInput
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutAdministratorsInput = {
@@ -35503,9 +36870,9 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: roleUpdateOneRequiredWithoutUsersNestedInput
     teacher_profile?: teacherUpdateOneWithoutUserNestedInput
-    supervised_school?: schoolUpdateOneWithoutDirectorNestedInput
     student_profile?: studentUpdateOneWithoutUserNestedInput
     auth_tokens?: auth_tokenUpdateManyWithoutUserNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutUserNestedInput
   }
 
   export type usersUncheckedUpdateWithoutAdministrator_profileInput = {
@@ -35522,9 +36889,9 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     teacher_profile?: teacherUncheckedUpdateOneWithoutUserNestedInput
-    supervised_school?: schoolUncheckedUpdateOneWithoutDirectorNestedInput
     student_profile?: studentUncheckedUpdateOneWithoutUserNestedInput
     auth_tokens?: auth_tokenUncheckedUpdateManyWithoutUserNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type schoolUpsertWithoutAdministratorsInput = {
@@ -35552,17 +36919,18 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
     students?: studentUpdateManyWithoutSchoolNestedInput
-    director?: usersUpdateOneWithoutSupervised_schoolNestedInput
     sections?: sectionUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUpdateManyWithoutSchoolNestedInput
     teachers?: teacherUpdateManyWithoutSchoolNestedInput
     years?: yearUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutAdministratorsInput = {
@@ -35579,10 +36947,10 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
-    director_id?: NullableIntFieldUpdateOperationsInput | number | null
     students?: studentUncheckedUpdateManyWithoutSchoolNestedInput
     sections?: sectionUncheckedUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUncheckedUpdateManyWithoutSchoolNestedInput
@@ -35590,6 +36958,7 @@ export namespace Prisma {
     years?: yearUncheckedUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type usersCreateWithoutTeacher_profileInput = {
@@ -35604,10 +36973,10 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     role: roleCreateNestedOneWithoutUsersInput
-    supervised_school?: schoolCreateNestedOneWithoutDirectorInput
     administrator_profile?: administratorCreateNestedOneWithoutUserInput
     student_profile?: studentCreateNestedOneWithoutUserInput
     auth_tokens?: auth_tokenCreateNestedManyWithoutUserInput
+    user_schools?: user_schoolsCreateNestedManyWithoutUserInput
   }
 
   export type usersUncheckedCreateWithoutTeacher_profileInput = {
@@ -35623,10 +36992,10 @@ export namespace Prisma {
     is_active?: boolean
     created_at?: Date | string
     updated_at?: Date | string
-    supervised_school?: schoolUncheckedCreateNestedOneWithoutDirectorInput
     administrator_profile?: administratorUncheckedCreateNestedOneWithoutUserInput
     student_profile?: studentUncheckedCreateNestedOneWithoutUserInput
     auth_tokens?: auth_tokenUncheckedCreateNestedManyWithoutUserInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type usersCreateOrConnectWithoutTeacher_profileInput = {
@@ -35648,17 +37017,18 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
     students?: studentCreateNestedManyWithoutSchoolInput
-    director?: usersCreateNestedOneWithoutSupervised_schoolInput
     sections?: sectionCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsCreateNestedManyWithoutSchoolInput
     years?: yearCreateNestedManyWithoutSchoolInput
     administrators?: administratorCreateNestedManyWithoutSchoolInput
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutTeachersInput = {
@@ -35675,10 +37045,10 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
-    director_id?: number | null
     students?: studentUncheckedCreateNestedManyWithoutSchoolInput
     sections?: sectionUncheckedCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsUncheckedCreateNestedManyWithoutSchoolInput
@@ -35686,6 +37056,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutTeachersInput = {
@@ -35780,10 +37151,10 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: roleUpdateOneRequiredWithoutUsersNestedInput
-    supervised_school?: schoolUpdateOneWithoutDirectorNestedInput
     administrator_profile?: administratorUpdateOneWithoutUserNestedInput
     student_profile?: studentUpdateOneWithoutUserNestedInput
     auth_tokens?: auth_tokenUpdateManyWithoutUserNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutUserNestedInput
   }
 
   export type usersUncheckedUpdateWithoutTeacher_profileInput = {
@@ -35799,10 +37170,10 @@ export namespace Prisma {
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    supervised_school?: schoolUncheckedUpdateOneWithoutDirectorNestedInput
     administrator_profile?: administratorUncheckedUpdateOneWithoutUserNestedInput
     student_profile?: studentUncheckedUpdateOneWithoutUserNestedInput
     auth_tokens?: auth_tokenUncheckedUpdateManyWithoutUserNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type schoolUpsertWithoutTeachersInput = {
@@ -35830,17 +37201,18 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
     students?: studentUpdateManyWithoutSchoolNestedInput
-    director?: usersUpdateOneWithoutSupervised_schoolNestedInput
     sections?: sectionUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUpdateManyWithoutSchoolNestedInput
     years?: yearUpdateManyWithoutSchoolNestedInput
     administrators?: administratorUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutTeachersInput = {
@@ -35857,10 +37229,10 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
-    director_id?: NullableIntFieldUpdateOperationsInput | number | null
     students?: studentUncheckedUpdateManyWithoutSchoolNestedInput
     sections?: sectionUncheckedUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUncheckedUpdateManyWithoutSchoolNestedInput
@@ -35868,6 +37240,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type sectionUpsertWithWhereUniqueWithoutGuideInput = {
@@ -35915,9 +37288,9 @@ export namespace Prisma {
     updated_at?: Date | string
     role: roleCreateNestedOneWithoutUsersInput
     teacher_profile?: teacherCreateNestedOneWithoutUserInput
-    supervised_school?: schoolCreateNestedOneWithoutDirectorInput
     administrator_profile?: administratorCreateNestedOneWithoutUserInput
     auth_tokens?: auth_tokenCreateNestedManyWithoutUserInput
+    user_schools?: user_schoolsCreateNestedManyWithoutUserInput
   }
 
   export type usersUncheckedCreateWithoutStudent_profileInput = {
@@ -35934,9 +37307,9 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     teacher_profile?: teacherUncheckedCreateNestedOneWithoutUserInput
-    supervised_school?: schoolUncheckedCreateNestedOneWithoutDirectorInput
     administrator_profile?: administratorUncheckedCreateNestedOneWithoutUserInput
     auth_tokens?: auth_tokenUncheckedCreateNestedManyWithoutUserInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type usersCreateOrConnectWithoutStudent_profileInput = {
@@ -35958,10 +37331,10 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
-    director?: usersCreateNestedOneWithoutSupervised_schoolInput
     sections?: sectionCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsCreateNestedManyWithoutSchoolInput
     teachers?: teacherCreateNestedManyWithoutSchoolInput
@@ -35969,6 +37342,7 @@ export namespace Prisma {
     administrators?: administratorCreateNestedManyWithoutSchoolInput
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutStudentsInput = {
@@ -35985,10 +37359,10 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
-    director_id?: number | null
     sections?: sectionUncheckedCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsUncheckedCreateNestedManyWithoutSchoolInput
     teachers?: teacherUncheckedCreateNestedManyWithoutSchoolInput
@@ -35996,6 +37370,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutStudentsInput = {
@@ -36132,9 +37507,9 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: roleUpdateOneRequiredWithoutUsersNestedInput
     teacher_profile?: teacherUpdateOneWithoutUserNestedInput
-    supervised_school?: schoolUpdateOneWithoutDirectorNestedInput
     administrator_profile?: administratorUpdateOneWithoutUserNestedInput
     auth_tokens?: auth_tokenUpdateManyWithoutUserNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutUserNestedInput
   }
 
   export type usersUncheckedUpdateWithoutStudent_profileInput = {
@@ -36151,9 +37526,9 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     teacher_profile?: teacherUncheckedUpdateOneWithoutUserNestedInput
-    supervised_school?: schoolUncheckedUpdateOneWithoutDirectorNestedInput
     administrator_profile?: administratorUncheckedUpdateOneWithoutUserNestedInput
     auth_tokens?: auth_tokenUncheckedUpdateManyWithoutUserNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type schoolUpsertWithoutStudentsInput = {
@@ -36181,10 +37556,10 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
-    director?: usersUpdateOneWithoutSupervised_schoolNestedInput
     sections?: sectionUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUpdateManyWithoutSchoolNestedInput
     teachers?: teacherUpdateManyWithoutSchoolNestedInput
@@ -36192,6 +37567,7 @@ export namespace Prisma {
     administrators?: administratorUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutStudentsInput = {
@@ -36208,10 +37584,10 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
-    director_id?: NullableIntFieldUpdateOperationsInput | number | null
     sections?: sectionUncheckedUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUncheckedUpdateManyWithoutSchoolNestedInput
     teachers?: teacherUncheckedUpdateManyWithoutSchoolNestedInput
@@ -36219,6 +37595,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type representativeUpsertWithoutStudentsInput = {
@@ -36509,17 +37886,18 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
     students?: studentCreateNestedManyWithoutSchoolInput
-    director?: usersCreateNestedOneWithoutSupervised_schoolInput
     sections?: sectionCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsCreateNestedManyWithoutSchoolInput
     teachers?: teacherCreateNestedManyWithoutSchoolInput
     years?: yearCreateNestedManyWithoutSchoolInput
     administrators?: administratorCreateNestedManyWithoutSchoolInput
     subjects?: subjectCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutLoad_academicsInput = {
@@ -36536,10 +37914,10 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
-    director_id?: number | null
     students?: studentUncheckedCreateNestedManyWithoutSchoolInput
     sections?: sectionUncheckedCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsUncheckedCreateNestedManyWithoutSchoolInput
@@ -36547,6 +37925,7 @@ export namespace Prisma {
     years?: yearUncheckedCreateNestedManyWithoutSchoolInput
     administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutLoad_academicsInput = {
@@ -36739,17 +38118,18 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
     students?: studentUpdateManyWithoutSchoolNestedInput
-    director?: usersUpdateOneWithoutSupervised_schoolNestedInput
     sections?: sectionUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUpdateManyWithoutSchoolNestedInput
     teachers?: teacherUpdateManyWithoutSchoolNestedInput
     years?: yearUpdateManyWithoutSchoolNestedInput
     administrators?: administratorUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutLoad_academicsInput = {
@@ -36766,10 +38146,10 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
-    director_id?: NullableIntFieldUpdateOperationsInput | number | null
     students?: studentUncheckedUpdateManyWithoutSchoolNestedInput
     sections?: sectionUncheckedUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUncheckedUpdateManyWithoutSchoolNestedInput
@@ -36777,6 +38157,7 @@ export namespace Prisma {
     years?: yearUncheckedUpdateManyWithoutSchoolNestedInput
     administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type evaluation_planUpsertWithWhereUniqueWithoutLoad_academicInput = {
@@ -36809,17 +38190,18 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
     students?: studentCreateNestedManyWithoutSchoolInput
-    director?: usersCreateNestedOneWithoutSupervised_schoolInput
     academic_periods?: academic_periodsCreateNestedManyWithoutSchoolInput
     teachers?: teacherCreateNestedManyWithoutSchoolInput
     years?: yearCreateNestedManyWithoutSchoolInput
     administrators?: administratorCreateNestedManyWithoutSchoolInput
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutSectionsInput = {
@@ -36836,10 +38218,10 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
-    director_id?: number | null
     students?: studentUncheckedCreateNestedManyWithoutSchoolInput
     academic_periods?: academic_periodsUncheckedCreateNestedManyWithoutSchoolInput
     teachers?: teacherUncheckedCreateNestedManyWithoutSchoolInput
@@ -36847,6 +38229,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutSectionsInput = {
@@ -37017,17 +38400,18 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
     students?: studentUpdateManyWithoutSchoolNestedInput
-    director?: usersUpdateOneWithoutSupervised_schoolNestedInput
     academic_periods?: academic_periodsUpdateManyWithoutSchoolNestedInput
     teachers?: teacherUpdateManyWithoutSchoolNestedInput
     years?: yearUpdateManyWithoutSchoolNestedInput
     administrators?: administratorUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutSectionsInput = {
@@ -37044,10 +38428,10 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
-    director_id?: NullableIntFieldUpdateOperationsInput | number | null
     students?: studentUncheckedUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUncheckedUpdateManyWithoutSchoolNestedInput
     teachers?: teacherUncheckedUpdateManyWithoutSchoolNestedInput
@@ -37055,6 +38439,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type academic_periodsUpsertWithoutSectionsInput = {
@@ -38154,9 +39539,9 @@ export namespace Prisma {
     updated_at?: Date | string
     role: roleCreateNestedOneWithoutUsersInput
     teacher_profile?: teacherCreateNestedOneWithoutUserInput
-    supervised_school?: schoolCreateNestedOneWithoutDirectorInput
     administrator_profile?: administratorCreateNestedOneWithoutUserInput
     student_profile?: studentCreateNestedOneWithoutUserInput
+    user_schools?: user_schoolsCreateNestedManyWithoutUserInput
   }
 
   export type usersUncheckedCreateWithoutAuth_tokensInput = {
@@ -38173,9 +39558,9 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     teacher_profile?: teacherUncheckedCreateNestedOneWithoutUserInput
-    supervised_school?: schoolUncheckedCreateNestedOneWithoutDirectorInput
     administrator_profile?: administratorUncheckedCreateNestedOneWithoutUserInput
     student_profile?: studentUncheckedCreateNestedOneWithoutUserInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type usersCreateOrConnectWithoutAuth_tokensInput = {
@@ -38207,9 +39592,9 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: roleUpdateOneRequiredWithoutUsersNestedInput
     teacher_profile?: teacherUpdateOneWithoutUserNestedInput
-    supervised_school?: schoolUpdateOneWithoutDirectorNestedInput
     administrator_profile?: administratorUpdateOneWithoutUserNestedInput
     student_profile?: studentUpdateOneWithoutUserNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutUserNestedInput
   }
 
   export type usersUncheckedUpdateWithoutAuth_tokensInput = {
@@ -38226,9 +39611,9 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     teacher_profile?: teacherUncheckedUpdateOneWithoutUserNestedInput
-    supervised_school?: schoolUncheckedUpdateOneWithoutDirectorNestedInput
     administrator_profile?: administratorUncheckedUpdateOneWithoutUserNestedInput
     student_profile?: studentUncheckedUpdateOneWithoutUserNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type schoolCreateManyCdceeInput = {
@@ -38245,9 +39630,9 @@ export namespace Prisma {
     DEA_CODE: string
     RIF?: string | null
     is_active?: boolean
+    subdomain?: string | null
     created_at?: Date | string
     updated_at?: Date | string
-    director_id?: number | null
   }
 
   export type schoolUpdateWithoutCdceeInput = {
@@ -38264,10 +39649,10 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     students?: studentUpdateManyWithoutSchoolNestedInput
-    director?: usersUpdateOneWithoutSupervised_schoolNestedInput
     sections?: sectionUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUpdateManyWithoutSchoolNestedInput
     teachers?: teacherUpdateManyWithoutSchoolNestedInput
@@ -38275,6 +39660,7 @@ export namespace Prisma {
     administrators?: administratorUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutCdceeInput = {
@@ -38291,9 +39677,9 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    director_id?: NullableIntFieldUpdateOperationsInput | number | null
     students?: studentUncheckedUpdateManyWithoutSchoolNestedInput
     sections?: sectionUncheckedUpdateManyWithoutSchoolNestedInput
     academic_periods?: academic_periodsUncheckedUpdateManyWithoutSchoolNestedInput
@@ -38302,6 +39688,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateManyWithoutCdceeInput = {
@@ -38318,9 +39705,9 @@ export namespace Prisma {
     DEA_CODE?: StringFieldUpdateOperationsInput | string
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    director_id?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type studentCreateManySchoolInput = {
@@ -38400,6 +39787,11 @@ export namespace Prisma {
     id_period: number
     id_subject: string
     created_at?: Date | string
+  }
+
+  export type user_schoolsCreateManySchoolInput = {
+    id?: number
+    user_id: number
   }
 
   export type studentUpdateWithoutSchoolInput = {
@@ -38668,6 +40060,20 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type user_schoolsUpdateWithoutSchoolInput = {
+    user?: usersUpdateOneRequiredWithoutUser_schoolsNestedInput
+  }
+
+  export type user_schoolsUncheckedUpdateWithoutSchoolInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    user_id?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type user_schoolsUncheckedUpdateManyWithoutSchoolInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    user_id?: IntFieldUpdateOperationsInput | number
+  }
+
   export type load_academicCreateManySubjectInput = {
     id?: number
     id_teacher: number
@@ -38894,6 +40300,11 @@ export namespace Prisma {
     created_at?: Date | string
   }
 
+  export type user_schoolsCreateManyUserInput = {
+    id?: number
+    SIG: string
+  }
+
   export type auth_tokenUpdateWithoutUserInput = {
     token?: StringFieldUpdateOperationsInput | string
     expires_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -38912,6 +40323,20 @@ export namespace Prisma {
     token?: StringFieldUpdateOperationsInput | string
     expires_at?: DateTimeFieldUpdateOperationsInput | Date | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type user_schoolsUpdateWithoutUserInput = {
+    school?: schoolUpdateOneRequiredWithoutUser_schoolsNestedInput
+  }
+
+  export type user_schoolsUncheckedUpdateWithoutUserInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    SIG?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type user_schoolsUncheckedUpdateManyWithoutUserInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    SIG?: StringFieldUpdateOperationsInput | string
   }
 
   export type usersCreateManyRoleInput = {
@@ -38940,10 +40365,10 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     teacher_profile?: teacherUpdateOneWithoutUserNestedInput
-    supervised_school?: schoolUpdateOneWithoutDirectorNestedInput
     administrator_profile?: administratorUpdateOneWithoutUserNestedInput
     student_profile?: studentUpdateOneWithoutUserNestedInput
     auth_tokens?: auth_tokenUpdateManyWithoutUserNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutUserNestedInput
   }
 
   export type usersUncheckedUpdateWithoutRoleInput = {
@@ -38959,10 +40384,10 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     teacher_profile?: teacherUncheckedUpdateOneWithoutUserNestedInput
-    supervised_school?: schoolUncheckedUpdateOneWithoutDirectorNestedInput
     administrator_profile?: administratorUncheckedUpdateOneWithoutUserNestedInput
     student_profile?: studentUncheckedUpdateOneWithoutUserNestedInput
     auth_tokens?: auth_tokenUncheckedUpdateManyWithoutUserNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type usersUncheckedUpdateManyWithoutRoleInput = {

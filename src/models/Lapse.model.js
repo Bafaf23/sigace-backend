@@ -1,6 +1,7 @@
 import { pool } from "../db.js";
+import { prisma } from "../lib/prisma.js";
 
-export class LapseModel {
+export class Lapse {
   constructor(id, name, start_date, end_date, is_active, createdAt, updatedAt) {
     this.id = id;
     this.name = name;
@@ -19,13 +20,17 @@ export class LapseModel {
    */
   static async getLapses(SIG, id_period) {
     try {
-      const [rows] = await pool.query(
-        `SELECT l.id, l.name, l.start_date, l.end_date, l.is_active FROM lapses l
-          JOIN academic_periods ap ON l.id_period = ap.id
-          WHERE ap.SIG = ? AND ap.is_active = 1 AND l.id_period = ?`,
-        [SIG, id_period],
-      );
-      return rows;
+      return await prisma.lapse.findMany({
+        where: {
+          id_period: Number(id_period),
+          period: {
+            SIG: SIG,
+          },
+        },
+        orderBy: {
+          id: "asc",
+        },
+      });
     } catch (error) {
       console.error(error);
       throw error;
@@ -38,24 +43,15 @@ export class LapseModel {
    */
   static async createLapses(lapse) {
     try {
-      const [result] = await pool.query(
-        "INSERT INTO lapses (id_period, name, start_date, end_date, is_active) VALUES (?, ?, ?, ?, ?)",
-        [
-          lapse.id_period,
-          lapse.name,
-          lapse.start_date,
-          lapse.end_date,
-          lapse.is_active ?? false,
-        ],
-      );
-      return {
-        id: result.insertId,
-        id_period: lapse.id_period,
-        name: lapse.name,
-        start_date: lapse.start_date,
-        end_date: lapse.end_date,
-        is_active: lapse.is_active ?? false,
-      };
+      return await prisma.lapse.create({
+        data: {
+          id_period: lapse.id_period,
+          name: lapse.name,
+          start_date: lapse.start_date,
+          end_date: lapse.end_date,
+          is_active: lapse.is_active,
+        },
+      });
     } catch (error) {
       console.error(error);
       throw error;
@@ -63,15 +59,17 @@ export class LapseModel {
   }
 
   /**
-   * Desactiva un lapso (lo finaliza)
+   * Actualiza el estado del lapso para desactivarlo
+   * @param {number} id - Momento
    */
   static async endLapse(id) {
     try {
-      const [result] = await pool.query(
-        "UPDATE lapses SET is_active = 0 WHERE id = ?",
-        [id],
-      );
-      return result.affectedRows > 0;
+      return await prisma.lapse.update({
+        where: { id: id },
+        data: {
+          is_active: false,
+        },
+      });
     } catch (error) {
       console.error(error);
       throw error;
@@ -81,22 +79,16 @@ export class LapseModel {
   /**
    * inicia un lapso
    * @param {string} idLapse
-   * @returns {Promise<boolean>} success
+   * @returns {Promise<object>}
    */
-  static async startLapse(idLapse, id_period) {
+  static async startLapse(idLapse) {
     try {
-      const [lapseActive] = await pool.query(
-        "SELECT * FROM lapses WHERE is_active = 1 AND id_period = ?",
-        [id_period],
-      );
-      if (lapseActive.length > 0) {
-        return false;
-      }
-      const [result] = await pool.query(
-        "UPDATE lapses SET is_active = 1 WHERE id = ?",
-        [idLapse],
-      );
-      return result.affectedRows > 0;
+      return await prisma.lapse.update({
+        where: { id: Number(idLapse) },
+        data: {
+          is_active: true,
+        },
+      });
     } catch (error) {
       console.error(error);
       throw error;

@@ -398,10 +398,10 @@ export const updateStudent = async (req, res) => {
  */
 export const getStudentNotEnrolled = async (req, res) => {
   const SIG = req.user?.SIG;
-  const id_period = req.params.id_period;
+  const { id_period } = req.user.id_period;
 
   if (!SIG) {
-    console.error(`⚠️ [NOT FOUND] No se encontro el codigo SIG. ${SIG}`);
+    logger.error(`No se encontro el codigo SIG. ${SIG}`);
     return res.status(400).json({
       success: false,
       code: "MISSING_SIG",
@@ -411,9 +411,7 @@ export const getStudentNotEnrolled = async (req, res) => {
   }
 
   if (!id_period || isNaN(parseInt(id_period))) {
-    console.error(
-      `⚠️ [NOT FOUND] No se encontro el perido academico. ${id_period}`,
-    );
+    logger.error(`No se encontro el perido academico. ${id_period}`);
     return res.status(400).json({
       success: false,
       code: "INVALID_PERIOD_ID",
@@ -427,9 +425,7 @@ export const getStudentNotEnrolled = async (req, res) => {
     });
 
     if (!students || students.length === 0) {
-      console.error(
-        `⚠️ [NOT FOUND] No hay estudiantes sin matricula en este perido academcio.`,
-      );
+      logger.warn(`No hay estudiantes sin matricula en este perido academcio.`);
       return res.status(404).json({
         success: false,
         code: "ALL_STUDENTS_ENROLLED",
@@ -458,70 +454,11 @@ export const getStudentNotEnrolled = async (req, res) => {
       data: students,
     });
   } catch (error) {
-    console.error("❌ Error en getStudentNotEnrolled:", error);
+    logger.error("❌ Error en getStudentNotEnrolled:", error);
     return res.status(500).json({
       success: false,
       code: "NOT_ENROLLED_INTERNAL_ERROR",
       message: "Error de base de datos al buscar estudiantes desvinculados.",
-      error: error.message,
-    });
-  }
-};
-
-/**
- * Obtiene a los estudiantes de una seccion
- * TODO: Pasar al controlador section
- * @async
- * @function getStudentsBySection
- * @param {import("express").Request} req - Objeto de solicitud de Express.
- * @param {import("express").Response} res - Objeto de respuesta de Express.
- * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
- */
-export const getStudentsBySection = async (req, res) => {
-  const id_section = req.params.id_section;
-  const SIG = req.user.SIG;
-
-  if (!id_section) {
-    return res.status(400).json({
-      success: false,
-      code: "MISSING_SECTION_ID",
-      message: "El ID identificador de la sección es mandatorio.",
-    });
-  }
-
-  if (!SIG) {
-    return res.status(400).json({
-      success: false,
-      code: "MISSING_SIG",
-      message: "Código institucional no suministrado.",
-    });
-  }
-
-  try {
-    const students = await Students.bySection({ id_section, SIG });
-
-    if (!students || students.length === 0) {
-      return res.status(404).json({
-        success: false,
-        code: "SECTION_EMPTY",
-        message:
-          "Aula disponible: Esta sección no cuenta con estudiantes inscritos actualmente.",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message:
-        "Nómina de estudiantes asignados a la sección recuperada de forma exitosa.",
-      data: students,
-    });
-  } catch (error) {
-    console.error("❌ Error en getStudentsBySection:", error);
-    return res.status(500).json({
-      success: false,
-      code: "GET_STUDENTS_SECTION_INTERNAL_ERROR",
-      message:
-        "Inconveniente en el servidor al intentar leer la nómina de la sección.",
       error: error.message,
     });
   }
@@ -848,7 +785,7 @@ export const getPreinscription = async (req, res) => {
   const id_period = req.params.id_period || req.query.id_period;
   try {
     if (!SIG) {
-      console.error(`⚠️ [NOT FOUND] SIG no encontrado`);
+      logger.error(`SIG no encontrado`);
       return res.status(400).json({
         success: false,
         code: "MISSING_SIG",
@@ -858,7 +795,7 @@ export const getPreinscription = async (req, res) => {
     }
 
     if (!id_period || isNaN(parseInt(id_period))) {
-      console.error(`⚠️ [NOT FOUND] Periodo no enviado en la peticion`);
+      logger.error(`Periodo no enviado en la peticion`);
       return res.status(400).json({
         success: false,
         code: "INVALID_PERIOD_ID",
@@ -867,18 +804,14 @@ export const getPreinscription = async (req, res) => {
       });
     }
 
-    console.error(
-      `🔃 [LOANDING] Consultados las pre-inscripciones en el sistema.`,
-    );
+    logger.info(`Consultandos las pre-inscripciones en el sistema.`);
     const preInscription = await Students.preInscription(
       SIG,
       Number(id_period),
     );
 
     if (!preInscription || preInscription.length === 0) {
-      console.error(
-        `⚠️ [NOT FOUND] Sin estudiante preInscriptos en el sistema.`,
-      );
+      logger.error(`Sin estudiante preInscriptos en el sistema.`);
       return res.status(404).json({
         success: false,
         code: "ALL_STUDENTS_ENROLLED",

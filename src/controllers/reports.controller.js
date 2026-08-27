@@ -6,7 +6,7 @@ import { enrollmentP } from "../templates/EnrollmetP.template.js";
 import { listSection } from "../templates/listSectio.template.js";
 import { Sections } from "../models/Section.model.js";
 import { Subject } from "../models/Subject.model.js";
-import { LapseModel } from "../models/Lapse.model.js";
+import { Lapse } from "../models/Lapse.model.js";
 import { School } from "../models/School.model.js";
 import { noteSheet } from "../templates/noteSheet.template.js";
 import { reporteFinalRendimientoEstudiantil } from "../templates/reporteFinalRendimientoEstudiantil.template.js";
@@ -387,7 +387,7 @@ export const sheetNote = async (req, res) => {
   }
 
   try {
-    const lapses = await LapseModel.getLapses(SIG, id_period);
+    const lapses = await Lapse.getLapses(SIG, id_period);
     const lapseActive = lapses?.find((lapse) => lapse.is_active === 1);
 
     if (!lapseActive) {

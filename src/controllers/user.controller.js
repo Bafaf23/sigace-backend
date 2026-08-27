@@ -38,7 +38,7 @@ export const createUser = async (req, res) => {
 
   try {
     console.log("BODY RECIBIDO EN BACKEND:", req.body);
-    console.log("SIG EXTRAÍDO:", req.body?.SIG);
+    console.log("SIG EXTRAÍDO:", req.user?.SIG);
 
     const document = (req.body.typeDocuement + req.body.document).trim();
     const rawDocument = req.body.document ? String(req.body.document) : "";
@@ -54,7 +54,7 @@ export const createUser = async (req, res) => {
       email: req.body.email.trim(),
       phone: req.body.phone,
       role_id: req.body.role_id,
-      SIG: req.body.SIG,
+      SIG: req.user.SIG,
       password: passgeneric,
     });
 
@@ -111,7 +111,7 @@ export const getUsers = async (req, res) => {
     const users = await Users.getUsers();
 
     if (!users || users.length === 0) {
-      console.error(`⚠️ [NOT FOUND] No hay usuarios registrados.`);
+      logger.warn(`No hay usuarios registrados.`);
       return res.status(404).json({
         success: false,
         code: "USERS_NOT_FOUND",
@@ -196,12 +196,14 @@ export const changePassword = async (req, res) => {
   }
 
   try {
+    logger.debug("Realizando el cambio de llave de acceso...");
     const passwordChanged = await Users.changePassword(
       req.user.id,
       newPassword,
     );
 
     if (!passwordChanged) {
+      logger.debug("No se resivio la informacion");
       return res.status(400).json({
         success: false,
         code: "PASSWORD_UPDATE_FAILED",
@@ -402,6 +404,7 @@ export const getProfile = async (req, res) => {
       console.table(
         usersList.map((user) => ({
           id: user.id,
+          id_card: user.id_card,
           name: user.name,
           last_name: user.last_name,
           email: user.email,

@@ -1,4 +1,6 @@
+import { Prisma } from "@prisma/client";
 import { School } from "../models/School.model.js";
+import logger from "../utils/logger.js";
 
 /**
  * Obtiene el catálogo completo de instituciones educativas registradas.
@@ -20,6 +22,10 @@ export const getAllSchools = async (req, res) => {
         message: "No hay intituciones registradas por el momento",
       });
     }
+
+    console.dir(schools, { depth: null, colors: true });
+
+    const schoolPro = schools.reduce((school) => {});
 
     if (process.env.NODE_ENV !== "production") {
       console.log("📤 Resultado de Prisma:", {
@@ -133,8 +139,24 @@ export const createSchool = async (req, res) => {
     });
   }
 
+  const genrateSubdomain = (schoolName) => {
+    logger.debug("Generando el subdominio de la escuela...", { schoolName });
+    const subdomain = schoolName
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "")
+      .trim();
+
+    logger.debug("Subdominio generado con exito", { subdomain });
+    return subdomain;
+  };
+
   try {
-    const newSchool = await School.createSchool(school);
+    const newSchool = await School.createSchool(
+      school,
+      genrateSubdomain(school.name),
+    );
 
     if (!newSchool) {
       logger.error("Hubo un problema en registar la institucion");
@@ -305,3 +327,45 @@ export const getRoles = async (_req, res) => {
     });
   }
 };
+
+/**
+ * Realiza el registro de una institucion en el sistema
+ *
+ * @async
+ * @function checkSchool
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
+export async function checkSchool(req, res) {
+  const subdomain = req.params;
+  
+  try {
+    logger.debug("Verificando el subdominio...");
+    const exiteSubdomain = await School.checkSubdomain(
+      String(subdomain.subdomain),
+    );
+
+    if (!exiteSubdomain) {
+      logger.error("No se localizo el subdominio");
+      return res.status(404).json({
+        success: false,
+        message: "No se encontro el subdomain",
+      });
+    }
+
+    return res.status(200).json({
+      success: exiteSubdomain == exiteSubdomain,
+      school_name: exiteSubdomain.school_name,
+      SIG: exiteSubdomain.SIG,
+    });
+  } catch (e) {
+    console.error("❌ Error en getRoles:", e);
+    return res.status(500).json({
+      success: false,
+      code: "ROLES_FETCH_FAILED",
+      message: "No se puedo realizar la operacion, intenta mas tarde",
+      error: e.message,
+    });
+  }
+}
