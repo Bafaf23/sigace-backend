@@ -5,26 +5,26 @@ import logger from "../utils/logger.js";
 import { getCurrentPeriod } from "../utils/periodAc.js";
 
 export const createSection = async (req, res) => {
+  const SIG = /* req.user.SIG */ "SIG3728";
+  const id_year = req.body.yearId;
+  const name = req.body.name;
+  const guide_id = req.body.teacherId;
+  const capacity = req.body.capacity;
+  const id_period = req.body.id_period;
+
+  if (!name || !SIG || !id_year || !guide_id || !capacity || !id_period) {
+    logger.error("Parámetros obligatorios incompletos.");
+    return res.status(400).json({
+      success: false,
+      code: "INCOMPLETE_SECTION_DATA",
+      message:
+        "No se pudo procesar: Todos los campos del formulario (Año, Letra/Nombre, Docente Guía y Capacidad) son estrictamente requeridos.",
+    });
+  }
+
   try {
-    const SIG = req.user.SIG;
-    const id_year = req.body.yearId;
-    const name = req.body.name;
-    const guide_id = req.body.teacherId;
-    const capacity = req.body.capacity;
-    const id_period = req.body.id_period;
-
-    if (!name || !SIG || !id_year || !guide_id || !capacity || !id_period) {
-      logger.error("❌ Parámetros obligatorios incompletos.");
-      return res.status(400).json({
-        success: false,
-        code: "INCOMPLETE_SECTION_DATA",
-        message:
-          "No se pudo procesar: Todos los campos del formulario (Año, Letra/Nombre, Docente Guía y Capacidad) son estrictamente requeridos.",
-      });
-    }
-
-    logger.info("🔄 Registrando sección en la base de datos...");
-    const section = await Sections.createSection({
+    logger.info("Registrando sección en la base de datos...");
+    const section = await Sections.create({
       name,
       SIG,
       id_period,
@@ -34,6 +34,7 @@ export const createSection = async (req, res) => {
     });
 
     if (!section) {
+      logger.info("No se puedo registar la seccion", { section: section });
       return res.status(400).json({
         success: false,
         code: "SECTION_PERSISTENCE_FAILED",
@@ -42,7 +43,7 @@ export const createSection = async (req, res) => {
       });
     }
 
-    console.log("✅ Sección creada exitosamente");
+    logger.info("Exito, las secion fue registrada");
     return res.status(201).json({
       success: true,
       message: `¡Sección configurada con éxito! El aula de "${name.toUpperCase()}" ha sido habilitada para el período lectivo actual.`,
@@ -50,7 +51,6 @@ export const createSection = async (req, res) => {
   } catch (error) {
     console.error("❌ Error en createSection:", error);
 
-    // 💡 Captura inteligente de duplicados (Ej: Intentar registrar dos veces 5to Año Sección "A")
     if (
       error.code === "ER_DUP_ENTRY" ||
       error.sqlMessage?.includes("Duplicate entry")
@@ -72,37 +72,52 @@ export const createSection = async (req, res) => {
   }
 };
 
+/**
+ ** Obtiene todas las secciones de un colegio
+ *
+ * @async
+ * @function getSections
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
 export const getSections = async (req, res) => {
+  const SIG = req.user.SIG;
+  const id_period = req.user.id_period;
+
+  if (!SIG || !id_period) {
+    logger.error("Código institucional o ID de período ausente");
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_QUERY_PARAMETERS",
+      message:
+        "Es necesario indicar el código SIG de la institución y el período escolar activo para consultar las secciones.",
+    });
+  }
   try {
-    const SIG = req.user.SIG;
-    const id_period = req.user.id_period;
+    logger.info("Sincronizando las secciones para", { SIG: SIG });
+    const sectionsList = await Sections.get(SIG, id_period);
 
-    if (!SIG || !id_period) {
-      logger.error("Código institucional o ID de período ausente");
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_QUERY_PARAMETERS",
-        message:
-          "Es necesario indicar el código SIG de la institución y el período escolar activo para consultar las secciones.",
-      });
-    }
-
-    const sections = await Sections.getSections(SIG, id_period);
-
-    if (sections.length === 0) {
+    if (sectionsList.length === 0) {
       logger.debug("No hay secciones en este perido academico");
       return res.status(200).json({
         success: false,
         message: "No hay secciones academicas en este perido.",
       });
     }
+
     logger.info(
-      `✅ Secciones localizadas con éxito. Cantidad: ${sections?.length}`,
+      `Secciones localizadas con éxito. Cantidad: ${sectionsList?.length}`,
     );
+
+    if (process.env.NODE_DEV !== "production") {
+      console.table(sectionsList);
+    }
+
     return res.status(200).json({
       success: true,
       message: "Distribución de secciones académicas recuperada con éxito.",
-      data: sections,
+      data: sectionsList,
     });
   } catch (error) {
     console.error("❌ Error en getSections:", error);
@@ -117,7 +132,7 @@ export const getSections = async (req, res) => {
 };
 
 /**
- * Obtiene a los estudiantes de una seccion
+ * Obtiene a todos los estudiantes de una seccion
  * @async
  * @function getStudentsBySection
  * @param {import("express").Request} req - Objeto de solicitud de Express.
@@ -129,6 +144,7 @@ export const getStudentsBySection = async (req, res) => {
   const SIG = req.user.SIG;
 
   if (!id_section) {
+    logger.info("El id de la seccion es requerido", { id_section });
     return res.status(400).json({
       success: false,
       code: "MISSING_SECTION_ID",
@@ -137,6 +153,7 @@ export const getStudentsBySection = async (req, res) => {
   }
 
   if (!SIG) {
+    logger.info("El SIG es requerido", { SIG });
     return res.status(400).json({
       success: false,
       code: "MISSING_SIG",
@@ -145,9 +162,11 @@ export const getStudentsBySection = async (req, res) => {
   }
 
   try {
-    const students = await Students.bySection({ id_section, SIG });
+    logger.info("Sincronizando la informcaion de la seccion...");
+    const section = await Sections.getStudent({ id_section, SIG });
 
-    if (!students || students.length === 0) {
+    if (!section || section.length === 0) {
+      logger.info("No hay estudiantes en esta seccion o la seccion no exite");
       return res.status(404).json({
         success: false,
         code: "SECTION_EMPTY",
@@ -156,11 +175,16 @@ export const getStudentsBySection = async (req, res) => {
       });
     }
 
+    logger.info("Exito, se cargo la informacion de la seccion.", {
+      section: `${section.name} ${section.nomenclature}`,
+      students: section.students.length,
+    });
+
     return res.status(200).json({
       success: true,
       message:
-        "Nómina de estudiantes asignados a la sección recuperada de forma exitosa.",
-      data: students,
+        "Estudiantes asignados a la sección recuperada de forma exitosa.",
+      data: section,
     });
   } catch (error) {
     console.error("❌ Error en getStudentsBySection:", error);

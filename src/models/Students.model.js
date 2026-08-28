@@ -282,44 +282,6 @@ export class Students {
   }
 
   /**
-   * Obtiene a los estudiates de una sección
-   * @param {object} params - Objecto con los parámetros
-   * @param {number} params.id_section - ID de la sección
-   * @param {string} params.SIG - SIG de la escuela
-   * @returns {Array<object>} - Array de estudiantes
-   */
-  static async bySection({ id_section, SIG }) {
-    try {
-      return await prisma.student.findMany({
-        where: {
-          SIG: SIG,
-          enrollments: {
-            some: {
-              id_section: Number(id_section),
-            },
-          },
-        },
-        select: {
-          id: true,
-          id_user: true,
-          SIG: true,
-          tuition_number: true,
-          user: {
-            select: {
-              name: true,
-              last_name: true,
-              id_card: true, // Nota: en tu schema.prisma el campo se llama id_card, no document
-            },
-          },
-        },
-      });
-    } catch (error) {
-      console.error("Error al obtener los estudiantes de la sección:", error);
-      throw error;
-    }
-  }
-
-  /**
    * Busca a un estudiante por su id_card
    * @param {string} id_card - id del estudiante
    * @return {object|null} - info del estudiante o null si no existe
