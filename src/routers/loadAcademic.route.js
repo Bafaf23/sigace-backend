@@ -11,15 +11,15 @@ import {
 const router = Router();
 
 router.post(
-  "/create",
+  "/",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador"),
   createLoadAcademic,
 );
 router.get(
-  "/get",
+  "/",
   verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor"),
+  permitirRoles("administrador", "profesor", "director", "gestion"),
   getLoadAcademic,
 );
 
