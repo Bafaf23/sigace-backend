@@ -12,7 +12,7 @@ import {
 } from "../middlewares/auth.middleware.js";
 
 const router = Router();
-// Lapses
+
 router.post(
   "/",
   verificarAutenticacion,

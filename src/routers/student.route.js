@@ -8,6 +8,7 @@ import {
   getRecordStudent,
   getSubjectPending,
   getPreinscription,
+  getGrade,
 } from "../controllers/student.controller.js";
 import {
   verificarAutenticacion,
@@ -67,6 +68,13 @@ router.get(
   verificarAutenticacion,
   permitirRoles("administrador", "director", "estudiante", "gestion"),
   getSubjectPending,
+);
+
+router.get(
+  "/:id_student/grade",
+  /*  verificarAutenticacion,
+  permitirRoles("administrador", "director", "estudiante", "gestion"), */
+  getGrade,
 );
 
 export default router;

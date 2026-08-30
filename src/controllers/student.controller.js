@@ -906,3 +906,67 @@ export const getSubjectPending = async (req, res) => {
     });
   }
 };
+
+/**
+ * Obtiene las notas de un estudiante por perido academico dividido en momentos pedagojicos.
+ *
+ * @async
+ * @function getGrade
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
+export const getGrade = async (req, res) => {
+  const { id_student } = req.params;
+  const SIG = /* req.user.SIG; */ "SIG3728";
+  const { idPeriod } = req.query || req.user.id_period;
+
+  if (!id_student) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_DELETE_SUBJECT_CODE",
+      message: "No se especificó el ID del estudiante.",
+    });
+  }
+
+  if (!idPeriod) {
+    return res.status(400).json({
+      success: false,
+      message: "El parámetro de consulta 'idPeriod' es obligatorio.",
+    });
+  }
+
+  try {
+    logger.info("Cargando las notas, por favor espere...");
+    const grades = await Students.grade({ id_student, idPeriod });
+
+    if (!grades) {
+      logger.info(
+        "El estudiante no tiene notas registradas en este periodpo academico.",
+      );
+      return res.status(404).json({
+        success: false,
+        code: "SUBJECT_ALREADY_DELETED",
+        message: "Este estudante no tiene notas registradas, en este perido.",
+      });
+    }
+
+    logger.info("Exito, las notas sincronizadas.", {
+      garde: grades.length,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: grades,
+    });
+  } catch (error) {
+    console.error("❌ Error en getSubejctPending:", error);
+    return res.status(500).json({
+      success: false,
+      code: "DELETE_SUBJECT_INTERNAL_ERROR",
+      message:
+        "Error en el servidor, no se pudo estraer la informacion, intenta nuevamente.",
+      error: error.message,
+    });
+  }
+};

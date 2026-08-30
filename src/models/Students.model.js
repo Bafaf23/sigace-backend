@@ -508,4 +508,125 @@ export class Students {
       throw error;
     }
   }
+
+  /**
+   ** Obtiene las notas de un estudiante por perido academico, armando un objeto de datos por momento academico, asignatura
+   * evaluacion, calificacion
+   * @param {Object} param0
+   * @param {number} param0.idStudent
+   * @param {number} param0.idPeriod
+   */
+  static async grade({ idStudent, idPeriod }) {
+    const rows = await prisma.grade.findMany({
+      where: {
+        id_student: idStudent,
+        evaluation: {
+          evaluation_plan: {
+            lapse: {
+              period: {
+                id: Number(idPeriod),
+              },
+            },
+          },
+        },
+      },
+      include: {
+        evaluation: {
+          select: {
+            referent_teorical: true,
+            id_evaluation_plan: true,
+            activity: true,
+            technical: true,
+            instrument: true,
+            porcentage: true,
+            evaluation_plan: {
+              select: {
+                load_academic: {
+                  select: {
+                    subject: {
+                      select: {
+                        code_subject: true,
+                        name: true,
+                        abbreviation: true,
+                      },
+                    },
+                  },
+                },
+                lapse: {
+                  select: {
+                    id: true,
+                    period: {
+                      select: {
+                        name: true,
+                        id: true,
+                      },
+                    },
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const gradesByLapse = rows.reduce((acc, row) => {
+      const lapsesName = row.evaluation?.evaluation_plan?.lapse?.name;
+      if (!acc[lapsesName]) {
+        acc[lapsesName] = [];
+      }
+      const subject = row.evaluation?.evaluation_plan?.load_academic?.subject;
+
+      const gradeItems = {
+        id: row.id_evaluation,
+        grade: row.grade ? row.grade.toNumber() : 0,
+        activity: row.evaluation.activity,
+        referent_teorical: row.evaluation.referent_teorical,
+        instrument: row.evaluation.instrument,
+        porcentage: row.evaluation.porcentage
+          ? Number(row.evaluation.porcentage)
+          : row.evaluation.porcentage,
+        subject: {
+          code_subject: subject.code_subject,
+          name: subject.name,
+          abbreviation: subject.abbreviation,
+        },
+        created_at: new Date(row.created_at),
+        updated_at: new Date(row.updated_at),
+      };
+
+      acc[lapsesName].push(gradeItems);
+      return acc;
+    }, {});
+
+    const lapseArry = Object.entries(gradesByLapse).map(
+      ([lapse_name, evaluations]) => {
+        const evaluatedItems = evaluations.filter(
+          (e) => e.grade !== null && e.grade !== undefined,
+        );
+
+        // total de porcentaje evaluado
+        const totalPercentage = evaluatedItems.reduce(
+          (acc, curr) => acc + (curr.porcentage || 0),
+          0,
+        );
+
+        const weightedGrade = evaluatedItems.reduce((acc, curr) => {
+          return acc + curr.grade * ((curr.porcentage || 0) / 100);
+        }, 0);
+
+        const finalLapseScore = Math.round(weightedGrade);
+
+        return {
+          lapse_name,
+          score: finalLapseScore,
+          exact_score: Number(weightedGrade.toFixed(2)),
+          evaluated_percentage: totalPercentage,
+          evaluations,
+        };
+      },
+    );
+    return lapseArry;
+  }
 }
