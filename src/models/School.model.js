@@ -56,21 +56,64 @@ export class School {
    */
   static async getSchoolBySIG(SIG) {
     try {
-      return await prisma.school.findUnique({
+      const rows = await prisma.school.findUnique({
         where: {
           SIG,
         },
         include: {
-          director: {
+          user_schools: {
             select: {
-              id_card: true,
-              name: true,
-              last_name: true,
+              user: {
+                select: {
+                  id: true,
+                  id_card: true,
+                  name: true,
+                  last_name: true,
+                  role: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
             },
           },
           cdcee: true,
         },
       });
+
+      const usersByRole = rows.user_schools.reduce((acc, item) => {
+        const roleUser = item.user.role.name || "Sin Rol";
+
+        if (!acc[roleUser]) {
+          acc[roleUser] = [];
+        }
+
+        acc[roleUser].push(item.user);
+        return acc;
+      }, {});
+
+      return {
+        SIG: rows.SIG,
+        code_DEA: rows.DEA_CODE,
+        name: rows.school_name,
+        type: rows.type,
+        company_name: rows.company_name,
+        address: rows.address,
+        city: rows.city,
+        municipality: rows.municipality,
+        state: rows.state,
+        phone: rows.phone,
+        email: rows.email,
+        rif: rows.RIF,
+        is_active: rows.is_active,
+        subdomain: rows.subdomain,
+        cdcee: {
+          id: rows.cdcee.id,
+          name: rows.cdcee.name,
+        },
+        usersByRole,
+      };
     } catch (error) {
       console.error("Error al obtener la escuela:", error);
       throw error;

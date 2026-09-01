@@ -13,6 +13,8 @@ import { reporteFinalRendimientoEstudiantil } from "../templates/reporteFinalRen
 import puppeteer from "puppeteer";
 import fs from "fs";
 import path from "path";
+import logger from "../utils/logger.js";
+import { Academic_periods } from "../models/Academin_period.model.js";
 
 /**
  * CONFIGURACIÓN REUSABLE DE LANZAMIENTO PUPPETEER
@@ -23,42 +25,46 @@ const LAUNCH_ARGS = {
 };
 
 /**
- * ==========================================================================
- * 1. GENERAR LISTA DE ESTUDIANTES POR SECCIÓN
- * ==========================================================================
+ ** Genera la lista de seccion con todos los estudinantes que la conforman
+ *
+ * @async
+ * @function sectionList
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const sectionList = async (req, res) => {
   const { id_section } = req.params;
   const SIG = req.user?.SIG;
+
   let browser = null;
 
   try {
-    const [students, sectionsResult] = await Promise.all([
-      Students.getStudentsBySection({ id_section, SIG }),
-      Sections.getSectionByID(SIG, id_section),
+    const [school, section] = await Promise.all([
+      School.getSchoolBySIG(SIG),
+      Sections.getStudent({ id_section, SIG }),
     ]);
 
-    if (!sectionsResult) {
+    if (!section) {
       return res
         .status(404)
         .json({ success: false, message: "Sección no encontrada" });
     }
 
-    const filasEstudiantes = students
+    const filasEstudiantes = section.students
       .map(
         (student, index) => `
       <tr class="border-b border-slate-200">
         <td class="p-3 text-xs text-slate-500 font-medium">${index + 1}</td>
-        <td class="p-3 text-xs font-bold text-blue-700">${student.tuition_number || "N/A"}</td>
+        <td class="p-3 text-xs font-bold text-blue-700">${student.tuition_number || "N/A"}</td><td class="p-3 text-xs text-slate-600">${student.id_card || "Este estudiante debe tramitar su cedula"}</td>
         <td class="p-3 text-xs font-bold text-slate-800">${`${student.name || ""} ${student.last_name || ""}`}</td>
-        <td class="p-3 text-xs text-slate-600">${student.document || "N/A"}</td>
       </tr>
     `,
       )
       .join("");
 
-    const studentCount = students.length;
-    const nameLogo = sectionsResult.logo_school;
+    const studentCount = section.students.length;
+    const nameLogo = school.logo_school;
     let logoBase64 = "";
 
     if (nameLogo) {
@@ -71,10 +77,9 @@ export const sectionList = async (req, res) => {
       }
     }
 
-    console.log(sectionsResult);
-
     const htmlContent = listSection(
-      sectionsResult,
+      school,
+      section,
       filasEstudiantes,
       logoBase64,
       studentCount,
@@ -102,11 +107,8 @@ export const sectionList = async (req, res) => {
     await browser.close();
     browser = null;
 
-    const filenameYear = (sectionsResult.year_name || "Anio").replace(
-      /\s+/g,
-      "_",
-    );
-    const filenameSection = (sectionsResult.section_name || "Seccion").replace(
+    const filenameYear = (section.name || "Año").replace(/\s+/g, "_");
+    const filenameSection = (section.nomenclature || "Seccion").replace(
       /\s+/g,
       "_",
     );
@@ -129,13 +131,17 @@ export const sectionList = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 2. GENERAR BOLETA DE CALIFICACIONES DE ESTUDIANTE
- * ==========================================================================
+ ** Crea la boletas de calificaciones para los estudiantes
+ *
+ * @async
+ * @function reportCard
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
-export const boleta = async (req, res) => {
+export const reportCard = async (req, res) => {
   const { id_student, id_section, id_period } = req.params;
-  const SIG = req.user?.SIG;
+  const SIG = /* req.user?.SIG */ "SIG3728";
   let browser = null;
 
   if (!id_student || !id_section) {
@@ -148,15 +154,20 @@ export const boleta = async (req, res) => {
   }
 
   try {
-    const [grades, seccionInfoResult, student] = await Promise.all([
-      Grade.getGradesForBoleta(SIG, id_student, id_section),
-      Sections.getSectionByID(SIG, id_section),
-      Students.getStudentByID(id_student, id_period),
+    logger.info("Generando el certificado..., espere por favor...");
+    const [grades, section, student, school, periods] = await Promise.all([
+      Students.grade({
+        SIG: SIG,
+        idStudent: Number(id_student),
+        idPeriod: id_period,
+      }),
+      Sections.getStudent({ id_section: id_section, SIG: SIG }),
+      Students.byID(id_student),
+      School.getSchoolBySIG(SIG),
+      Academic_periods.getAcademicPeriods(SIG),
     ]);
 
-    const seccionInfo = seccionInfoResult?.[0] || seccionInfoResult;
-
-    if (!seccionInfo || !student) {
+    if (!section || !student || !school) {
       return res.status(404).json({
         success: false,
         code: "BOLETA_DATA_NOT_FOUND",
@@ -165,71 +176,60 @@ export const boleta = async (req, res) => {
       });
     }
 
-    let totalAcumulado = 0;
-    let materiasContadas = 0;
+    const period = periods.find((item) => item.is_active === true);
 
-    const rowsSubjec = grades
+    logger.info("Inicianado carculo de promedio...");
+
+    const uniqueSubjects = grades[0]?.subjects;
+    const arrayDefinitive = [];
+
+    const rowsSubjec = uniqueSubjects
       .map((subject) => {
-        const classNota = (n) =>
-          n < 10 ? "text-red-600 font-bold bg-red-50" : "text-slate-900";
-        const classDef = (n) =>
-          n < 10
-            ? "text-red-700 font-black bg-red-100"
-            : "text-blue-950 font-black bg-slate-100";
+        const getScoreForLapse = (lapseIndex) => {
+          const lapse = grades[lapseIndex];
+          const match = lapse?.subjects.find(
+            (s) => s.code_subject === subject.code_subject,
+          );
+          return match && match.score !== null ? match.score : 0;
+        };
 
-        let notaMateriaValida = 0;
-        let lapsosActivosMateria = 0;
+        const scoreM1 = getScoreForLapse(0);
+        const scoreM2 = getScoreForLapse(1);
+        const scoreM3 = getScoreForLapse(2);
 
-        if (subject.momento_1 != null) {
-          notaMateriaValida += parseFloat(subject.momento_1);
-          lapsosActivosMateria++;
-        }
-        if (subject.momento_2 != null) {
-          notaMateriaValida += parseFloat(subject.momento_2);
-          lapsosActivosMateria++;
-        }
-        if (subject.momento_3 != null) {
-          notaMateriaValida += parseFloat(subject.momento_3);
-          lapsosActivosMateria++;
-        }
+        const scores = [scoreM1, scoreM2, scoreM3];
 
-        const promedioMateria =
-          lapsosActivosMateria > 0
-            ? notaMateriaValida / lapsosActivosMateria
-            : 0;
-        totalAcumulado += promedioMateria;
-        materiasContadas++;
-
-        return `
-        <tr class="border-b border-slate-200">
-          <td class="p-2 text-left pl-3 font-bold text-slate-700">${subject.subject_name.toUpperCase()}</td>
-          <td class="p-2 text-center ${classNota(subject.momento_1)}">${String(subject.momento_1 || 0).padStart(2, "0")}</td>
-          <td class="p-2 text-center ${classNota(subject.momento_2)}">${String(subject.momento_2 || 0).padStart(2, "0")}</td>
-          <td class="p-2 text-center ${classNota(subject.momento_3)}">${String(subject.momento_3 || 0).padStart(2, "0")}</td>
-          <td class="p-2 font-mono text-center text-xs ${classDef(subject.definitiva_ano)}">${String(subject.definitiva_ano || 0).padStart(2, "0")}</td>
-        </tr>`;
+        const totamSum = scores.reduce((acc, curr) => acc + curr, 0);
+        const definitivingScore = totamSum / scores.length;
+        arrayDefinitive.push(definitivingScore);
+        return `<tr class="border-b border-slate-200 text-[12px]">
+                  <td class="p-2 text-left pl-3 font-bold text-slate-700">${subject.name.toUpperCase()}</td>
+                  <td class="p-2 text-center text-[13px] font-bold">${scoreM1}</td>
+                  <td class="p-2 text-center text-[13px] font-bold">${scoreM2}</td>
+                  <td class="p-2 text-center text-[13px] font-bold">${scoreM3}</td>
+                  <td class="p-2 text-center text-[13px] font-bold">${definitivingScore}</td>
+                </tr>`;
       })
       .join("");
 
-    const promedioGeneral =
-      materiasContadas > 0
-        ? (totalAcumulado / materiasContadas).toFixed(1)
-        : "00";
+    const resumen = arrayDefinitive.reduce((acc, curr) => {
+      const sum = acc + curr;
+      const average = sum / arrayDefinitive.length;
 
-    const resumen = {
-      promedio: promedioGeneral,
-      observaciones:
-        promedioGeneral >= 10
-          ? "Estudiante demuestra rendimiento satisfactorio, logrando consolidar las competencias del nivel escolar."
-          : "Estudiante requiere asistir de forma obligatoria a los procesos de nivelación académica en las áreas reprobadas.",
-    };
+      return {
+        average: average,
+      };
+    });
 
-    const htmlContent = boletaTemplate(
-      seccionInfo,
-      student,
-      rowsSubjec,
-      resumen,
-    );
+    logger.info("Cargando la certifiacion....");
+    const htmlContent = boletaTemplate({
+      secction: section,
+      student: student,
+      filasAsignaturas: rowsSubjec,
+      school: school,
+      resumen: resumen,
+      period: period,
+    });
 
     browser = await puppeteer.launch(LAUNCH_ARGS);
     const page = await browser.newPage();
@@ -248,18 +248,20 @@ export const boleta = async (req, res) => {
     await browser.close();
     browser = null;
 
-    const filenameYear = (seccionInfo.year_name || "Anio").replace(/\s+/g, "_");
-    const filenameSection = (seccionInfo.section_name || "Seccion").replace(
+    const filenameYear = (section.name || "Anio").replace(/\s+/g, "_");
+    const filenameSection = (section.nomenclature || "Seccion").replace(
       /\s+/g,
       "_",
     );
-    const studentDoc = student.document || "Estudiante";
+    const studentDoc = student.user?.id_card || "Estudiante";
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       `inline; filename=Boleta_${studentDoc}_${filenameYear}_${filenameSection}.pdf`,
     );
+
+    logger.info("Exito, la certificacion esta lista.");
     return res.end(pdfBuffer);
   } catch (error) {
     if (browser) await browser.close();

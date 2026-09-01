@@ -283,16 +283,14 @@ export class Students {
 
   /**
    * Busca a un estudiante por su id_card
-   * @param {string} id_card - id del estudiante
+   * @param {number} id - id del estudiante
    * @return {object|null} - info del estudiante o null si no existe
    */
-  static async byID(id_card) {
+  static async byID(id) {
     try {
       return await prisma.student.findFirst({
         where: {
-          user: {
-            id_card: String(id_card).trim(),
-          },
+          id: Number(id),
         },
         include: {
           user: {
@@ -514,9 +512,10 @@ export class Students {
    * evaluacion, calificacion
    * @param {Object} param0
    * @param {number} param0.idStudent
+   * @param {string} param0.SIG
    * @param {number} param0.idPeriod
    */
-  static async grade({ idStudent, idPeriod }) {
+  static async grade({ SIG, idStudent, idPeriod }) {
     const rows = await prisma.grade.findMany({
       where: {
         id_student: idStudent,
@@ -573,12 +572,27 @@ export class Students {
 
     const gradesByLapse = rows.reduce((acc, row) => {
       const lapsesName = row.evaluation?.evaluation_plan?.lapse?.name;
+      const subject = row.evaluation?.evaluation_plan?.load_academic?.subject;
+
       if (!acc[lapsesName]) {
         acc[lapsesName] = [];
       }
-      const subject = row.evaluation?.evaluation_plan?.load_academic?.subject;
 
-      const gradeItems = {
+      let subjectItem = acc[lapsesName].find(
+        (item) => item.code_subject === subject.code_subject,
+      );
+
+      if (!subjectItem) {
+        subjectItem = {
+          code_subject: subject.code_subject,
+          abbreviation: subject.abbreviation,
+          name: subject.name,
+          evaluations: [],
+        };
+        acc[lapsesName].push(subjectItem);
+      }
+
+      subjectItem.evaluations.push({
         id: row.id_evaluation,
         grade: row.grade ? row.grade.toNumber() : 0,
         activity: row.evaluation.activity,
@@ -587,46 +601,52 @@ export class Students {
         porcentage: row.evaluation.porcentage
           ? Number(row.evaluation.porcentage)
           : row.evaluation.porcentage,
-        subject: {
-          code_subject: subject.code_subject,
-          name: subject.name,
-          abbreviation: subject.abbreviation,
-        },
         created_at: new Date(row.created_at),
         updated_at: new Date(row.updated_at),
-      };
+      });
 
-      acc[lapsesName].push(gradeItems);
       return acc;
     }, {});
 
-    const lapseArry = Object.entries(gradesByLapse).map(
-      ([lapse_name, evaluations]) => {
-        const evaluatedItems = evaluations.filter(
-          (e) => e.grade !== null && e.grade !== undefined,
-        );
+    const lapseArray = Object.entries(gradesByLapse).map(
+      ([lapse_name, subjects]) => {
+        const processedSubjects = subjects.map((subj) => {
+          const evaluationsList = subj?.evaluations || [];
 
-        // total de porcentaje evaluado
-        const totalPercentage = evaluatedItems.reduce(
-          (acc, curr) => acc + (curr.porcentage || 0),
-          0,
-        );
+          const evaluatedItems = evaluationsList.filter(
+            (e) => e && e.grade !== null && e.grade !== undefined,
+          );
 
-        const weightedGrade = evaluatedItems.reduce((acc, curr) => {
-          return acc + curr.grade * ((curr.porcentage || 0) / 100);
-        }, 0);
+          const totalPercentage = evaluatedItems.reduce(
+            (acc, curr) => acc + (curr.porcentage || 0),
+            0,
+          );
 
-        const finalLapseScore = Math.round(weightedGrade);
+          const weightedGrade = evaluatedItems.reduce((acc, curr) => {
+            return acc + (curr.grade || 0) * ((curr.porcentage || 0) / 100);
+          }, 0);
+
+          const finalSubjectScore = Math.round(weightedGrade);
+
+          return {
+            code_subject: subj?.code_subject || "",
+            name: subj?.name || "",
+            abbreviation: subj?.abbreviation || "",
+            score: finalSubjectScore,
+            exact_score: Number(weightedGrade.toFixed(2)),
+            evaluated_percentage: totalPercentage,
+            is_completed: totalPercentage === 100,
+            evaluations: evaluationsList,
+          };
+        });
 
         return {
           lapse_name,
-          score: finalLapseScore,
-          exact_score: Number(weightedGrade.toFixed(2)),
-          evaluated_percentage: totalPercentage,
-          evaluations,
+          subjects: processedSubjects,
         };
       },
     );
-    return lapseArry;
+
+    return lapseArray;
   }
 }

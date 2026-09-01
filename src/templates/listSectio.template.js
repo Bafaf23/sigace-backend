@@ -1,11 +1,14 @@
 /**
  * Plantilla lista de secciones
  * @param {object} seccionInfo - indormacion de la seccion
+ * @param {object} school - informacion la escuela
  * @param {string} filasEstudiantes - filas ya procesadas en el controlador de los estudantes de la seccion
  * @param {string} logoSchool - logo del colegio
+ * @param {number} studentAcount - camaño de la lista de estudiantes de la seccion
  * @returns {string}
  */
 export function listSection(
+  school,
   seccionInfo,
   filasEstudiantes,
   logoSchool,
@@ -65,9 +68,9 @@ ${
       <div>
         <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">República Bolivarian de Venezuela</p>
         <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Ministerio del Poder Popular para la Educación</p>
-        <h1 class="text-base font-bold text-slate-900 mt-1 uppercase">${seccionInfo.school_name || "N/A"}</h1>
+        <h1 class="text-base font-bold text-slate-900 mt-1 uppercase">${school.name || "N/A"}</h1>
         <span class="inline-block bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded mt-2 uppercase">
-          ${seccionInfo.year_name || "AÑO NO ASIGNADO"} - SECCIÓN "${(seccionInfo.section_name || "").toUpperCase()}"
+          ${seccionInfo.name || "AÑO NO ASIGNADO"} - SECCIÓN "${(seccionInfo.nomenclature || "").toUpperCase()}"
         </span>
       </div>
       <div class="text-right">
@@ -85,8 +88,8 @@ ${
         <tr class="bg-slate-800 text-white uppercase text-[10px] font-bold tracking-wider">
           <th class="p-3 rounded-l w-[8%]">N°</th>
           <th class="p-3 w-[22%]">Matrícula</th>
-          <th class="p-3 w-[45%]">Apellidos y Nombres</th>
           <th class="p-3 rounded-r w-[25%]">Cédula de Identidad</th>
+          <th class="p-3 w-[45%]">Apellidos y Nombres</th>
         </tr>
       </thead>
       <tbody>
@@ -98,21 +101,18 @@ ${
   <div class="mt-20">
     <div class="flex justify-around items-center pt-12">
       <div class="w-[35%] border-t border-slate-300 text-center pt-2">
-        <p class="text-[12px] font-bold text-slate-800">Docente / Guía</p>
+        <p class="text-[12px] font-bold text-slate-800">Docente Guía</p>
         <p class="text-[10px] text-slate-500 font-medium uppercase">
-          ${seccionInfo.teacher_name || "No asignado"} ${seccionInfo.teacher_last_name || ""}
+          ${seccionInfo.guide?.name || "No asignado"} ${seccionInfo.guide?.last_name || ""}
         </p>
         <p class="text-[12px] text-slate-500 font-medium">
-          ${seccionInfo.teacher_document ? seccionInfo.teacher_document : ""}
+          ${seccionInfo.guide ? seccionInfo.guide?.document : ""}
         </p>
       </div>
       <div class="w-[35%] border-t border-slate-300 text-center pt-2">
         <p class="text-[12px] font-bold text-slate-800">Control de Estudios</p>
         <p class="text-[12px] text-slate-500 font-medium uppercase">FIRMA Y SELLO AUTORIZADO</p>
       </div>
-    </div>
-    <div class="text-center text-[9px] text-slate-400 border-t border-slate-100 pt-4 mt-8">
-      SIGACE • Simplificando procesos, impulsando el futuro.
     </div>
   </div>
 </body>

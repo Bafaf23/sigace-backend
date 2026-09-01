@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   sectionList,
-  boleta,
+  reportCard,
   enrollmetP,
   sheetNote,
   resumenFinalE,
@@ -14,17 +14,17 @@ import {
 const router = Router();
 
 router.get(
-  "/sectionList/:id_section",
-  verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor"),
+  "/:id_section/list-section",
+  /* verificarAutenticacion,
+  permitirRoles("administrador", "profesor"), */
   sectionList,
 );
 
 router.get(
-  "/boleta/:id_student/:id_section/:id_period",
-  verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor", "Estudiante"),
-  boleta,
+  "/:id_student/:id_section/:id_period/boleta",
+  /* verificarAutenticacion,
+  permitirRoles("administrador", "estudiante"), */
+  reportCard,
 );
 
 router.get(

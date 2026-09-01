@@ -54,6 +54,7 @@ export class Grade {
   }
 
   /**
+   * TODO: investigar si sirve para algo esto
    * Obtener el resumen de notas agrupado por asignaturas para la boleta
    * @param {string} SIG - Código de la institución
    * @param {number} idStudent - ID del estudiante

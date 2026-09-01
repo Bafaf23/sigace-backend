@@ -12,21 +12,21 @@ const router = Router();
 
 router.put(
   "/",
-  /* verificarAutenticacion,
-  permitirRoles("profesor"), */
+  verificarAutenticacion,
+  permitirRoles("profesor"),
   createGrade,
 );
 
 router.get(
   "/:id_load_academic",
-  /* verificarAutenticacion,
+  verificarAutenticacion,
   permitirRoles(
     "profesor",
     "administrador",
     "estudiante",
     "director",
     "gestion",
-  ), */
+  ),
   getGradeStudents,
 );
 export default router;

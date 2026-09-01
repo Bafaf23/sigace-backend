@@ -928,6 +928,7 @@ export const getGrade = async (req, res) => {
       message: "No se especificó el ID del estudiante.",
     });
   }
+  console.log(`Controller ${id_student}`);
 
   if (!idPeriod) {
     return res.status(400).json({
@@ -938,9 +939,13 @@ export const getGrade = async (req, res) => {
 
   try {
     logger.info("Cargando las notas, por favor espere...");
-    const grades = await Students.grade({ id_student, idPeriod });
+    const grades = await Students.grade({
+      SIG: SIG,
+      idStudent: Number(id_student),
+      idPeriod: idPeriod,
+    });
 
-    if (!grades) {
+    if (!grades || grades.length == 0) {
       logger.info(
         "El estudiante no tiene notas registradas en este periodpo academico.",
       );

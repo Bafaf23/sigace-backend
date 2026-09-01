@@ -95,7 +95,7 @@ export class Sections {
       });
 
       // Informacion de la seccion
-      const sectioonInfo = enrollments[0].section;
+      const sectioonInfo = enrollments[0]?.section;
 
       // lista de estudiantes
       const studentsList = enrollments.map((e) => ({
@@ -109,15 +109,15 @@ export class Sections {
       }));
 
       return {
-        id: sectioonInfo.id,
-        name: sectioonInfo.year.name,
-        nomenclature: sectioonInfo.name,
+        id: sectioonInfo?.id,
+        name: sectioonInfo?.year?.name,
+        nomenclature: sectioonInfo?.name,
         guide: {
-          id_user: sectioonInfo.guide.user.id,
-          document: sectioonInfo.guide.user.id_card,
-          name: sectioonInfo.guide.user.name,
-          last_name: sectioonInfo.guide.user.last_name,
-          id: sectioonInfo.guide.id,
+          id_user: sectioonInfo?.guide?.user?.id,
+          document: sectioonInfo?.guide?.user?.id_card,
+          name: sectioonInfo?.guide?.user?.name,
+          last_name: sectioonInfo?.guide?.user?.last_name,
+          id: sectioonInfo?.guide?.id,
         },
         students: studentsList,
       };
