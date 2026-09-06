@@ -33,23 +33,103 @@ export class Grade {
   }
 
   /**
-   ** Obtiene las notas de una seccion completa. La lista de 35 estudiantes con sus notas de un perido especifico
-   * @param {object} getG
-   * @param {number} getG.idStudent - Id Estudiante
-   * @param {number} getG.idEvaluation Id Evaluacion
-   * @param {number} getG.idLapse - Id Lapso
-   * @returns {Array<object>}
+   * Obtiene todas las notas de los estudiantes asociadas a una Carga Académica específica.
+   *
+   * @param {number} id_load_academic - ID de la carga académica (asignación docente-materia-sección).
+   * @returns {Promise<Array<Object>>} Lista de calificaciones estructuradas.
    */
-  static async getBySectionSubject({ idStudent, idPeriod, idSubjetc }) {
+  static async getBySection(id_load_academic) {
     try {
-      const rows = await prisma.grade.findMany({
+      const loadAcademicId = Number(id_load_academic);
+
+      const grades = await prisma.grade.findMany({
         where: {
-          id_student: idStudent,
+          evaluation: {
+            evaluation_plan: {
+              id_load_academic: loadAcademicId,
+            },
+          },
+        },
+        select: {
+          id: true,
+          grade: true,
+          id_student: true,
+          id_evaluation: true,
+          student: {
+            select: {
+              id: true,
+              id_user: true,
+              gender: true,
+              birth_date: true,
+              user: {
+                select: {
+                  id_card: true,
+                  name: true,
+                  last_name: true,
+                },
+              },
+            },
+          },
+          evaluation: {
+            select: {
+              id: true,
+              porcentage: true,
+              activity: true,
+              evaluation_plan: {
+                select: {
+                  id_lapse: true,
+                  id_load_academic: true,
+                  load_academic: {
+                    select: {
+                      id_subject: true,
+                      subject: {
+                        select: {
+                          code_subject: true,
+                          abbreviation: true,
+                          name: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       });
-      return gradesStudent;
+      const gradesMap = grades.reduce((acc, curr) => {
+        const studentCard = curr.student?.user?.id_card || curr.id_student;
+        const subject =
+          curr.evaluation?.evaluation_plan?.load_academic.subject.abbreviation;
+
+        const grade = Number(curr.grade) || 0;
+        const percentage = Number(curr.evaluation?.porcentage) || 0;
+
+        const aporteEvaluacion = grade * (percentage / 100);
+
+        if (!acc[studentCard]) {
+          acc[studentCard] = {};
+        }
+
+        if (!acc[studentCard][subject]) {
+          acc[studentCard][subject] = 0;
+        }
+
+        acc[studentCard][subject] += aporteEvaluacion;
+
+        return acc;
+      }, {});
+
+      Object.keys(gradesMap).forEach((student) => {
+        Object.keys(gradesMap[student]).forEach((subject) => {
+          gradesMap[student][subject] = Math.round(gradesMap[student][subject]);
+        });
+      });
+
+      return gradesMap;
     } catch (error) {
-      console.log(`Error en modelo grade: ${error}`);
+      console.error(`❌ Error en Grade.getBySection: ${error.message}`);
+      throw error;
     }
   }
 

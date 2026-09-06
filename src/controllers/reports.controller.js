@@ -15,6 +15,7 @@ import fs from "fs";
 import path from "path";
 import logger from "../utils/logger.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
+import { LoadAcademic } from "../models/LoadAcademic.model.js";
 
 /**
  * CONFIGURACIÓN REUSABLE DE LANZAMIENTO PUPPETEER
@@ -141,7 +142,7 @@ export const sectionList = async (req, res) => {
  */
 export const reportCard = async (req, res) => {
   const { id_student, id_section, id_period } = req.params;
-  const SIG = /* req.user?.SIG */ "SIG3728";
+  const SIG = req.user?.SIG;
   let browser = null;
 
   if (!id_student || !id_section) {
@@ -276,17 +277,21 @@ export const reportCard = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 3. GENERAR PLANILLA DE INSCRIPCIÓN / MATRÍCULA
- * ==========================================================================
+ ** Genera la planilla de incripcion de un estudiante
+ *
+ * @async
+ * @function enrollmetP
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const enrollmetP = async (req, res) => {
-  const { id_student, id_representative } = req.params;
-  const SIG = req.user?.SIG;
+  const { id_student } = req.params;
+  const SIG = /* req.user?.SIG */ "SIG3728";
   const id_period = req.user?.id_period;
   let browser = null;
 
-  if (!SIG || !id_representative || !id_student) {
+  if (!SIG || !id_student) {
     return res.status(400).json({
       success: false,
       code: "INCOMPLETE_ENROLLMENT_REPORT_PARAMS",
@@ -296,13 +301,13 @@ export const enrollmetP = async (req, res) => {
   }
 
   try {
-    const [student, school, representative] = await Promise.all([
-      Students.getStudentByID(id_student, id_period),
+    logger.info("Generando planilla de inscripcion...");
+    const [student, school] = await Promise.all([
+      Students.byID(id_student),
       School.getSchoolBySIG(SIG),
-      Representative.getRepresentativeByID(id_representative),
     ]);
 
-    if (!student || !school || !representative) {
+    if (!student || !school) {
       return res.status(404).json({
         success: false,
         code: "ENROLLMENT_DATA_NOT_FOUND",
@@ -318,21 +323,14 @@ export const enrollmetP = async (req, res) => {
     if (fs.existsSync(rutaDelLogo)) {
       const imagenBuffer = fs.readFileSync(rutaDelLogo);
       const formato = path.extname(nameLogo).replace(".", "");
-      // CORRECCIÓN: Se agrega plantilla de string que faltaba para leer el buffer
       logoBase64 = `data:image/${formato};base64,${imagenBuffer.toString("base64")}`;
     }
 
-    const htmlContent = enrollmentP(
-      student,
-      school,
-      representative,
-      logoBase64,
-    );
+    const htmlContent = enrollmentP(student, school, logoBase64);
 
     browser = await puppeteer.launch(LAUNCH_ARGS);
     const page = await browser.newPage();
 
-    // OPTIMIZACIÓN DE AJUSTES EN HOJA DE MATRÍCULA
     await page.setViewport({ width: 1200, height: 800 });
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
@@ -351,6 +349,7 @@ export const enrollmetP = async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
     res.setHeader("Content-Length", pdfBuffer.length);
+    logger.info("Exito, planilla generada");
     return res.send(pdfBuffer);
   } catch (error) {
     if (browser) await browser.close();
@@ -545,14 +544,17 @@ export const sheetNote = async (req, res) => {
 };
 
 /**
- * ===========================================================================
- * 5. Resumen final del rendimiento estudiantil
- * ===========================================================================
+ ** Genera la planilla de incripcion de un estudiante
+ *
+ * @async
+ * @function resumenFinalE
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
-
 export const resumenFinalE = async (req, res) => {
-  /*   const SIG = req.user?.SIG;
-  const id_period = req.user?.id_period;
+  const SIG = /* req.user?.SIG */ "SIG8587";
+  const id_period = /* req.user?.id_period */ 1;
   const { id_section } = req.params;
 
   if (!SIG || !id_section) {
@@ -562,77 +564,65 @@ export const resumenFinalE = async (req, res) => {
       message:
         "Los parámetros institucionales de la sección son requeridos para auditar el reporte.",
     });
-  } */
+  }
 
-  const data = {
-    dataSchool: {
-      school_name: "U.E.N Juan de Escalona",
-      eval_type: "FINAL",
-      period: "2026-2027",
-      DEA: "10293DO093",
-      adress: "Av, el Arroyo",
-      phone: "02128973333",
-      municipio: "EL hatillo",
-      entidad_federal: "Caracas",
-      cdcee: "Zona Educativa Bolivaria de miranda",
-      director: {
-        name: "Bryant Facenda",
-        dni: "V-30021867",
+  try {
+    logger.info("Cargando informacion...");
+    const [school, section, loadAcademic] = await Promise.all([
+      School.getSchoolBySIG(SIG),
+      Sections.getStudent({ id_section, SIG }),
+      LoadAcademic.get({ SIG, id_section }),
+    ]);
+
+    const loadAcademicIds = loadAcademic
+      .flatMap((item) => item.academicLoad || [])
+      .map((load) => load.id_load_academic)
+      .filter(Boolean);
+
+    const gradesRawList = await Promise.all(
+      loadAcademicIds.map((id) => Grade.getBySection(id)),
+    );
+    console.log(gradesRawList);
+    if (!school || !section || !loadAcademic)
+      return logger.info("No hay informacion necesaria para generar el RFRE");
+
+    const htmlContent = reporteFinalRendimientoEstudiantil({
+      section: section,
+      loadAcademic: loadAcademic,
+      school: school,
+      grades: gradesRawList,
+    });
+
+    let browser = null;
+    browser = await puppeteer.launch(LAUNCH_ARGS);
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1400, height: 900 });
+    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+    const pdfBuffer = await page.pdf({
+      format: "Legal",
+      landscape: false,
+      scale: 0.82,
+      printBackground: true,
+      preferCSSPageSize: false,
+      margin: {
+        top: "4mm",
+        right: "3mm",
+        bottom: "4mm",
+        left: "4mm",
       },
-    },
-    student: [
-      {
-        cedula: "V-30021867",
-        nombre: "Bryant",
-        apellido: "Facenda",
-        efNacimiento: "Caracas",
-        sexo: "M",
-        diaNac: "23",
-        mesNac: "09",
-        anoNac: "2003",
-      },
-    ],
-    cursoInfo: {
-      planEstudio: "EDUCACION MEDIA GENERAL",
-      codigo: "31059",
-      anoCursado: "PRIMER",
-      seccion: "A",
-      director: {
-        name: "Bryant Facenda",
-        cedula: "V-30021867",
-      },
-    },
-  };
+    });
+    await browser.close();
+    browser = null;
 
-  const htmlContent = reporteFinalRendimientoEstudiantil(data);
+    const year = section.name || "Seccion";
 
-  let browser = null;
-  browser = await puppeteer.launch(LAUNCH_ARGS);
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1400, height: 900 });
-  await page.setContent(htmlContent, { waitUntil: "networkidle0" });
-  const pdfBuffer = await page.pdf({
-    format: "Legal",
-    landscape: false,
-    scale: 0.82,
-    printBackground: true,
-    preferCSSPageSize: false,
-    margin: {
-      top: "4mm",
-      right: "3mm",
-      bottom: "4mm",
-      left: "4mm",
-    },
-  });
-  await browser.close();
-  browser = null;
+    const fileName = `Resumen Final del Rendimineto Estudiantil${year.replace(/\s+/g, "_")}.pdf`;
 
-  const year = data.cursoInfo.anoCursado || "Seccion";
-
-  const fileName = `Resumen Final del Rendimineto Estudiantil${year.replace(/\s+/g, "_")}.pdf`;
-
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
-  res.setHeader("Content-Length", pdfBuffer.length);
-  return res.send(pdfBuffer);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+    res.setHeader("Content-Length", pdfBuffer.length);
+    return res.send(pdfBuffer);
+  } catch (error) {
+    logger.error(error);
+  }
 };

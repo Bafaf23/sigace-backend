@@ -45,17 +45,22 @@ export class LoadAcademic {
   /**
    ** Obtiene una lista de toda la acarga academica de colegio segun el perido activo de un colegio espesifico
    * @param {string} SIG - codigo unico del cada escuela
+   * @param {number} id_section - identificador de la seccion
    * @returns {Array<object>} - Lista de la carga academica del period activo del colegio
    */
-  static async get(SIG) {
+  static async get({ SIG, id_section }) {
+    const where = {
+      period: {
+        is_active: true,
+      },
+    };
+
+    if (SIG) where.SIG = SIG;
+    if (id_section) where.id_section = Number(id_section);
+
     try {
       const rows = await prisma.load_academic.findMany({
-        where: {
-          SIG: SIG,
-          period: {
-            is_active: true,
-          },
-        },
+        where,
         select: {
           id: true,
           id_section: true,
@@ -72,6 +77,7 @@ export class LoadAcademic {
           },
           section: {
             select: {
+              id: true,
               name: true,
               year: {
                 select: {
@@ -102,26 +108,56 @@ export class LoadAcademic {
         },
       });
 
-      return rows.map((row) => ({
-        id_load_academic: row.id,
-        section: {
-          name: row.section.year.name,
-          nomenclature: row.section.name,
-          period: row.period.name,
-        },
-        subject: {
-          abbreviation: row.subject.abbreviation,
-          code_subject: row.id_subject,
-          name: row.subject.name,
-        },
-        teacher: {
-          id: row.teacher.id,
-          id_user: row.teacher.user.id,
-          document: row.teacher.user.id_card,
-          name: row.teacher.user.name,
-          last_name: row.teacher.user.last_name,
-        },
-      }));
+      const agroupBySection = rows.reduce((acc, row) => {
+        // 1. Clave única de agrupación por sección
+        const sectionKey = `${row.section.year.name}-${row.section.name}`;
+        if (!sectionKey) return acc;
+
+        // 2. Inicializar la estructura base de la sección si no existe
+        if (!acc[sectionKey]) {
+          acc[sectionKey] = {
+            section: {
+              id: row.section.id,
+              name: row.section.year.name,
+              nomenclature: row.section.name,
+              period: row.period.name,
+            },
+            academicLoad: [], // Separa la lista de materias de la información de la sección
+          };
+        }
+
+        // 3. Verificar si la materia ya existe dentro de esta sección
+        const exists = acc[sectionKey].academicLoad.some(
+          (item) => item.subject.code_subject === row.subject?.code_subject,
+        );
+
+        // 4. Agregar la materia junto a su docente
+        if (!exists && row.subject) {
+          const teacherUser = row.teacher?.user;
+
+          acc[sectionKey].academicLoad.push({
+            id_load_academic: row.id, // Se asigna correctamente a cada registro de la materia
+            subject: {
+              code_subject: row.subject.code_subject,
+              name: row.subject.name,
+              abbreviation: row.subject.abbreviation,
+            },
+            teacher: teacherUser
+              ? {
+                  id: row.teacher.id,
+                  id_user: teacherUser.id,
+                  name: teacherUser.name,
+                  last_name: teacherUser.last_name,
+                  document: teacherUser.id_card,
+                }
+              : null,
+          });
+        }
+
+        return acc;
+      }, {});
+
+      return Object.values(agroupBySection);
     } catch (error) {
       console.error("Error al obtener el registro de carga académica:", error);
       throw error;

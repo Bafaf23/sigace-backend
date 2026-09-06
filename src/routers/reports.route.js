@@ -15,31 +15,36 @@ const router = Router();
 
 router.get(
   "/:id_section/list-section",
-  /* verificarAutenticacion,
-  permitirRoles("administrador", "profesor"), */
+  verificarAutenticacion,
+  permitirRoles("administrador", "profesor"),
   sectionList,
 );
 
 router.get(
   "/:id_student/:id_section/:id_period/boleta",
-  /* verificarAutenticacion,
-  permitirRoles("administrador", "estudiante"), */
+  verificarAutenticacion,
+  permitirRoles("administrador", "gestion", "estudiante"),
   reportCard,
 );
 
 router.get(
-  "/planillaIns/:id_student/:id_representative",
+  "/:id_student/enrollment",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador", "gestion"),
   enrollmetP,
 );
 
 router.get(
   "/noteSheet/:id_section",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador", "gestion"),
   sheetNote,
 );
 
-router.get("/rfre", resumenFinalE);
+router.get(
+  "/:id_section/rfre",
+  /*  verificarAutenticacion,
+  permitirRoles("administrador", "gestion", "director"), */
+  resumenFinalE,
+);
 export default router;

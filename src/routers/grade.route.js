@@ -10,23 +10,18 @@ import {
 
 const router = Router();
 
-router.put(
-  "/",
-  verificarAutenticacion,
-  permitirRoles("profesor"),
-  createGrade,
-);
+router.put("/", verificarAutenticacion, permitirRoles("profesor"), createGrade);
 
 router.get(
   "/:id_load_academic",
-  verificarAutenticacion,
-  permitirRoles(
+  /* verificarAutenticacion, */
+  /*   permitirRoles(
     "profesor",
     "administrador",
     "estudiante",
     "director",
     "gestion",
-  ),
+  ), */
   getGradeStudents,
 );
 export default router;

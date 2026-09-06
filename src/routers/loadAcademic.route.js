@@ -18,8 +18,8 @@ router.post(
 );
 router.get(
   "/",
-  verificarAutenticacion,
-  permitirRoles("administrador", "profesor", "director", "gestion"),
+  /* verificarAutenticacion,
+  permitirRoles("administrador", "profesor", "director", "gestion"), */
   getLoadAcademic,
 );
 

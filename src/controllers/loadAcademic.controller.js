@@ -88,7 +88,7 @@ export const createLoadAcademic = async (req, res) => {
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getLoadAcademic = async (req, res) => {
-  const SIG = /* req.user?.SIG */ "SIG3728";
+  const SIG = req.user?.SIG;
 
   if (!SIG) {
     return res.status(400).json({
@@ -101,7 +101,7 @@ export const getLoadAcademic = async (req, res) => {
 
   try {
     logger.info("Buscando datos, por favor espere...");
-    const result = await LoadAcademic.get(SIG);
+    const result = await LoadAcademic.get({ SIG: SIG });
 
     if (result.length == 0) {
       logger.info("NO se encontro carga academica para", { SIG: SIG });

@@ -81,6 +81,8 @@ export class Sections {
               id: true,
               SIG: true,
               tuition_number: true,
+              gender: true,
+              birth_date: true,
               user: {
                 select: {
                   id: true,
@@ -106,6 +108,8 @@ export class Sections {
         id_enrollment: e.id,
         id_student: e.student?.id,
         tuition_number: e.student?.tuition_number,
+        gender: e.student?.gender,
+        birth_date: e.student?.birth_date,
       }));
 
       return {
@@ -136,6 +140,29 @@ export class Sections {
           year: {
             select: {
               name: true,
+            },
+          },
+          load_academics: {
+            select: {
+              id: true,
+              subject: {
+                select: {
+                  code_subject: true,
+                  name: true,
+                  abbreviation: true,
+                },
+              },
+              teacher: {
+                select: {
+                  id: true,
+                  user: {
+                    id: true,
+                    name: true,
+                    last_name: true,
+                    id_card: true,
+                  },
+                },
+              },
             },
           },
           guide: {
