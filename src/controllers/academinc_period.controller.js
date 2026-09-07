@@ -1,24 +1,28 @@
 import { Academic_periods } from "../models/Academin_period.model.js";
 import { Enrollments } from "../models/Enrollments.model.js";
+import logger from "../utils/logger.js";
 
 /**
- * ==========================================================================
- * 1. APERTURA DE UN NUEVO PERÍODO ACADÉMICO
- * ==========================================================================
+ * Obtiene los peridos de una escuela
+ *
+ * @async
+ * @function getAcademicPeriods
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const createAcademicPeriod = async (req, res) => {
   try {
-    console.log(
-      `⚠️ [SIGACE API]: Validando apertura de nuevo ciclo escolar...`,
-    );
-
     const body = req.body || {};
     const namePeriod = body.namePeriod;
-    const dateStart = body.dateStart || body.dateStard; // Tolerancia a typos del cliente
+    const dateStart = body.dateStart || body.dateStard;
     const dateEnd = body.dateEnd;
     const SIG = req.user?.SIG;
 
     if (!namePeriod || !dateStart || !dateEnd) {
+      logger.debug(
+        "Sin infromarcion para realizar el proceso de inicio de periodo",
+      );
       return res.status(400).json({
         success: false,
         code: "INCOMPLETE_PERIOD_DATA",
@@ -31,9 +35,7 @@ export const createAcademicPeriod = async (req, res) => {
     const periodActive = periods.find((item) => item.is_active === 1);
 
     if (periodActive) {
-      console.log(
-        `⚠️ Operación rechazada: Ya existe el ciclo activo [${periodActive.name}]`,
-      );
+      logger.error("Ya existe un periodo activo en esta escuela");
       return res.status(400).json({
         success: false,
         code: "ACTIVE_PERIOD_EXISTS",
@@ -43,9 +45,10 @@ export const createAcademicPeriod = async (req, res) => {
 
     const academicPeriod = await Academic_periods.createAcademicPeriod({
       name: namePeriod,
-      start_date: dateStart,
-      end_date: dateEnd,
-      SIG,
+      start_date: new Date(dateStart),
+      end_date: new Date(dateEnd),
+      SIG: SIG,
+      is_active: true,
     });
 
     const migrateStudent = await Enrollments.activateNewPeriod(academicPeriod);
@@ -69,18 +72,20 @@ export const createAcademicPeriod = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 2. CIERRE DE PERÍODO ACADÉMICO Y PROCESAMIENTO DE HISTÓRICOS
- * ==========================================================================
+ * Finaliza un periodo academico
+ *
+ * @async
+ * @function endAcademicPeriod
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const endAcademicPeriod = async (req, res) => {
   try {
-    console.log(
-      `⚠️ [SIGACE API]: Iniciando protocolo de clausura de período lectivo...`,
-    );
     const SIG = req.user?.SIG;
 
     if (!SIG) {
+      logger.error("No se sincornizo el SIG del colegio en el usuario");
       return res.status(400).json({
         success: false,
         code: "MISSING_SCHOOL_SIG",
@@ -89,11 +94,13 @@ export const endAcademicPeriod = async (req, res) => {
     }
 
     const currentPeriod = await Academic_periods.getAcademicPeriods(SIG);
+
     const currentPeriodActive = currentPeriod.find(
       (item) => item.is_active === 1,
     );
 
     if (!currentPeriodActive || !currentPeriodActive.id) {
+      logger.error("Sin perido escolar activo, revirtiendo proceso");
       return res.status(404).json({
         success: false,
         code: "NO_ACTIVE_PERIOD_TO_CLOSE",
@@ -102,17 +109,13 @@ export const endAcademicPeriod = async (req, res) => {
       });
     }
 
-    console.log(
-      `📊 [SIGACE CORE]: Ejecutando proceso batch de rendimientos finales para el Período ID: ${currentPeriodActive.id}...`,
-    );
     // Consolida los estados de aprobación/reprobación antes de romper el ciclo
     Enrollments.processFinalStates(currentPeriodActive.id);
 
     const academicPeriod = await Academic_periods.endAcademicPeriod(SIG);
 
-    console.log(
-      `✅ [SIGACE API]: Período finalizado y estados de estudiantes archivados.`,
-    );
+    logger.debug(`✅ Período finalizado y estados de estudiantes archivados.`);
+
     return res.status(200).json({
       success: true,
       code: "ACADEMIC_PERIOD_CLOSED",
@@ -132,18 +135,20 @@ export const endAcademicPeriod = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 3. OBTENER CATÁLOGO GENERAL DE PERÍODOS DE LA INSTITUCIÓN
- * ==========================================================================
+ * Obtiene los peridos de una escuela
+ *
+ * @async
+ * @function getAcademicPeriods
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getAcademicPeriods = async (req, res) => {
   try {
-    console.log(
-      `⚠️ [SIGACE API]: Extrayendo histórico de períodos académicos...`,
-    );
     const SIG = req.user?.SIG;
 
     if (!SIG) {
+      logger.debug("Codigo SIG aunsente");
       return res.status(400).json({
         success: false,
         code: "MISSING_SCHOOL_SIG",
@@ -151,9 +156,11 @@ export const getAcademicPeriods = async (req, res) => {
       });
     }
 
+    logger.debug("Buscando... en", { SIG: SIG });
     const academicPeriods = await Academic_periods.getAcademicPeriods(SIG);
 
     if (!academicPeriods || academicPeriods.length === 0) {
+      logger.debug("No hay peridos en esta escuela");
       return res.status(404).json({
         success: false,
         code: "ACADEMIC_PERIODS_EMPTY",
@@ -162,7 +169,9 @@ export const getAcademicPeriods = async (req, res) => {
       });
     }
 
-    const periodActive = academicPeriods.find((item) => item.is_active === 1);
+    const periodActive = academicPeriods.find(
+      (item) => item.is_active === true,
+    );
 
     return res.status(200).json({
       success: true,
@@ -179,57 +188,6 @@ export const getAcademicPeriods = async (req, res) => {
       success: false,
       code: "GET_PERIODS_INTERNAL_ERROR",
       message: "Fallo de red al solicitar los ciclos del calendario escolar.",
-      error: error.message,
-    });
-  }
-};
-
-/**
- * ==========================================================================
- * 4. HISTORIAL DE INSCRIPCIÓN / PERÍODOS POR ESTUDIANTE
- * ==========================================================================
- */
-export const periodStudent = async (req, res) => {
-  try {
-    const { id_student } = req.params;
-
-    if (!id_student) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_STUDENT_ID",
-        message:
-          "El identificador único del estudiante es estrictamente requerido.",
-      });
-    }
-
-    console.log(
-      `🔄 [SIGACE API]: Extrayendo expediente de matrícula para el Estudiante ID: ${id_student}`,
-    );
-    const periods =
-      await Academic_periods.getPeriodEnrollmentStudent(id_student);
-
-    if (!periods || periods.length === 0) {
-      return res.status(404).json({
-        success: false,
-        code: "STUDENT_MATRICULA_NOT_FOUND",
-        message:
-          "El estudiante seleccionado no posee trazas de inscripción en ningún año escolar registrado.",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      code: "STUDENT_PERIODS_FETCHED",
-      message: "Historial de inscripción escolar recuperado con éxito.",
-      data: periods,
-    });
-  } catch (error) {
-    console.error("❌ Error crítico en periodStudent:", error);
-    return res.status(500).json({
-      success: false,
-      code: "STUDENT_PERIODS_INTERNAL_ERROR",
-      message:
-        "Inconsistencia interna al intentar estructurar el expediente cronológico del alumno.",
       error: error.message,
     });
   }

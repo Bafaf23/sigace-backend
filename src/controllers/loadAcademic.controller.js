@@ -1,32 +1,29 @@
 import { LoadAcademic } from "../models/LoadAcademic.model.js";
+import logger from "../utils/logger.js";
 
 /**
- * ==========================================================================
- * 1. REGISTRAR UNA NUEVA CARGA ACADÉMICA (CON CONTROL DE DUPLICADOS)
- * ==========================================================================
+ ** Crea una nueva carga academica de un colegio
+ *
+ * @async
+ * @function createLoadAcademic
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const createLoadAcademic = async (req, res) => {
+  const { teacherId, sectionId, id_period, subjectId } = req.body ?? {};
+  const SIG = req.user?.SIG;
+
+  if (!teacherId || !sectionId || !id_period || !subjectId || !SIG) {
+    logger.info("Faltan parámetros obligatorios para la carga académica.");
+    return res.status(400).json({
+      success: false,
+      code: "INCOMPLETE_ACADEMIC_LOAD_DATA",
+      message:
+        "Todos los campos (Profesor, Sección, Período y Materia) son estrictamente requeridos.",
+    });
+  }
   try {
-    console.log(
-      "⚠️ [SIGACE API]: Validando datos para nueva asignación académica...",
-    );
-    const { teacherId, sectionId, id_period, subjectId } = req.body ?? {};
-    const SIG = req.user?.SIG;
-
-    // 1. Validación defensiva unificada
-    if (!teacherId || !sectionId || !id_period || !subjectId || !SIG) {
-      console.log(
-        "❌ [SIGACE API]: Faltan parámetros obligatorios para la carga académica.",
-      );
-      return res.status(400).json({
-        success: false,
-        code: "INCOMPLETE_ACADEMIC_LOAD_DATA",
-        message:
-          "Todos los campos (Profesor, Sección, Período y Materia) son estrictamente requeridos.",
-      });
-    }
-
-    // 2. Estructuración limpia del objeto para el modelo
     const loadAcademicData = {
       id_teacher: teacherId,
       SIG: SIG,
@@ -36,13 +33,11 @@ export const createLoadAcademic = async (req, res) => {
       created_at: new Date(),
     };
 
-    console.log(
-      "🔄 [SIGACE API]: Registrando carga académica en la base de datos...",
-    );
-    const result = await LoadAcademic.createLoadAcademic(loadAcademicData);
+    logger.info("Registrando carga académica en la base de datos...");
+    const result = await LoadAcademic.create(loadAcademicData);
 
     if (result) {
-      console.log("✅ [SIGACE API]: Carga académica creada correctamente.");
+      logger.info("Carga académica creada correctamente.", { SIG: SIG });
       return res.status(201).json({
         success: true,
         code: "ACADEMIC_LOAD_CREATED",
@@ -59,9 +54,8 @@ export const createLoadAcademic = async (req, res) => {
         "No se pudo consolidar la asignación académica. Verifique los datos de origen.",
     });
   } catch (error) {
-    console.error("❌ Error en createLoadAcademic:", error);
+    logger.error("Error en createLoadAcademic:", { error: error });
 
-    // UX Pro: Capturar si la materia ya fue asignada en esa sección (Clave única en BD)
     if (
       error.code === "ER_DUP_ENTRY" ||
       error.sqlMessage?.includes("Duplicate entry")
@@ -85,36 +79,45 @@ export const createLoadAcademic = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 2. OBTENER TODAS LAS ASIGNACIONES ACADÉMICAS DE LA INSTITUCIÓN
- * ==========================================================================
+ * Obtiene toda la cargas academica de una escuela espesificando su codigo SIG
+ *
+ * @async
+ * @function getLoadAcademic
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getLoadAcademic = async (req, res) => {
-  try {
-    console.log(
-      "🔍 [SIGACE API]: Solicitando registros de asignación académica...",
-    );
-    const SIG = req.user?.SIG;
+  const SIG = req.user?.SIG;
 
-    if (!SIG) {
-      return res.status(400).json({
+  if (!SIG) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_SCHOOL_SIG",
+      message:
+        "El identificador SIG de la institución es requerido para consultar la carga académica.",
+    });
+  }
+
+  try {
+    logger.info("Buscando datos, por favor espere...");
+    const result = await LoadAcademic.get({ SIG: SIG });
+
+    if (result.length == 0) {
+      logger.info("NO se encontro carga academica para", { SIG: SIG });
+      return res.status(404).json({
         success: false,
-        code: "MISSING_SCHOOL_SIG",
-        message:
-          "El identificador SIG de la institución es requerido para consultar la carga académica.",
+        code: "ACADEMIC_LOAD_FETCHED",
+        message: "Actualmente no tienes carga academica.",
       });
     }
 
-    console.log(
-      `🔄 [SIGACE API]: Extrayendo asignaciones para la institución SIG: ${SIG}...`,
-    );
-    const result = await LoadAcademic.getLoadAcademic(SIG);
-
+    logger.info("Exito, los datos cargados");
     return res.status(200).json({
       success: true,
       code: "ACADEMIC_LOAD_FETCHED",
       message: "Listado de carga académica obtenido con éxito.",
-      data: result || [],
+      data: result,
     });
   } catch (error) {
     console.error("❌ Error en getLoadAcademic:", error);

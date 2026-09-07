@@ -1,4 +1,5 @@
 import { pool } from "../db.js";
+import { prisma } from "../lib/prisma.js";
 
 export class Subject {
   constructor(code_subject, name, abbreviation, year_id, SIG) {
@@ -8,45 +9,55 @@ export class Subject {
     this.year_id = year_id;
     this.SIG = SIG;
   }
-  static async createSubject(subject) {
+
+  /**
+   * Metodo que inseerta una asignatura a la base de datos
+   * @param {object} subject - objeto de la asiganatura
+   * @returns
+   */
+  static async create(subject) {
     try {
-      const [result] = await pool.query(
-        "INSERT INTO subjects (code_subject, name, year_id, SIG, abbreviation) VALUES (?, ?, ?, ?, ?)",
-        [
-          subject.code_subject,
-          subject.name,
-          subject.year_id,
-          subject.SIG,
-          subject.abbreviation,
-        ],
-      );
-      return result.affectedRows > 0;
+      return await prisma.subject.create({
+        data: {
+          code_subject: subject.code_subject,
+          name: subject.name,
+          year_id: subject.year_id,
+          SIG: subject.SIG,
+          abbreviation: subject.abbreviation,
+        },
+      });
     } catch (error) {
-      console.error("Error al crear la materia:", error);
-      return null;
+      throw error;
     }
   }
 
-  static async getSubjects(SIG) {
+  /**
+   * Metodo para obtener toas las asignaturas de un colegio espesificando su SIG
+   * @param {string} SIG - Codigo unico del colegio
+   * @returns {Array<object>} - lista de asiganturas del colegio
+   */
+  static async get(SIG) {
     try {
-      const [result] = await pool.query(
-        "SELECT s.code_subject, s.name, y.name AS year_name, s.abbreviation FROM subjects s INNER JOIN years y ON s.year_id = y.id WHERE s.SIG = ?",
-        [SIG],
-      );
-      return result;
+      return await prisma.subject.findMany({
+        where: { SIG: SIG },
+      });
     } catch (error) {
-      console.error("Error al obtener las materias:", error);
-      return null;
+      throw error;
     }
   }
 
+  /**
+   * Metodo para obtener todos los años cademicos de un colegio
+   * @param {string} SIG - Codigo unico del colegio
+   * @returns {Array<object>}
+   */
   static async getYears(SIG) {
     try {
-      const [result] = await pool.query(
-        "SELECT id, name FROM years WHERE SIG = ?",
-        [SIG],
-      );
-      return result;
+      return await prisma.year.findMany({
+        where: {
+          SIG: SIG,
+        },
+      });
     } catch (error) {
       console.error("Error al obtener los años:", error);
       return null;
@@ -54,6 +65,7 @@ export class Subject {
   }
 
   /**
+   * TODO: revisar para saber que hace a ciencia cierta
    * Obtiene todas las materias de una sección con sus respectivas evaluaciones y notas de un estudiante
    * @param {number} id_lapse - ID del lapso/momento educativo
    * @param {number} id_section - ID de la sección
@@ -167,81 +179,13 @@ export class Subject {
    * @returns {boolean} terdadero si elimina una asignatura
    */
   static async deleteSubjects(code_subject, SIG) {
-    
     try {
-     
-      const query = `DELETE FROM subjects WHERE code_subject = ? AND SIG = ?`;
-      const result = await pool.query(query, [code_subject, SIG]);
-      return result.affectedRows > 0;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   ** Obtiene todas las calificaciones de una sección crudas para armar la sábana de notas en el controlador
-   * @param {Object} param0
-   * @param {string} param0.id_lapse
-   * @param {number} param0.id_section
-   * @param {string} param0.SIG
-   */
-  static async getGradesForSheetNote({ id_lapse, id_section, SIG }) {
-   
-    try {
-    
-
-      const query = `
-     SELECT 
-        u.document AS student_document,
-        u.name AS student_name,
-        u.last_name AS student_last_name,
-        s.name AS subject_name,
-        s.code_subject AS subject_code,
-        s.abbreviation,
-        epd.porcentage AS evaluation_porcentage,
-        g.grade AS evaluation_grade
-      FROM enrollments e
-      INNER JOIN students est ON e.id_student = est.id
-      INNER JOIN users u ON est.id_user = u.id
-      -- Acoplamos la sección para poder validar el SIG institucional de forma estricta
-      INNER JOIN sections sec ON e.id_section = sec.id
-      INNER JOIN load_academic la ON la.id_section = e.id_section AND la.id_period = e.id_period
-      INNER JOIN subjects s ON la.id_subject = s.code_subject
-      LEFT JOIN evaluation_plans ep ON ep.id_load_academic = la.id AND ep.id_lapse = ?
-      LEFT JOIN evaluation_plan_details epd ON epd.id_evaluation_plan = ep.id
-      LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = est.id
-      WHERE e.id_section = ? 
-        AND sec.SIG = ? -- 🔥 CORRECCIÓN: Filtramos usando la tabla de secciones (sec)
-        AND e.status IN ('Activo', 'Materia Pendiente', 'Repitiente')
-      ORDER BY u.last_name ASC, u.name ASC, s.name ASC, epd.date ASC;
-    `;
-
-      // Pasamos los parámetros de forma limpia y segura
-      const [rows] = await pool.execute(query, [id_lapse, id_section, SIG]);
-      return rows;
-    } catch (error) {
-      console.error("❌ Error en getGradesForSheetNote:", error);
-      throw error;
-    } 
-  }
-
-  /**
-   * Obtiene las asignaturas pendientes de un estudiante
-   * @param {number} id_student
-   * @return {Array<object>}
-   */
-  static async getPendingSubject(id_student) {
-    
-    try {
-      
-
-      const sql = `SELECT ps.id_subject, ps.status, su.name, su.abbreviation 
-                 FROM pending_subjects ps 
-                 LEFT JOIN subjects su ON ps.id_subject = su.code_subject 
-                 WHERE ps.id_student = ?`;
-
-      const result = await pool.query(sql, [id_student]);
-      return result;
+      return prisma.subject.deleteMany({
+        where: {
+          code_subject: code_subject,
+          SIG: SIG,
+        },
+      });
     } catch (error) {
       throw error;
     }

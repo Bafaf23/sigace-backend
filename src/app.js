@@ -19,12 +19,15 @@ import evaluationRouter from "./routers/evaluation.route.js";
 import lapseRouter from "./routers/lapse.route.js";
 import gredeRouter from "./routers/grade.route.js";
 import cookieParser from "cookie-parser";
+import { subdomainHandler } from "./middlewares/subdomainHandler.js";
+import { requestLogger } from "./middlewares/requestLogger.js";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+app.use(requestLogger);
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -34,32 +37,43 @@ const sessionStore = new MySQLStore({}, pool);
 if (isProduction) {
   app.set("trust proxy", 1);
 }
+
+const subdomainRegex =
+  /^https?:\/\/([a-z0-9-]+)\.(localhost:\d+|sigace\.xyz)$/i;
+
+const allowedOrigins = ["http://localhost:3000", "http://sigace.xyz"];
+
 app.use(
   cors({
-    origin: [
-      "https://sigace.xyz",
-      "https://www.sigace.xyz",
-      "http://localhost:3000",
-    ],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || subdomainRegex.test(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error(`Bloqueado por CORS: Origen ${origin} no permitido`),
+      );
+    },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-origin-host"],
   }),
 );
 
 app.use(
   session({
     key: "sigace_session_cookie",
-    secret: process.env.SESSION_SECRET, // Clave para firmar la cookie de sesión
-    resave: false, // Evita guardar la sesión si no hubo cambios
+    secret: process.env.SESSION_SECRET,
+    resave: false,
     store: sessionStore,
-    saveUninitialized: false, // No crea una sesión vacía para usuarios no logueados
+    saveUninitialized: false,
     cookie: {
       secure: isProduction,
-      httpOnly: true, // Impide que el frontend acceda a la cookie vía JS (Seguridad)
+      httpOnly: true,
       sameSite: isProduction ? "none" : "lax",
       domain: isProduction ? ".sigace.xyz" : undefined,
-      maxAge: 1000 * 60 * 60 * 2, // Duración de la sesión: 2 horas
+      maxAge: 7200 * 1000,
     },
   }),
 );
@@ -86,7 +100,7 @@ app.get("/", (_req, res) => {
     description:
       "Sistema Inteligente de Control de Estudios. Backend para la gestión de matrículas, notas y reportes académicos.",
     version: "1.0.0",
-    environment: isProduction ? "Producion" : "Rivisar",
+    environment: isProduction ? "Producion" : "desarrollo",
     status: "operational",
     timestamp: "2026-05-24T13:00:00Z",
     links: {

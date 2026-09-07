@@ -4,3 +4,12 @@ node_modules/
 public/
 
 32.js
+dist/
+
+/src/generated/prisma
+
+/src/generated/prisma
+
+/generated/prisma
+
+/src/generated/prisma

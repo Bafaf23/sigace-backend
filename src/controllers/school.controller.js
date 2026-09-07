@@ -1,15 +1,45 @@
+import { Prisma } from "@prisma/client";
 import { School } from "../models/School.model.js";
+import logger from "../utils/logger.js";
 
-export const getAllSchools = async (_req, res) => {
+/**
+ * Obtiene el catálogo completo de instituciones educativas registradas.
+ *
+ * @async
+ * @function getAllSchools
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
+export const getAllSchools = async (req, res) => {
   try {
-    console.log("⚠️ [SIGACE API]: Leyendo catálogo global de planteles...");
     const schools = await School.getAllSchools();
+
+    if (schools.length === 0) {
+      console.warn(`⚠️ [NOT FOUND] No se encontraron colegios registrados`);
+      return res.status(200).json({
+        success: true,
+        message: "No hay intituciones registradas por el momento",
+      });
+    }
+
+    console.dir(schools, { depth: null, colors: true });
+
+    const schoolPro = schools.reduce((school) => {});
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("📤 Resultado de Prisma:", {
+        type: typeof schools,
+        isArray: Array.isArray(schools),
+        value: schools,
+      });
+    }
 
     return res.status(200).json({
       success: true,
       message:
         "El catálogo de instituciones educativas ha sido sincronizado de forma exitosa.",
-      data: schools || [],
+      data: schools,
     });
   } catch (error) {
     console.error("❌ Error en getAllSchools:", error);
@@ -23,22 +53,34 @@ export const getAllSchools = async (_req, res) => {
   }
 };
 
+/**
+ * Obtiene el catálogo de escuelas por su codigo SIG.
+ *
+ * @async
+ * @function getSchoolBySIG
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
 export const getSchoolBySIG = async (req, res) => {
-  try {
-    const { SIG } = req.params;
+  const { SIG } = req.params;
 
-    if (!SIG) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_SIG_PARAMETER",
-        message:
-          "Solicitud ambigua: Es obligatorio proporcionar el código SIG de la institución para realizar la consulta.",
-      });
-    }
+  if (!SIG) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_SIG_PARAMETER",
+      message:
+        "Solicitud ambigua: Es obligatorio proporcionar el código SIG de la institución para realizar la consulta.",
+    });
+  }
+
+  try {
+    console.log(`🔎 Buscando...  SIG: "${SIG}"...`);
 
     const school = await School.getSchoolBySIG(SIG);
 
     if (!school) {
+      console.warn(`⚠️ [NOT FOUND] No se encontró colegio con SIG: ${SIG}`);
       return res.status(404).json({
         success: false,
         code: "SCHOOL_NOT_FOUND",
@@ -46,13 +88,23 @@ export const getSchoolBySIG = async (req, res) => {
       });
     }
 
+    console.log("📤 Resultado de Prisma:", {
+      type: typeof school,
+      isArray: Array.isArray(school),
+    });
+
+    console.dir(school, { depth: null, colors: true });
+
     return res.status(200).json({
       success: true,
       message: "Ficha institucional localizada y cargada correctamente.",
       school,
     });
   } catch (error) {
-    console.error("❌ Error en getSchoolBySIG:", error);
+    console.error("❌ [ERROR EN CONTROLADOR]:", error.message);
+    console.error("📋 StackTrace:", error.stack);
+    console.log("========================================\n");
+
     return res.status(500).json({
       success: false,
       code: "GET_SCHOOL_INTERNAL_ERROR",
@@ -63,23 +115,51 @@ export const getSchoolBySIG = async (req, res) => {
   }
 };
 
+/**
+ * Realiza el registro de una institucion en el sistema
+ *
+ * @async
+ * @function createSchool
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
 export const createSchool = async (req, res) => {
+  const school = req.body;
+
+  if (!school || Object.keys(school).length === 0) {
+    console.warn(
+      `⚠️ [NOT FOUND] No se encontró informacion para realizar el registro`,
+    );
+    return res.status(400).json({
+      success: false,
+      code: "EMPTY_PAYLOAD",
+      message:
+        "Imposible procesar: El formulario de registro se encuentra vacío.",
+    });
+  }
+
+  const genrateSubdomain = (schoolName) => {
+    logger.debug("Generando el subdominio de la escuela...", { schoolName });
+    const subdomain = schoolName
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "")
+      .trim();
+
+    logger.debug("Subdominio generado con exito", { subdomain });
+    return subdomain;
+  };
+
   try {
-    console.log("🟢 [SIGACE API]: Evaluando datos para nuevo plantel...");
-    const school = req.body;
-
-    if (!school || Object.keys(school).length === 0) {
-      return res.status(400).json({
-        success: false,
-        code: "EMPTY_PAYLOAD",
-        message:
-          "Imposible procesar: El formulario de registro se encuentra vacío.",
-      });
-    }
-
-    const newSchool = await School.createSchool(school);
+    const newSchool = await School.createSchool(
+      school,
+      genrateSubdomain(school.name),
+    );
 
     if (!newSchool) {
+      logger.error("Hubo un problema en registar la institucion");
       return res.status(400).json({
         success: false,
         code: "PERSISTENCE_FAILED",
@@ -87,13 +167,17 @@ export const createSchool = async (req, res) => {
           "Los datos enviados no poseen el formato requerido para dar de alta la institución.",
       });
     }
+    if (process.env.NODE_ENV !== "production") {
+      console.dir(newSchool, { depth: null, colors: true });
+    }
 
     return res.status(201).json({
       success: true,
       message: `¡Configuración inicial exitosa! El plantel "${school.name || "Nueva Institución"}" ha sido integrado al ecosistema SIGACE.`,
     });
   } catch (error) {
-    console.error("❌ Error en createSchool:", error);
+    console.error("❌ [ERROR EN CONTROLADOR]:", error.message);
+    console.error("📋 StackTrace:", error.stack);
     return res.status(500).json({
       success: false,
       code: "CREATE_SCHOOL_INTERNAL_ERROR",
@@ -104,19 +188,28 @@ export const createSchool = async (req, res) => {
   }
 };
 
+/**
+ * Realiza el registro de una institucion en el sistema
+ *
+ * @async
+ * @function deleteSchool
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
 export const deleteSchool = async (req, res) => {
+  const { SIG } = req.params;
+
+  if (!SIG) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_DELETE_TARGET",
+      message: "No se especificó qué institución se desea remover del sistema.",
+    });
+  }
+
   try {
-    const { SIG } = req.params;
-
-    if (!SIG) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_DELETE_TARGET",
-        message:
-          "No se especificó qué institución se desea remover del sistema.",
-      });
-    }
-
+    console.log(`🔃 Iniciando metodo de eliminacion de escuela...`);
     const deletedSchool = await School.deleteSchool(SIG);
 
     if (!deletedSchool) {
@@ -127,6 +220,13 @@ export const deleteSchool = async (req, res) => {
           "La institución que intenta remover ya no existe en el sistema.",
       });
     }
+
+    console.log("📤 Resultado de Prisma:", {
+      type: typeof deletedSchool,
+      isArray: Array.isArray(deletedSchool),
+    });
+
+    console.dir(deletedSchool, { depth: null, colors: true });
 
     return res.status(200).json({
       success: true,
@@ -145,21 +245,32 @@ export const deleteSchool = async (req, res) => {
   }
 };
 
+/**
+ * Realiza el registro de una institucion en el sistema
+ *
+ * @async
+ * @function updateSchool
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
 export const updateSchool = async (req, res) => {
-  try {
-    const school = {
-      ...req.body,
-      SIG: req.body.sig ?? req.body.SIG,
-    };
+  const school = {
+    ...req.body,
+    SIG: req.body.sig ?? req.body.SIG,
+  };
 
-    if (!school.SIG) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_UPDATE_IDENTIFIER",
-        message:
-          "Error de identidad: Es imposible actualizar los datos sin el código SIG de la institución.",
-      });
-    }
+  if (!school.SIG) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_UPDATE_IDENTIFIER",
+      message:
+        "Error de identidad: Es imposible actualizar los datos sin el código SIG de la institución.",
+    });
+  }
+
+  try {
+    console.log("🔃 Iniciando metodo de actualizacion de datos...");
 
     const updatedSchool = await School.updateSchool(school);
 
@@ -171,6 +282,13 @@ export const updateSchool = async (req, res) => {
           "No se efectuaron cambios: El plantel no existe o los datos ingresados coinciden exactamente con los actuales.",
       });
     }
+
+    console.log("📤 Resultado de Prisma:", {
+      type: typeof updatedSchool,
+      isArray: Array.isArray(updatedSchool),
+    });
+
+    console.dir(updatedSchool, { depth: null, colors: true });
 
     return res.status(200).json({
       success: true,
@@ -209,3 +327,45 @@ export const getRoles = async (_req, res) => {
     });
   }
 };
+
+/**
+ * Realiza el registro de una institucion en el sistema
+ *
+ * @async
+ * @function checkSchool
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
+export async function checkSchool(req, res) {
+  const subdomain = req.params;
+  
+  try {
+    logger.debug("Verificando el subdominio...");
+    const exiteSubdomain = await School.checkSubdomain(
+      String(subdomain.subdomain),
+    );
+
+    if (!exiteSubdomain) {
+      logger.error("No se localizo el subdominio");
+      return res.status(404).json({
+        success: false,
+        message: "No se encontro el subdomain",
+      });
+    }
+
+    return res.status(200).json({
+      success: exiteSubdomain == exiteSubdomain,
+      school_name: exiteSubdomain.school_name,
+      SIG: exiteSubdomain.SIG,
+    });
+  } catch (e) {
+    console.error("❌ Error en getRoles:", e);
+    return res.status(500).json({
+      success: false,
+      code: "ROLES_FETCH_FAILED",
+      message: "No se puedo realizar la operacion, intenta mas tarde",
+      error: e.message,
+    });
+  }
+}

@@ -12,18 +12,18 @@ import {
 } from "../middlewares/auth.middleware.js";
 
 const router = Router();
-// Lapses
+
 router.post(
-  "/create",
+  "/",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador", "director"),
   createLapse,
 );
 
 router.put(
   "/start/:id",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador", "director"),
   startLapse,
 );
 router.put(
@@ -33,15 +33,27 @@ router.put(
   endLapse,
 );
 router.get(
-  "/getLapses",
+  "/",
   verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor", "Estudiante"),
+  permitirRoles(
+    "administrador",
+    "profesor",
+    "estudiante",
+    "director",
+    "gestion",
+  ),
   getLapses,
 );
 router.get(
-  "/getLapseActive",
+  "/lapse-a",
   verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor", "Estudiante"),
+  permitirRoles(
+    "administrador",
+    "profesor",
+    "estudiante",
+    "director",
+    "gestion",
+  ),
   getLapseActive,
 );
 

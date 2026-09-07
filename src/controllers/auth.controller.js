@@ -4,44 +4,95 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import jsonwebtoken from "jsonwebtoken";
 import { sendResetPasswordEmail } from "../services/resend.service.js";
+import logger from "../utils/logger.js";
+import { School } from "../models/School.model.js";
+
 const { sign } = jsonwebtoken;
 
 /**
- ** Porcesa el login de un usuario
+ * Inserta un registro de usuario al sisitema
+ *
+ * @async
+ * @function login
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const login = async (req, res) => {
+  const { email, password } = req.body;
+  const subdomain = req.subdomain;
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (!email || !password) {
+    logger.error("No se proporcionó el usuario ni la contraseña.");
+    return res.status(400).json({
+      success: false,
+      code: "EMPTY_PAYLOAD",
+      message: "Los datos de inicio de sesión son obligatorios.",
+    });
+  }
+
   try {
-    console.log("⚠️ Iniciando proceso de login...");
-    const { email, password } = req.body;
-
-    // 1. Validaciones básicas de entrada
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ error: "El email y la contraseña son obligatorios" });
-    }
-
-    // 2. Buscar usuario
+    const school = await School.checkSubdomain(String(subdomain));
     const user = await Users.getUserByEmail(email);
 
     if (!user) {
-      console.log(`usuario no encontrado`);
-      return res.status(401).json({ error: "Usuario no encontrado" });
+      logger.debug("No se encontró registro sobre la cuenta consultada", {
+        email,
+      });
+      return res.status(401).json({
+        success: false,
+        code: "LOGIN_INVALID",
+        message:
+          "Las credenciales son inválidas, verifícalas e intenta de nuevo.",
+      });
     }
 
-    // 3. Verificar contraseña
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const userId = user.id_user || user.id;
+    const roleName = user.role?.name || user.role || "usuario";
+
+    const passwordMatch = await bcrypt.compare(
+      password,
+      user.pass || user.password,
+    );
+
     if (!passwordMatch) {
-      return res.status(401).json({ error: "Contraseña incorrecta" });
+      logger.error(
+        "Intento de inicio de sesión fallido por contraseña incorrecta",
+        {
+          email,
+          id: userId,
+        },
+      );
+      return res.status(401).json({
+        success: false,
+        code: "LOGIN_INVALID",
+        message:
+          "Las credenciales son inválidas, verifícalas e intenta de nuevo.",
+      });
     }
 
-    // 4. Circuito de seguridad: Restricción por Período Académico Inactivo
-    if (user.role !== "Administrador" && user.role !== "SuperAdmin") {
-      const isSystemOpen = await Academic_periods.hasActivePeriod(user.SIG);
+    // Extraer SIG con fallbacks seguros para evitar que Prisma reciba null/undefined
+    const userSchools = Array.isArray(user.user_schools)
+      ? user.user_schools
+      : [];
+    const SIG = userSchools[0]?.SIG || school?.SIG || "";
+
+    const isAdmin = ["administrador", "sudo", "director"].includes(
+      roleName.toLowerCase(),
+    );
+
+    // 4. Circuito de seguridad: Verificar si hay sistema abierto solo si existe SIG
+    if (!isAdmin && SIG) {
+      const isSystemOpen = await Academic_periods.hasActivePeriod(SIG);
 
       if (!isSystemOpen) {
-        console.log(
-          `⚠️ Intento de acceso bloqueado para ${user.email}. Sistema cerrado sin período activo.`,
+        logger.warn(
+          "Intento de acceso bloqueado: sistema cerrado sin período activo.",
+          {
+            email: user.email,
+            role: roleName,
+          },
         );
         return res.status(403).json({
           success: false,
@@ -51,43 +102,46 @@ export const login = async (req, res) => {
       }
     }
 
-    // 5. Carga del periodo académico (Orden descendente)
-    const periodsList = await Academic_periods.getAcademicPeriods(user.SIG);
+    // Consulta de períodos segura (evita invocar la base de datos si SIG está vacío)
+    const periodsList = SIG
+      ? await Academic_periods.getAcademicPeriods(SIG)
+      : [];
 
     let activePeriod = Array.isArray(periodsList)
-      ? periodsList.find((p) => p.is_active === 1)
+      ? periodsList.find((p) => p.is_active === 1 || p.is_active === true)
       : null;
 
     if (
       !activePeriod &&
-      (user.role === "Administrador" || user.role === "SuperAdmin")
+      isAdmin &&
+      Array.isArray(periodsList) &&
+      periodsList.length > 0
     ) {
-      if (Array.isArray(periodsList) && periodsList.length > 0) {
-        activePeriod = periodsList[0];
-        console.log(
-          `⚠️ Admin sin periodo activo. Asignando último periodo creado de la lista: ${activePeriod.name}`,
-        );
-      }
+      activePeriod = periodsList[0];
+      logger.debug(
+        `Admin sin período activo. Asignando último período creado: ${activePeriod.name}`,
+      );
     }
 
     const currentPeriodId = activePeriod ? activePeriod.id : null;
     const currentPeriodName = activePeriod
       ? activePeriod.name
-      : "Sin Periodo Activo";
-    const mustChangePassword = user.is_first_login === 1;
+      : "Sin Período Activo";
+    const mustChangePassword = Boolean(user.is_first_login);
 
-    req.session.userId = user.id_user;
-    req.session.role = user.role;
-    req.session.SIG = user.SIG;
+    req.session.userId = userId;
+    req.session.role = roleName;
+    req.session.SIG = SIG;
     req.session.id_period = currentPeriodId;
 
+    // Generar Token JWT
     const token = sign(
       {
         email: user.email,
-        id: user.id_user,
-        id_user: user.id_user,
-        role: user.role,
-        SIG: user.SIG,
+        id: userId,
+        id_user: userId,
+        role: roleName,
+        SIG: SIG,
         id_period: currentPeriodId,
         mustChangePassword,
       },
@@ -95,39 +149,32 @@ export const login = async (req, res) => {
       { expiresIn: mustChangePassword ? "15m" : "1h" },
     );
 
-    const cookieOptionsBase = {
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 'none' en producción con HTTPS, 'lax' en local
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      domain: isProduction ? ".sigace.xyz" : undefined,
+      maxAge: 7200 * 1000,
+      path: "/",
     };
 
-    res.cookie("auth_token", token, {
-      ...cookieOptionsBase,
-      httpOnly: true,
-      maxAge: mustChangePassword ? 15 * 60 * 1000 : 60 * 60 * 1000,
-    });
-
-    res.cookie("user_name", encodeURIComponent(user.name), {
-      ...cookieOptionsBase,
-      httpOnly: false,
-      maxAge: mustChangePassword ? 15 * 60 * 1000 : 60 * 60 * 1000,
-    });
+    res.cookie("auth_token", token, cookieOptions);
 
     if (mustChangePassword) {
-      console.log(
-        `⚠️ Primer login detectado. Redireccionando cambio de clave: ${user.email}`,
+      logger.warn(
+        `Primer login detectado. Redireccionando a cambio de clave: ${user.email}`,
       );
       return res.status(200).json({
         mustChangePassword: true,
         user: {
-          id: user.id_user,
+          id: userId,
           email: user.email,
-          role: user.role,
+          role: roleName,
           mustChangePassword: true,
         },
       });
     }
 
-    // 🌟 FORZAR EL GUARDADO en la BD antes de responder al cliente
     req.session.save((err) => {
       if (err) {
         console.error("Error al guardar la sesión en MySQL:", err);
@@ -136,13 +183,15 @@ export const login = async (req, res) => {
           .json({ error: "Error al registrar la sesión en la base de datos" });
       }
 
-      console.log(`✅ Sesión iniciada y guardada en MySQL para: ${user.email}`);
+      logger.debug(
+        `Sesión iniciada para: ${user.name} ${user.last_name}, ${user.email}`,
+      );
+
       return res.status(200).json({
         mustChangePassword: false,
         user: {
-          id_user: user.id_user, // Corregido: usabas user.id y arriba tienes user.id_user
-          id: user.id,
-          role: user.role,
+          id: userId,
+          role: roleName,
           id_period: currentPeriodId,
           period: currentPeriodName,
           name: user.name,
@@ -151,7 +200,7 @@ export const login = async (req, res) => {
       });
     });
   } catch (error) {
-    console.error("Error al iniciar sesión:", error);
+    console.error("❌ Error en controller login:", error);
     return res
       .status(500)
       .json({ error: "Error interno al iniciar sesión: " + error.message });
@@ -159,24 +208,22 @@ export const login = async (req, res) => {
 };
 
 /**
- ** cierra la sesion del usuario
+ * Cerrar sesión de usuario
  */
 export const logout = async (req, res) => {
   try {
     res.clearCookie("auth_token");
-    res.clearCookie("user_name");
     res.clearCookie("connect.sid");
 
-    console.log(`🔒 Cookies de sesión limpiadas correctamente.`);
     return res.status(200).json({ message: "Sesión cerrada correctamente" });
   } catch (error) {
-    console.error("Error en el proceso de logout:", error);
+    console.error("❌ Error en el proceso de logout:", error);
     return res.status(500).json({ error: "Error interno al cerrar sesión" });
   }
 };
 
 /**
- ** Solicitud de cambio de contraseña por parte del usuario
+ * Solicitud de cambio de contraseña por email
  */
 export const forgotPassword = async (req, res) => {
   console.log("⚠️ Iniciando proceso de restablecimiento de contraseña...");
@@ -189,24 +236,27 @@ export const forgotPassword = async (req, res) => {
 
     const user = await Users.getUserByEmail(email);
 
+    // Mensaje genérico de seguridad
+    const successResponse = {
+      success: true,
+      code: "RESET_PASSWORD_CODE_SENT",
+      message:
+        "Si el correo electrónico proporcionado está asociado a una cuenta de usuario, se enviarán las instrucciones para restablecer la contraseña.",
+    };
+
     if (!user) {
-      return res.status(400).json({
-        success: false,
-        code: "USER_NOT_FOUND",
-        message:
-          "Si el correo electrónico proporcionado está asociado a una cuenta de usuario, se enviará un correo electrónico con instrucciones para restablecer la contraseña.",
-      });
+      return res.status(200).json(successResponse);
     }
+
+    const userId = user.id_user || user.id;
     const code = crypto.randomBytes(32).toString("hex");
     const hashedCode = crypto.createHash("sha256").update(code).digest("hex");
 
     const tokenId = await Users.saveToken(
-      user.id_user,
+      userId,
       hashedCode,
       new Date(Date.now() + 15 * 60 * 1000),
     );
-
-    const resetUrl = `${process.env.URL_FRONTEND}/resetpass?token=${code}`;
 
     if (!tokenId) {
       return res.status(500).json({
@@ -216,39 +266,41 @@ export const forgotPassword = async (req, res) => {
       });
     }
 
+    const resetUrl = `${process.env.URL_FRONTEND}/resetpass?token=${code}`;
+
     await sendResetPasswordEmail(user.name, user.email, resetUrl).catch(
       (error) => {
         console.error(
-          "Error al enviar el correo de restablecimiento de contraseña:",
+          "❌ Error al enviar el correo de restablecimiento de contraseña:",
           error,
         );
       },
     );
 
-    return res.status(200).json({
-      success: true,
-      code: "RESET_PASSWORD_CODE_SENT",
-      message:
-        "Si el correo electrónico proporcionado está asociado a una cuenta de usuario, se enviará un correo electrónico con instrucciones para restablecer la contraseña.",
-    });
+    return res.status(200).json(successResponse);
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error en forgotPassword:", error);
+    // Corrección: responder 500 para evitar peticiones colgadas
+    return res.status(500).json({
+      success: false,
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Error interno en el servidor al procesar la solicitud.",
+    });
   }
 };
 
 /**
- ** Cambio de contraseña via link de email
+ * Cambio de contraseña vía token de email
  */
 export const resetPassword = async (req, res) => {
   console.log("⚠️ Iniciando proceso de restablecimiento de contraseña...");
   try {
     const { token, password } = req.body;
-    console.log(token, password);
 
     if (!token || !password) {
       return res.status(400).json({
         success: false,
-        code: "TOKEN_AND_PASS_REQUERID",
+        code: "TOKEN_AND_PASS_REQUIRED",
         message: "El token y la contraseña son requeridos.",
       });
     }
@@ -256,24 +308,24 @@ export const resetPassword = async (req, res) => {
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
     const user = await Users.getUserToken(hashedToken);
-    console.log(user);
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        code: "USER_NOT_FOUND",
+        code: "INVALID_OR_EXPIRED_TOKEN",
         message:
           "El enlace es inválido o ha expirado. Por favor, solicita uno nuevo.",
       });
     }
-    const changePassword = await Users.changePassword(user.id_user, password);
-    console.log(changePassword);
 
-    if (changePassword === false) {
+    const userId = user.id_user || user.id;
+    const changePassword = await Users.changePassword(userId, password);
+
+    if (!changePassword) {
       return res.status(400).json({
         success: false,
-        code: "PASSWORD_CHANGE_FAILED", // Cambiado para que tenga coherencia con el error
-        message: "No pudimos cambiar la Contraseña, intenta nuevamente.",
+        code: "PASSWORD_CHANGE_FAILED",
+        message: "No pudimos cambiar la contraseña, intenta nuevamente.",
       });
     }
 
@@ -284,8 +336,7 @@ export const resetPassword = async (req, res) => {
         "Contraseña restablecida correctamente. Ya puedes iniciar sesión.",
     });
   } catch (error) {
-    console.error("Error en resetPassword:", error);
-    // 3. Recomendación: Devolver un estado 500 si la base de datos se cae o algo crashea
+    console.error("❌ Error en resetPassword:", error);
     return res.status(500).json({
       success: false,
       code: "INTERNAL_SERVER_ERROR",

@@ -4,6 +4,8 @@ import { Users } from "../models/Users.model.js";
 import { generateTuitionNumber } from "../utils/tuitoinNumber.js";
 import { welcomeEmail } from "../services/resend.service.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
+import { Subject } from "../models/Subject.model.js";
+import logger from "../utils/logger.js";
 
 function formatText(text) {
   if (typeof text !== "string") return text;
@@ -18,24 +20,56 @@ function formatText(text) {
   return cleanText.charAt(0).toUpperCase() + cleanText.slice(1);
 }
 
-/* ==========================================================================
-   1. OBTENER TODOS LOS ESTUDIANTES
-   ========================================================================== */
+/**
+ * Normaliza fechas tipo "2003/9/23", "2003-9-23" o "2003-09-23"
+ * a un objeto Date en UTC apto para Prisma @db.Date.
+ */
+const normalizeToDate = (rawDate) => {
+  if (!rawDate) return null;
+
+  // Reemplazar / por - y separar año, mes, día
+  const parts = rawDate.toString().trim().replace(/\//g, "-").split("-");
+
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    const paddedMonth = month.padStart(2, "0");
+    const paddedDay = day.padStart(2, "0");
+
+    const isoString = `${year}-${paddedMonth}-${paddedDay}T00:00:00.000Z`;
+    const dateObj = new Date(isoString);
+
+    return isNaN(dateObj.getTime()) ? null : dateObj;
+  }
+
+  const fallbackDate = new Date(rawDate);
+  return isNaN(fallbackDate.getTime()) ? null : fallbackDate;
+};
+
+const safeTrim = (val) => (typeof val === "string" ? val.trim() : "");
+
+/**
+ * Obtiene a todos los estudiantes de una escuela por su codigo SIG
+ *
+ * @async
+ * @function getStudents
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
 export const getStudents = async (req, res) => {
+  const SIG = /* req.user.SIG */ "SIG8587";
+  const id_period = /* req.user.id_period */ 1;
+
+  if (!SIG) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_SCHOOL_SIG",
+      message:
+        "Identificador institucional ausente. Es obligatorio indicar el SIG del plantel.",
+    });
+  }
+
   try {
-    console.log("⚠️");
-    const SIG = req.user.SIG;
-    const id_period = req.user.id_period;
-
-    if (!SIG) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_SCHOOL_SIG",
-        message:
-          "Identificador institucional ausente. Es obligatorio indicar el SIG del plantel.",
-      });
-    }
-
     let targetPeriodId = id_period;
 
     if (!targetPeriodId) {
@@ -43,6 +77,10 @@ export const getStudents = async (req, res) => {
       const activePeriod = periods.find((item) => item.is_active === 1);
 
       if (!activePeriod) {
+        logger.warn("No se encontraron periodos academicos activos.", {
+          SIG,
+          periodId: targetPeriodId,
+        });
         return res.status(404).json({
           success: false,
           code: "ACTIVE_PERIOD_NOT_FOUND",
@@ -59,12 +97,26 @@ export const getStudents = async (req, res) => {
     });
 
     if (!students || students.length === 0) {
+      logger.warn("No se encontraron estudiantes matriculados", {
+        SIG,
+        periodId: targetPeriodId,
+      });
       return res.status(404).json({
         success: false,
         code: "STUDENTS_NOT_FOUND",
         message:
           "No se encontraron estudiantes matriculados en esta institución para el período consultado.",
       });
+    }
+
+    logger.debug("Estudiantes matriculados recuperados exitosamente", {
+      total: students.length,
+      SIG,
+      periodId: targetPeriodId,
+    });
+
+    if (process.env.NODE_ENV !== "production") {
+      console.dir(students, { depth: null, colors: true });
     }
 
     return res.status(200).json({
@@ -84,108 +136,152 @@ export const getStudents = async (req, res) => {
   }
 };
 
-/* ==========================================================================
-   2. INSCRIBIR / CREAR ESTUDIANTE
-   ========================================================================== */
+/**
+ * Inserta un registrito de estudante a la DB
+ *
+ * @async
+ * @function createStudent
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
 export const createStudent = async (req, res) => {
   try {
-    console.log("🟢 [SIGACE API]: Evaluando planilla de inscripción...");
+    const {
+      documentType = "",
+      document,
+      name,
+      lastName,
+      repdniType = "",
+      repdni,
+      repName,
+      repLastName,
+      repPhone,
+      phone,
+      gender,
+      relationship,
+      email,
+      ...medicalAndSizes
+    } = req.body;
 
-    // Evitar caídas por llamadas a .trim() en valores undefined/null
-    const safeTrim = (val) => (typeof val === "string" ? val.trim() : "");
-
-    const studentObject = {
-      SIG: req.user?.SIG,
-      document: `${req.body.documentType || ""}${req.body.document || ""}`,
-      name: formatText(req.body.name),
-      last_name: formatText(req.body.lastName),
-      phone: req.body.phone,
-      representative_id: req.body.representative_id,
-      gender: safeTrim(req.body.gender),
-      role_id: req.body.role_id || 2,
-      email: safeTrim(req.body.email),
-      birth_date: safeTrim(req.body.birthDate),
-      isNewEntry: req.body.isNewEntry,
-      previousSchool: safeTrim(req.body.previousSchool),
-      previousSchoolCode: safeTrim(req.body.previousSchoolCode),
-      previousYear: safeTrim(req.body.previousYear),
-      previousSection: safeTrim(req.body.previousSection),
-      allergies: safeTrim(req.body.allergies),
-      medical_condition: safeTrim(req.body.medicalCondition),
-      weight: req.body.weight,
-      height: req.body.height,
-      shirt_size: req.body.shirtSize,
-      pants_size: req.body.pantSize,
-      shoe_size: req.body.shoeSize,
-      year_id: req.body.year,
-      id_section: req.body.section,
-      id_period: req.user?.id_period,
-    };
-
-    const representativeObject = {
-      document: `${req.body.repdniType || ""}${req.body.repdni || ""}`,
-      name: formatText(req.body.repName),
-      last_name: formatText(req.body.repLastName),
-      phone: req.body.repPhone,
-      relationship: safeTrim(req.body.relationship),
-      repEmail: safeTrim(req.body.repEmail),
-    };
-
-    if (!req.body.repdni || !req.body.repName || !req.body.repLastName) {
+    if (
+      !document ||
+      !name ||
+      !lastName ||
+      !repdni ||
+      !repName ||
+      !repLastName
+    ) {
+      logger.warn(
+        "Falta informacion relevante sobre el estudiate para procesar el registro.",
+        {
+          SIG,
+        },
+      );
       return res.status(400).json({
         success: false,
-        code: "INCOMPLETE_REPRESENTATIVE_DATA",
+        code: "INCOMPLETE_DATA",
         message:
-          "Faltan datos obligatorios: Es necesario registrar la cédula, nombre y apellido del representante legal.",
+          "Faltan datos obligatorios del estudiante o del representante legal.",
       });
     }
 
-    const representativeId =
-      await Representative.createRepresentative(representativeObject);
+    const studentDoc = `${documentType}${document}`.trim();
+    const repDoc = `${repdniType}${repdni}`.trim();
+    const SIG = req.user?.SIG;
 
-    if (!representativeId) {
-      return res.status(400).json({
-        success: false,
-        code: "REPRESENTATIVE_CREATION_FAILED",
-        message:
-          "No se pudo consolidar el registro del representante legal en el sistema.",
-      });
-    }
-
-    const passgeneric = studentObject.document.substring(0, 4) + "@2026";
-    const tuitionNumber = await generateTuitionNumber(studentObject.SIG);
+    const tuitionNumber = await generateTuitionNumber(SIG);
 
     if (!tuitionNumber) {
+      logger.warn("Ocurrio un problema generando la matricula", {
+        tuitionNumber,
+        SIG,
+      });
       return res.status(400).json({
         success: false,
         code: "TUITION_GENERATION_FAILED",
-        message:
-          "Fallo crítico de secuencia: No se pudo generar un número de matrícula único para el estudiante.",
+        message: "No se pudo generar el número de matrícula.",
       });
     }
+    const passgeneric = `${studentDoc.substring(0, 4)}@2026`;
 
-    const userId = await Users.createUser({
-      ...studentObject,
-      password: passgeneric,
-      representative_id: representativeId,
-      tuition_number: tuitionNumber,
-      status: "Nuevo Ingreso",
-    });
-
-    if (!userId) {
+    const birthDate = normalizeToDate(req.body.birth_date);
+    if (!birthDate) {
+      logger.error(
+        "La fecha de nacimiento es inválida. Usa un formato válido como YYYY-MM-DD o YYYY/MM/DD.",
+        {
+          birthDate,
+        },
+      );
       return res.status(400).json({
         success: false,
-        code: "USER_CREATION_FAILED",
         message:
-          "Error de credenciales: No se pudo instanciar la cuenta de acceso del estudiante.",
+          "La fecha de nacimiento es inválida. Usa un formato válido como YYYY-MM-DD o YYYY/MM/DD.",
       });
     }
-    //cambia el correo por el del usuario en producion
-    await welcomeEmail(studentObject.name, studentObject.email).catch(
-      (error) => {
-        console.error(error);
+
+    // insercion el la DB
+    const newStudent = await Students.createStudent({
+      student: {
+        tuition_number: tuitionNumber,
+        allergies: req.body.allergies || null,
+        medical_condition: req.body.medicalCondition || null,
+        weight: req.body.weight || null,
+        height: req.body.height || null,
+        shirt_size: req.body.shirtSize || null,
+        pants_size: req.body.pantSize || null,
+        shoe_size: req.body.shoeSize || null,
+        condition: req.body.condition || null,
+        SIG: SIG,
+        tuition_number: tuitionNumber,
+        gender: gender?.trim(),
+        birth_date: birthDate,
       },
-    );
+      representative: {
+        document: repDoc,
+        name: formatText(repName),
+        last_name: formatText(repLastName),
+        phone: repPhone,
+        relationship: relationship?.trim(),
+        repEmail: req.body.repEmail.trim(),
+      },
+      user: {
+        document: studentDoc,
+        name: formatText(name),
+        last_name: formatText(lastName),
+        email: email?.trim(),
+        password: passgeneric,
+        phone: phone,
+        role_id: req.body.role_id || 4,
+        pass: passgeneric,
+      },
+    });
+
+    if (!newStudent) {
+      logger.error(
+        "Ocurrio un error al procesar el registro del estudiante, intenta de nuevo.",
+        {
+          newStudent,
+        },
+      );
+      return res.status(400).json({
+        success: false,
+        code: "NEW_REGISTER_ERROR",
+        message:
+          "Ocurrio un error al procesar el registro del estudiante, intenta de nuevo.",
+      });
+    }
+
+    // contacto con el usario
+    if (email) {
+      await welcomeEmail(name, email).catch((err) =>
+        console.error("⚠️ Error enviando email de bienvenida:", err),
+      );
+    }
+
+    logger.debug("¡Inscripción formalizada exitosamente!.", {
+      tuitionNumber,
+    });
 
     return res.status(201).json({
       success: true,
@@ -196,21 +292,23 @@ export const createStudent = async (req, res) => {
     return res.status(500).json({
       success: false,
       code: "CREATE_STUDENT_INTERNAL_ERROR",
-      message: "Fallo interno al procesar el expediente de matrícula.",
+      message: "Fallo interno al procesar la inscripción.",
       error: error.message,
     });
   }
 };
 
-/* ==========================================================================
-   3. ACTUALIZAR ESTUDIANTE
-   ========================================================================== */
+/**
+ * Actualiza la informacion exixtente en la BD de un estudiante con su respectiva informormacion editable del usuario
+ * TODO: Actualizar este controlador con el estandar de los demas.
+ * @async
+ * @function updateStudent
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
 export const updateStudent = async (req, res) => {
   try {
-    console.log(
-      "⚠️ [SIGACE API]: Sincronizando modificaciones de estudiante...",
-    );
-
     const userUpdateObject = {
       document: req.body.document,
       name: formatText(req.body.name),
@@ -289,41 +387,45 @@ export const updateStudent = async (req, res) => {
   }
 };
 
-/* ==========================================================================
-   4. OBTENER ESTUDIANTES NO MATRICULADOS
-   ========================================================================== */
+/**
+ * Obtine a todos los estudnates que no tienen una inscripcion en el sistema.
+ *
+ * @async
+ * @function getStudentNotEnrolled
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
 export const getStudentNotEnrolled = async (req, res) => {
+  const SIG = req.user?.SIG;
+  const { id_period } = req.user.id_period;
+
+  if (!SIG) {
+    logger.error(`No se encontro el codigo SIG. ${SIG}`);
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_SIG",
+      message:
+        "El código SIG institucional es requerido para filtrar los estudiantes.",
+    });
+  }
+
+  if (!id_period || isNaN(parseInt(id_period))) {
+    logger.error(`No se encontro el perido academico. ${id_period}`);
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_PERIOD_ID",
+      message: "Debe proporcionar un identificador de período escolar válido.",
+    });
+  }
   try {
-    console.log(
-      "⚠️ [SIGACE API]: Buscando estudiantes pendientes por asignación de aula...",
-    );
-    const SIG = req.user?.SIG;
-    const id_period = req.params.id_period || req.query.id_period;
-
-    if (!SIG) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_SIG",
-        message:
-          "El código SIG institucional es requerido para filtrar los estudiantes.",
-      });
-    }
-
-    if (!id_period || isNaN(parseInt(id_period))) {
-      return res.status(400).json({
-        success: false,
-        code: "INVALID_PERIOD_ID",
-        message:
-          "Debe proporcionar un identificador de período escolar válido.",
-      });
-    }
-
-    const students = await Students.getStudentNotEnrolled({
-      id_period: parseInt(id_period),
+    const students = await Students.notEnrolled({
+      id_period: id_period,
       SIG,
     });
 
     if (!students || students.length === 0) {
+      logger.warn(`No hay estudiantes sin matricula en este perido academcio.`);
       return res.status(404).json({
         success: false,
         code: "ALL_STUDENTS_ENROLLED",
@@ -332,6 +434,19 @@ export const getStudentNotEnrolled = async (req, res) => {
       });
     }
 
+    console.log("📤 Resultado de Prisma:", {
+      type: typeof students,
+      isArray: Array.isArray(students),
+    });
+
+    console.table(
+      students.map((student) => ({
+        id: student.id,
+        cedula: student.user.id_card,
+        nombre_apellido: `${student.user.name} ${student.user.last_name}`,
+      })),
+    );
+
     return res.status(200).json({
       success: true,
       message:
@@ -339,7 +454,7 @@ export const getStudentNotEnrolled = async (req, res) => {
       data: students,
     });
   } catch (error) {
-    console.error("❌ Error en getStudentNotEnrolled:", error);
+    logger.error("❌ Error en getStudentNotEnrolled:", error);
     return res.status(500).json({
       success: false,
       code: "NOT_ENROLLED_INTERNAL_ERROR",
@@ -349,77 +464,35 @@ export const getStudentNotEnrolled = async (req, res) => {
   }
 };
 
-/* ==========================================================================
-   5. OBTENER ESTUDIANTES POR SECCIÓN
-   ========================================================================== */
-export const getStudentsBySection = async (req, res) => {
-  try {
-    const { id_section } = req.params;
-    const SIG = req.user.SIG;
+/**
+ * Busca a un studiante por si numero de cedula
+ *
+ * @async
+ * @function getStudentByID
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
+export const getStudentByID = async (req, res) => {
+  const id_card = req.params.id_card;
 
-    if (!id_section) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_SECTION_ID",
-        message: "El ID identificador de la sección es mandatorio.",
-      });
-    }
-    if (!SIG) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_SIG",
-        message: "Código institucional no suministrado.",
-      });
-    }
-
-    const students = await Students.getStudentsBySection({ id_section, SIG });
-
-    if (!students || students.length === 0) {
-      return res.status(404).json({
-        success: false,
-        code: "SECTION_EMPTY",
-        message:
-          "Aula disponible: Esta sección no cuenta con estudiantes inscritos actualmente.",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message:
-        "Nómina de estudiantes asignados a la sección recuperada de forma exitosa.",
-      data: students,
-    });
-  } catch (error) {
-    console.error("❌ Error en getStudentsBySection:", error);
-    return res.status(500).json({
+  if (!id_card) {
+    console.error(
+      `⚠️ [NOT FOUND] El documento es necesario para realizar la consulta`,
+    );
+    return res.status(400).json({
       success: false,
-      code: "GET_STUDENTS_SECTION_INTERNAL_ERROR",
-      message:
-        "Inconveniente en el servidor al intentar leer la nómina de la sección.",
-      error: error.message,
+      code: "MISSING_STUDENT_ID",
+      message: "Es requerido especificar el código ID único del estudiante.",
     });
   }
-};
-
-/* ==========================================================================
-   6. OBTENER DETALLE DE UN ESTUDIANTE POR ID
-   ========================================================================== */
-export const getStudentByID = async (req, res) => {
   try {
-    const { id_student } = req.params;
-    const id_period = req.user.id_period;
-
-    if (!id_student) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_STUDENT_ID",
-        message: "Es requerido especificar el código ID único del estudiante.",
-      });
-    }
-
-    const student = await Students.getStudentByID(id_student, id_period);
+    const student = await Students.byID(id_card);
 
     if (!student) {
+      console.error(
+        `⚠️ [NOT FOUND] No se encontro informacion relacionada con esta id_card: ${id_card}`,
+      );
       return res.status(404).json({
         success: false,
         code: "STUDENT_NOT_FOUND",
@@ -428,10 +501,70 @@ export const getStudentByID = async (req, res) => {
       });
     }
 
+    console.log("📤 Resultado de Prisma:", {
+      type: typeof student,
+      isArray: Array.isArray(student),
+    });
+
+    const currentEnrollment = student.enrollments?.[0] || null;
+
+    const formattedStudent = {
+      id: student.id,
+      tuitionNumber: student.tuition_number,
+      condition: student.condition,
+
+      studentInfo: {
+        idCard: student.user?.id_card,
+        firstName: student.user?.name,
+        lastName: student.user?.last_name,
+        fullName: `${student.user?.name} ${student.user?.last_name}`,
+        email: student.user?.email,
+        phone: student.user?.phone,
+        gender: student.gender,
+        birthDate: student.birth_date,
+      },
+
+      school: {
+        SIG: student.school?.SIG,
+        name: student.school?.school_name,
+      },
+
+      representative: {
+        id: student.representative?.id,
+        document: student.representative?.document,
+        fullName: `${student.representative?.name} ${student.representative?.last_name}`,
+        relationship: student.representative?.relationship,
+        phone: student.representative?.phone,
+        email: student.representative?.repEmail,
+      },
+
+      physicalProfile: {
+        sizes: {
+          shirt: student.shirt_size,
+          pants: student.pants_size,
+          shoes: student.shoe_size,
+        },
+        weight: student.weight,
+        height: student.height,
+        allergies: student.allergies,
+        medicalCondition: student.medical_condition,
+      },
+
+      enrollment: currentEnrollment
+        ? {
+            id: currentEnrollment.id,
+            section: currentEnrollment.section?.name,
+            year: currentEnrollment.year?.name,
+          }
+        : null,
+    };
+
+    console.dir(formattedStudent);
+
     return res.status(200).json({
       success: true,
       message: "Ficha descriptiva del alumno localizada correctamente.",
-      data: student,
+      data: formattedStudent,
     });
   } catch (error) {
     console.error("❌ Error en getStudentByID:", error);
@@ -444,14 +577,21 @@ export const getStudentByID = async (req, res) => {
   }
 };
 
-/* ==========================================================================
-   7. EXPEDIENTE / RÉCORD ACADÉMICO INTEGRAL
-   ========================================================================== */
+/**
+ * Obtiene el record del estudiante basandose en el tiempo, si el id_perid viene el la url.
+ *
+ * @async
+ * @function getRecordStudent
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
 export const getRecordStudent = async (req, res) => {
   const { id_student } = req.params;
-  const { id_period } = req.query || req.user.id_period;
+  const id_period = req.query || req.user.id_period;
 
-  if (!id_student || !id_period) {
+  if (!id_student) {
+    console.error(`⚠️ [NOT FOUND] No se proporciono el id del estudiante.`);
     return res.status(400).json({
       success: false,
       code: "RECORD_STUDENT_ID_REQUIRED",
@@ -461,13 +601,13 @@ export const getRecordStudent = async (req, res) => {
   }
 
   try {
-    console.log(
-      `🔄 [SIGACE API]: Estructurando historial para estudiante ID: ${id_student} en el period: ${id_period}`,
-    );
-    const record = await Students.getRecordStudent(id_student, id_period);
-    console.log(record);
+    console.error(`🔃 [LOANDIG...] Buscando el record...`);
+    const record = await Students.record(Number(id_student), Number(id_period));
 
     if (!record || record.length === 0) {
+      console.error(
+        `⚠️ [NOT FOUND] No se encontro el record academico del estudiante ${id_student}`,
+      );
       return res.status(404).json({
         success: false,
         code: "ACADEMIC_RECORD_EMPTY",
@@ -475,6 +615,72 @@ export const getRecordStudent = async (req, res) => {
           "Historial en blanco: El alumno seleccionado no cuenta con calificaciones o evaluaciones cargadas.",
       });
     }
+
+    console.log("📤 Resultado de Prisma:", {
+      type: typeof record,
+      isArray: Array.isArray(record),
+    });
+
+    // Reestructuración de notas agrupadas por lapso
+    const gradesByLapse = record.grades.reduce((acc, currentGrade) => {
+      const evalData = currentGrade.evaluation;
+      const evalPlan = evalData?.evaluation_plan;
+      const lapse = evalPlan?.lapse;
+      const subjectData = evalPlan?.load_academic?.subject;
+
+      const lapseKey = lapse?.name || "Sin Lapso";
+
+      // Si la clave del lapso no existe aún en el objeto acumulador, se crea
+      if (!acc[lapseKey]) {
+        acc[lapseKey] = [];
+      }
+      const percentage = Number(evalData?.porcentage ?? 0);
+      const rawGrade = Number(currentGrade?.grade ?? 0);
+
+      const weightedGrade = Math.ceil(rawGrade * (percentage / 100));
+
+      // Insertar la nota formateada en el lapso correspondiente
+      acc[lapseKey].push({
+        id: currentGrade.id,
+        grade: rawGrade,
+        referent_teorical: evalData?.referent_teorical ?? null,
+        activity: evalData?.activity ?? null,
+        subject: subjectData?.name ?? null,
+        code_subject: subjectData?.code_subject ?? null,
+        porcentage: evalData.porcentage ?? null,
+      });
+
+      acc[lapseKey].push({ weighted_grade: weightedGrade });
+
+      return acc;
+    }, {});
+
+    const enrollment = record.enrollments[0];
+
+    // restructuracion del objeto record
+    const studentRecord = {
+      id: record.id,
+      tuition_number: record.tuition_number,
+      user: {
+        id_card: record.user.id_card,
+        name: record.user.name,
+        last_name: record.user.last_name,
+      },
+      school: {
+        SIG: record.school.SIG,
+        school_name: record.school.school_name,
+      },
+      enrollment: {
+        id: enrollment.id,
+        status: enrollment.status,
+        period: enrollment.period.name,
+        year: enrollment.year.name,
+        section: enrollment.section.name,
+      },
+      grades: gradesByLapse,
+    };
+
+    console.dir(studentRecord, { depth: null, colors: true });
 
     /*   const periodsMap = {};
 
@@ -551,7 +757,7 @@ export const getRecordStudent = async (req, res) => {
       success: true,
       message:
         "Expediente de calificaciones consolidado e indexado correctamente.",
-      data: record,
+      data: studentRecord,
     });
   } catch (error) {
     console.error("❌ Error en getRecordStudent:", error);
@@ -565,18 +771,21 @@ export const getRecordStudent = async (req, res) => {
   }
 };
 
-/* ==========================================================================
-   8. OBTENER ESTUDIANTES PREINSCRITOS 
-   ========================================================================== */
+/**
+ * Porcesa a los estudiantes que no tengan una incripcion activa en el sistema.
+ *
+ * @async
+ * @function getPreinscription
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
 export const getPreinscription = async (req, res) => {
+  const SIG = req.user?.SIG;
+  const id_period = req.params.id_period || req.query.id_period;
   try {
-    console.log(
-      "⚠️ [SIGACE API]: Buscando estudiantes pre-inscritos pendientes por asignación de aula...",
-    );
-    const SIG = req.user?.SIG;
-    const id_period = req.params.id_period || req.query.id_period;
-
     if (!SIG) {
+      logger.error(`SIG no encontrado`);
       return res.status(400).json({
         success: false,
         code: "MISSING_SIG",
@@ -586,6 +795,7 @@ export const getPreinscription = async (req, res) => {
     }
 
     if (!id_period || isNaN(parseInt(id_period))) {
+      logger.error(`Periodo no enviado en la peticion`);
       return res.status(400).json({
         success: false,
         code: "INVALID_PERIOD_ID",
@@ -594,9 +804,14 @@ export const getPreinscription = async (req, res) => {
       });
     }
 
-    const students = await Students.getPreinscription(SIG, parseInt(id_period));
+    logger.info(`Consultandos las pre-inscripciones en el sistema.`);
+    const preInscription = await Students.preInscription(
+      SIG,
+      Number(id_period),
+    );
 
-    if (!students || students.length === 0) {
+    if (!preInscription || preInscription.length === 0) {
+      logger.error(`Sin estudiante preInscriptos en el sistema.`);
       return res.status(404).json({
         success: false,
         code: "ALL_STUDENTS_ENROLLED",
@@ -605,11 +820,25 @@ export const getPreinscription = async (req, res) => {
       });
     }
 
+    console.log("📤 Resultado de Prisma:", {
+      type: typeof preInscription,
+      isArray: Array.isArray(preInscription),
+    });
+
+    console.table(
+      preInscription.map((student) => ({
+        id: student.id,
+        tuition_number: student.tuition_number,
+        id_card: student.user.id_card,
+        full_name: `${student.user.name} ${student.user.last_name}`,
+      })),
+    );
+
     return res.status(200).json({
       success: true,
       message:
         "Listado de estudiantes pre-inscritos (sin sección asignada) recuperado.",
-      data: students,
+      data: preInscription,
     });
   } catch (error) {
     console.error("❌ Error en getStudentNotEnrolled:", error);
@@ -617,6 +846,131 @@ export const getPreinscription = async (req, res) => {
       success: false,
       code: "NOT_ENROLLED_INTERNAL_ERROR",
       message: "Error de base de datos al buscar estudiantes desvinculados.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Obtiene las asignaturas pendiente por cursar de un estudiante, si las tiene.
+ *
+ * @async
+ * @function getSubjectPending
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
+export const getSubjectPending = async (req, res) => {
+  const { id_student } = req.params;
+
+  if (!id_student) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_DELETE_SUBJECT_CODE",
+      message: "No se especificó el ID del estudiante.",
+    });
+  }
+
+  try {
+    logger.info("Buscando asiganturas pendientes...");
+    const pending = await Students.pendingSubject(id_student);
+
+    if (!pending) {
+      logger.info(
+        "El estudiante no tiene compromiso academico de años anteriores.",
+      );
+      return res.status(404).json({
+        success: false,
+        code: "SUBJECT_ALREADY_DELETED",
+        message: "Este estudante no tiene materia pendientes.",
+      });
+    }
+
+    logger.info("Asignaturas sincronizadas con exito.", {
+      subject_pending: pending.length,
+    });
+    return res.status(200).json({
+      success: true,
+      data: {
+        pending,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error en getSubejctPending:", error);
+    return res.status(500).json({
+      success: false,
+      code: "DELETE_SUBJECT_INTERNAL_ERROR",
+      message:
+        "Error en el servidor, no se pudo estraer la informacion, intenta nuevamente.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Obtiene las notas de un estudiante por perido academico dividido en momentos pedagojicos.
+ *
+ * @async
+ * @function getGrade
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
+export const getGrade = async (req, res) => {
+  const { id_student } = req.params;
+  const SIG = /* req.user.SIG; */ "SIG3728";
+  const { idPeriod } = req.query || req.user.id_period;
+
+  if (!id_student) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_DELETE_SUBJECT_CODE",
+      message: "No se especificó el ID del estudiante.",
+    });
+  }
+  console.log(`Controller ${id_student}`);
+
+  if (!idPeriod) {
+    return res.status(400).json({
+      success: false,
+      message: "El parámetro de consulta 'idPeriod' es obligatorio.",
+    });
+  }
+
+  try {
+    logger.info("Cargando las notas, por favor espere...");
+    const grades = await Students.grade({
+      SIG: SIG,
+      idStudent: Number(id_student),
+      idPeriod: idPeriod,
+    });
+
+    if (!grades || grades.length == 0) {
+      logger.info(
+        "El estudiante no tiene notas registradas en este periodpo academico.",
+      );
+      return res.status(404).json({
+        success: false,
+        code: "SUBJECT_ALREADY_DELETED",
+        message: "Este estudante no tiene notas registradas, en este perido.",
+      });
+    }
+
+    logger.info("Exito, las notas sincronizadas.", {
+      garde: grades.length,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: grades,
+    });
+  } catch (error) {
+    console.error("❌ Error en getSubejctPending:", error);
+    return res.status(500).json({
+      success: false,
+      code: "DELETE_SUBJECT_INTERNAL_ERROR",
+      message:
+        "Error en el servidor, no se pudo estraer la informacion, intenta nuevamente.",
       error: error.message,
     });
   }

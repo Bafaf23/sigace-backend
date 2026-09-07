@@ -5,7 +5,7 @@
  * @param {object} representative - Información del Representante del estudiante
  * @returns {string}
  */
-export const enrollmentP = (student, school, representative, logoSchool) => {
+export const enrollmentP = (student, school, logoSchool) => {
   return `  
       <html lang="es">
       <head>
@@ -62,7 +62,7 @@ export const enrollmentP = (student, school, representative, logoSchool) => {
                           <div class="w-[35%] text-right font-bold text-md">
                               <p class="text-[#1E293B]">PLANILLA DE</p>
                               <p class="text-cyan-600">INSCRIPCIÓN</p>
-                              <p class="text-[#1E293B] mt-[2px]">${school.SIG || "SIG0000"}-${student.id_student || "0"}</p>
+                              <p class="text-[#1E293B] mt-[2px]">${school.SIG || "SIG0000"}-${student.id || "0"}</p>
                           </div>
                       </header>
   
@@ -82,11 +82,11 @@ export const enrollmentP = (student, school, representative, logoSchool) => {
                           <div class="flex -mx-1">
                               <div class="w-[55%] px-1 mb-[5px]">
                                   <label class="text-[12px] font-bold text-[#94A3B8] block uppercase tracking-wide">Nombres y Apellidos</label>
-                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] uppercase font-bold tracking-wide">${student.name || ""} ${student.last_name || ""}</div>
+                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] uppercase font-bold tracking-wide">${student.user?.name || ""} ${student.user?.last_name || ""}</div>
                               </div>
                               <div class="w-[25%] px-1 mb-[5px]">
                                   <label class="text-[12px] font-bold text-[#94A3B8] block uppercase tracking-wide">Cédula de Identidad</label>
-                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] font-bold">${student.document || "N/A"}</div>
+                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] font-bold">${student.user?.id_card || "N/A"}</div>
                               </div>
                               <div class="w-[20%] px-1 mb-[5px]">
                                   <label class="text-[12px] font-bold text-[#94A3B8] block uppercase tracking-wide">Sexo</label>
@@ -103,11 +103,11 @@ export const enrollmentP = (student, school, representative, logoSchool) => {
                               </div>
                               <div class="w-[45%] px-1 mb-[5px]">
                                   <label class="text-[12px] font-bold text-[#94A3B8] block uppercase tracking-wide">Correo Electrónico</label>
-                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] lowercase font-semibold">${student.email || "N/A"}</div>
+                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] lowercase font-semibold">${student.user?.email || "N/A"}</div>
                               </div>
                               <div class="w-[25%] px-1 mb-[5px]">
                                   <label class="text-[12px] font-bold text-[#94A3B8] block uppercase tracking-wide">Número de Teléfono</label>
-                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] font-bold">${student.phone || "N/A"}</div>
+                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] font-bold">${student.user?.phone || "N/A"}</div>
                               </div>
                           </div>
       
@@ -118,15 +118,15 @@ export const enrollmentP = (student, school, representative, logoSchool) => {
                               </div>
                               <div class="w-full px-1 mb-[5px]">
                                   <label class="text-[12px] font-bold text-[#94A3B8] block uppercase tracking-wide">Año</label>
-                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] uppercase font-bold">${student.name_year || "NUEVO INGRESO"}</div>
+                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] uppercase font-bold">${student.enrollments.map((e) => e.year?.name) || "NUEVO INGRESO"}</div>
                               </div>
                               <div class="w-full px-1 mb-[5px]">
                                   <label class="text-[12px] font-bold text-[#94A3B8] block uppercase tracking-wide">Sección</label>
-                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] uppercase font-bold">${student.name_section || "NUEVO INGRESO"}</div>
+                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] uppercase font-bold">${student.enrollments.map((e) => e.section?.name) || "NUEVO INGRESO"}</div>
                               </div>
                                <div class="w-full px-1 mb-[5px]">
                                   <label class="text-[12px] font-bold text-[#94A3B8] block uppercase tracking-wide">Fecha de Inscripcion</label>
-                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] uppercase font-bold">${new Date(student.date_enrollment).toLocaleDateString("es-VE") || "Ver en el Sistema"}</div>
+                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] uppercase font-bold">${new Date(student.created_at).toLocaleDateString("es-VE") || "Ver en el Sistema"}</div>
                               </div>
                           </div>
                       </section>
@@ -184,28 +184,28 @@ export const enrollmentP = (student, school, representative, logoSchool) => {
                               <div class="w-[50%] px-1 mb-[5px]">
                                   <label class="text-[12px] font-bold text-[#94A3B8] block uppercase tracking-wide">Nombre del Representante</label>
                                   <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] uppercase font-bold tracking-wide">
-                                      ${representative.name || ""} ${representative.last_name || ""}
+                                      ${student.representative?.name || ""} ${student.representative?.last_name || ""}
                                   </div>
                               </div>
                               <div class="w-[25%] px-1 mb-[5px]">
                                   <label class="text-[12px] font-bold text-[#94A3B8] block uppercase tracking-wide">Cédula de Identidad</label>
-                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] font-bold">${representative.document || "N/A"}</div>
+                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] font-bold">${student.representative?.document || "N/A"}</div>
                               </div>
                               <div class="w-[25%] px-1 mb-[5px]">
                                   <label class="text-[12px] font-bold text-[#94A3B8] block uppercase tracking-wide">Parentesco</label>
-                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] uppercase font-bold">${representative.relationship || "N/A"}</div>
+                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] uppercase font-bold">${student.representative?.relationship || "N/A"}</div>
                               </div>
                           </div>
       
                           <div class="flex -mx-1 mt-2">
                               <div class="w-[30%] px-1 mb-[5px]">
                                   <label class="text-[12px] font-bold text-[#94A3B8] block uppercase tracking-wide">Teléfono</label>
-                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] font-bold">${representative.phone || "N/A"}</div>
+                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] font-bold">${student.representative?.phone || "N/A"}</div>
                               </div>
                               <div class="w-[70%] px-1 mb-[5px]">
                                   <label class="text-[12px] font-bold text-[#94A3B8] block uppercase tracking-wide">Correo Electrónico</label>
-                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] lowercase font-semibold ${!representative.repEmail ? "text-slate-400 italic font-normal" : ""}">
-                                      ${representative.repEmail || "N/A"}
+                                  <div class="text-sm text-[#1E293B] py-[6px] border-b border-[#CBD5E1] min-h-[20px] lowercase font-semibold ${!student.representative?.repEmail ? "text-slate-400 italic font-normal" : ""}">
+                                      ${student.representative.repEmail || "N/A"}
                                   </div>
                               </div>
                           </div>
@@ -216,14 +216,14 @@ export const enrollmentP = (student, school, representative, logoSchool) => {
                       <div class="flex justify-between pt-[55px]">
                           <div class="w-[30%] border-t border-[#CBD5E1] text-center pt-[6px]">
                               <p class="text-[11px] font-bold text-[#1E293B] uppercase tracking-wide">Estudiante</p>
-                              <p class="text-[11px] text-[#64748B] leading-tight uppercase font-bold tracking-wide">${student.name || ""} ${student.last_name || ""}</p>
-                              <p class="text-[11px] text-[#64748B] leading-tight">${student.document || ""}</p>
+                              <p class="text-[11px] text-[#64748B] leading-tight uppercase font-bold tracking-wide">${student.user?.name || ""} ${student.user?.last_name || ""}</p>
+                              <p class="text-[11px] text-[#64748B] leading-tight">${student.user?.id_card || ""}</p>
                           </div>
       
                           <div class="w-[30%] border-t border-[#CBD5E1] text-center pt-[6px]">
                               <p class="text-[11px] font-bold text-[#1E293B] uppercase tracking-wide">Representante Legal</p>
-                              <p class="text-[11px] text-[#64748B] leading-tight uppercase font-bold tracking-wide">${representative.name || ""} ${representative.last_name || ""}</p>
-                              <p class="text-[11px] text-[#64748B] leading-tight">${representative.document || ""}</p>
+                              <p class="text-[11px] text-[#64748B] leading-tight uppercase font-bold tracking-wide">${student.representative?.name || ""} ${student.representative?.last_name || ""}</p>
+                              <p class="text-[11px] text-[#64748B] leading-tight">${student.representative?.document || ""}</p>
                           </div>
       
                           <div class="w-[30%] border-t border-[#CBD5E1] text-center pt-[6px]">
@@ -232,9 +232,6 @@ export const enrollmentP = (student, school, representative, logoSchool) => {
                           </div>
                       </div>
       
-                      <footer class="text-center text-[9px] text-[#94A3B8] mt-[30px] pb-[5px] font-medium">
-                          SIGACE - Impulsando el Futuro
-                      </footer>
                   </div>
               </div>
           </div>

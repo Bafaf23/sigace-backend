@@ -1,4 +1,5 @@
 import { pool } from "../db.js";
+import { prisma } from "../lib/prisma.js";
 
 export class Grade {
   constructor(id, idEvaluation, idStudent, grade) {
@@ -16,93 +17,124 @@ export class Grade {
    * @param {number} gred.grade - la calificacion
    * @returns {Promise<boolean>}
    */
-  static async createGrade({ id_evaluation, id_student, grade }) {
+  static async create({ id_evaluation, id_student, grade }) {
+    console.log("ID de evaluación a insertar:", id_evaluation);
     try {
-      const [result] = await pool.query(
-        `INSERT INTO grades (id_evaluation, id_student, grade) VALUES (?, ?, ?)`,
-        [id_evaluation, id_student, grade],
-      );
-
-      return result.affectedRows > 0;
+      return await prisma.grade.create({
+        data: {
+          id_evaluation: Number(id_evaluation),
+          id_student: Number(id_student),
+          grade: grade,
+        },
+      });
     } catch (error) {
       console.error(`Ha ocurrido un error inesperado: ${error}`);
-      return false; // Retornamos false si falla para respetar el @returns {boolean}
     }
   }
 
   /**
-   * Obtener las notas del estudiante
-   * @param {object} getG
-   * @param {number} getG.idStudent - Id Estudiante
-   * @param {number} getG.idEvaluation Id Evaluacion
-   * @param {number} getG.idLapse - Id Lapso
-   * @returns {Array<object>}
+   * Obtiene todas las notas de los estudiantes asociadas a una Carga Académica específica.
+   *
+   * @param {number} id_load_academic - ID de la carga académica (asignación docente-materia-sección).
+   * @returns {Promise<Array<Object>>} Lista de calificaciones estructuradas.
    */
-
-  static async getGradeStudent({
-    idStudent,
-    idEvaluation,
-    idLapse,
-    idLoadAcademic,
-  }) {
+  static async getBySection(id_load_academic) {
     try {
-      // 1. Base del query con un "WHERE 1=1" para poder concatenar "AND" fácilmente
-      let query = `
-      SELECT
-        g.id,
-        g.grade,
-        g.id_student,
-        g.id_evaluation,
-        det.activity AS evaluation_title,
-        det.porcentage,
-        lap.name AS lapse_name,
-      ROUND(
-    SUM(g.grade * (det.porcentage / 100)) 
-    OVER(PARTITION BY g.id_student, plan.id_lapse), 2
-  ) AS final_grade
-      FROM grades g
-      INNER JOIN evaluation_plan_details det ON g.id_evaluation = det.id
-      INNER JOIN evaluation_plans plan ON det.id_evaluation_plan = plan.id
-      INNER JOIN lapses lap ON plan.id_lapse = lap.id
-      WHERE 1=1
-      `;
+      const loadAcademicId = Number(id_load_academic);
 
-      const queryParams = [];
+      const grades = await prisma.grade.findMany({
+        where: {
+          evaluation: {
+            evaluation_plan: {
+              id_load_academic: loadAcademicId,
+            },
+          },
+        },
+        select: {
+          id: true,
+          grade: true,
+          id_student: true,
+          id_evaluation: true,
+          student: {
+            select: {
+              id: true,
+              id_user: true,
+              gender: true,
+              birth_date: true,
+              user: {
+                select: {
+                  id_card: true,
+                  name: true,
+                  last_name: true,
+                },
+              },
+            },
+          },
+          evaluation: {
+            select: {
+              id: true,
+              porcentage: true,
+              activity: true,
+              evaluation_plan: {
+                select: {
+                  id_lapse: true,
+                  id_load_academic: true,
+                  load_academic: {
+                    select: {
+                      id_subject: true,
+                      subject: {
+                        select: {
+                          code_subject: true,
+                          abbreviation: true,
+                          name: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      const gradesMap = grades.reduce((acc, curr) => {
+        const studentCard = curr.student?.user?.id_card || curr.id_student;
+        const subject =
+          curr.evaluation?.evaluation_plan?.load_academic.subject.abbreviation;
 
-      // 2. Filtros dinámicos: Se añaden al SQL y al array SOLO si vienen definidos
-      if (idStudent) {
-        query += ` AND g.id_student = ?`;
-        queryParams.push(idStudent);
-      }
+        const grade = Number(curr.grade) || 0;
+        const percentage = Number(curr.evaluation?.porcentage) || 0;
 
-      if (idEvaluation) {
-        query += ` AND g.id_evaluation = ?`;
-        queryParams.push(idEvaluation);
-      }
+        const aporteEvaluacion = grade * (percentage / 100);
 
-      if (idLapse) {
-        query += ` AND plan.id_lapse = ?`;
-        queryParams.push(idLapse);
-      }
+        if (!acc[studentCard]) {
+          acc[studentCard] = {};
+        }
 
-      if (idLoadAcademic) {
-        query += ` AND plan.id_load_academic = ?`;
-        queryParams.push(idLoadAcademic);
-      }
+        if (!acc[studentCard][subject]) {
+          acc[studentCard][subject] = 0;
+        }
 
-      // Ordenamos el resultado
-      query += ` ORDER BY lap.id ASC, det.id ASC`;
+        acc[studentCard][subject] += aporteEvaluacion;
 
-      // 3. Ejecutamos pasándole exactamente el array de parámetros mapeado
-      const [gradesStudent] = await pool.query(query, queryParams);
-      return gradesStudent;
+        return acc;
+      }, {});
+
+      Object.keys(gradesMap).forEach((student) => {
+        Object.keys(gradesMap[student]).forEach((subject) => {
+          gradesMap[student][subject] = Math.round(gradesMap[student][subject]);
+        });
+      });
+
+      return gradesMap;
     } catch (error) {
-      console.log(`Error en modelo grade: ${error}`);
-      return []; // Retorna array vacío en caso de error para evitar que el controlador rompa su lógica
+      console.error(`❌ Error en Grade.getBySection: ${error.message}`);
+      throw error;
     }
   }
 
   /**
+   * TODO: investigar si sirve para algo esto
    * Obtener el resumen de notas agrupado por asignaturas para la boleta
    * @param {string} SIG - Código de la institución
    * @param {number} idStudent - ID del estudiante
@@ -191,6 +223,165 @@ export class Grade {
     } catch (error) {
       console.error(`❌ Error crítico en getGradesForBoleta: ${error}`);
       return [];
+    }
+  }
+
+  /**
+   ** Obtiene todas las calificaciones de una sección crudas para armar la sábana de notas en el controlador
+   * @param {Object} param0
+   * @param {string} param0.id_lapse
+   * @param {number} param0.id_section
+   * @param {string} param0.SIG
+   */
+  static async gradesSheetNote({ id_lapse, id_section, SIG }) {
+    try {
+      const rows = await prisma.enrollment.findMany({
+        where: {
+          id_section: id_section,
+          status: {
+            in: ["activo", "materia_pendiente"],
+          },
+          // Condición sobre la relación con la sección (sec.SIG = ?)
+          section: {
+            SIG: SIG,
+          },
+        },
+        select: {
+          status: true,
+          // 1. Datos del Estudiante
+          student: {
+            select: {
+              user: {
+                select: {
+                  id_card: true,
+                  name: true,
+                  last_name: true,
+                },
+              },
+            },
+          },
+          // 2. Carga Académica de la Sección y Período
+          section: {
+            select: {
+              load_academics: {
+                // Filtramos la carga académica por el mismo período de la matrícula
+                where: {
+                  // Nota: Si relacionaste id_period en tu schema, Prisma lo resuelve dinámicamente
+                },
+                select: {
+                  // Datos de la Asignatura (Subject)
+                  subject: {
+                    select: {
+                      name: true,
+                      code_subject: true,
+                      abbreviation: true,
+                    },
+                  },
+
+                  evaluation_plans: {
+                    where: {
+                      id_lapse: id_lapse,
+                    },
+                    select: {
+                      details: {
+                        select: {
+                          porcentage: true,
+                          date: true,
+                          // Calificaciones filtradas por el estudiante de la matrícula (g.id_student = est.id)
+                          grades: {
+                            where: {
+                              // El filtro por id_student se aplica dinámicamente o mediante inclusión
+                            },
+                            select: {
+                              grade: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          student: {
+            user: {
+              last_name: "asc",
+            },
+          },
+        },
+      });
+
+      console.dir(rows, { depth: null, color: true });
+
+      const formatSheetNoteData = (rows) => {
+        if (!rows || rows.length === 0) {
+          return { subjects: [], students: [] };
+        }
+
+        // 1. Extraer materias únicas desde la carga académica de la primera matrícula
+        const sampleLoad = rows[0]?.section?.load_academics || [];
+        const subjects = sampleLoad.map((la) => ({
+          code: la.subject.code_subject,
+          name: la.subject.name,
+          abbreviation: la.subject.abbreviation,
+        }));
+
+        // 2. Procesar y mapear la lista de estudiantes con sus calificaciones
+        const students = prismaData.map((item) => {
+          const studentUser = item.student?.user || {};
+          const loadAcademics = item.section?.load_academics || [];
+
+          // Mapeamos las notas por materia para este estudiante
+          const gradesBySubject = {};
+
+          loadAcademics.forEach((la) => {
+            const subCode = la.subject.code_subject;
+            const evalPlans = la.evaluation_plans || [];
+
+            // Extraer evaluaciones y notas
+            const evaluations = evalPlans.flatMap((plan) =>
+              (plan.details || []).map((detail) => ({
+                porcentage: detail.porcentage,
+                date: detail.date,
+                grade: detail.grades?.[0]?.grade ?? null,
+              })),
+            );
+
+            // Calcular nota definitiva o promedio acumulado del lapso
+            const totalGrade = evaluations.reduce(
+              (acc, ev) => acc + (ev.grade || 0),
+              0,
+            );
+
+            gradesBySubject[subCode] = {
+              evaluations,
+              finalGrade: evaluations.length > 0 ? totalGrade : null,
+            };
+          });
+
+          return {
+            id_card: studentUser.id_card,
+            name: studentUser.name,
+            last_name: studentUser.last_name,
+            fullName:
+              `${studentUser.last_name || ""}, ${studentUser.name || ""}`.trim(),
+            grades: gradesBySubject,
+          };
+        });
+
+        return {
+          subjects,
+          students,
+        };
+      };
+      console.dir(formatSheetNoteData, { depth: null, color: true });
+      return formatSheetNoteData;
+    } catch (error) {
+      console.error("❌ Error en getGradesForSheetNote:", error);
+      throw error;
     }
   }
 }

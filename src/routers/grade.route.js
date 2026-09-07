@@ -10,23 +10,18 @@ import {
 
 const router = Router();
 
-router.get("/", (req, res) => {
-  res.status(200).json({
-    name: "API Notas SIG",
-  });
-});
-
-router.put(
-  "/uploadNote",
-  verificarAutenticacion,
-  permitirRoles("Profesor"),
-  createGrade,
-);
+router.put("/", verificarAutenticacion, permitirRoles("profesor"), createGrade);
 
 router.get(
-  "/getGrade/:id_load_academic",
-  verificarAutenticacion,
-  permitirRoles("Profesor", "Administrador", "Estudiante"),
+  "/:id_load_academic",
+  /* verificarAutenticacion, */
+  /*   permitirRoles(
+    "profesor",
+    "administrador",
+    "estudiante",
+    "director",
+    "gestion",
+  ), */
   getGradeStudents,
 );
 export default router;

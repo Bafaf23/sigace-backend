@@ -269,7 +269,7 @@ CREATE TABLE IF NOT EXISTS auth_tokens (
 -- =========================================================================
 
 INSERT INTO roles (name) VALUES 
-('SuperAdmin'),
+('sudo'),
 ('Estudiante'),
 ('Profesor'),
 ('Director'),

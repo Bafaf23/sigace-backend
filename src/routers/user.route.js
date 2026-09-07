@@ -14,55 +14,28 @@ import {
 
 const router = express.Router();
 
-router.get("/", (_req, res) => {
-  res.status(200).json({
-    name: "SIGACE API - Users",
-    description: "API para la gestión de usuarios del sistema SIGACE.",
-    version: "1.0.0",
-    environment: "production",
-    status: "operational",
-    links: {
-      getUsers: `/getUser`,
-      createUser: `/createUser`,
-      changePassword: `/changePassword`,
-      deleteUser: `/deleteUser/:id`,
-      updateUser: `/updateUser`,
-    },
-  });
-});
-
-router.get(
-  "/getUser",
-  verificarAutenticacion,
-  permitirRoles("SuperAdmin"),
-  getUsers,
-);
+router.get("/", verificarAutenticacion, permitirRoles("sudo"), getUsers);
 
 router.post(
-  "/createUser",
+  "/",
   verificarAutenticacion,
-  permitirRoles("SuperAdmin", "Administrador"),
+  permitirRoles("sudo", "administrador", "director", "gestion"),
   createUser,
 );
 router.post(
   "/changePassword",
   verificarAutenticacion,
-  permitirRoles("SuperAdmin", "Administrador", "Profesor", "Estudiante"),
+  permitirRoles("sudo", "administrador", "profesor", "estudiante", "director"),
   changePassword,
 );
 router.delete(
-  "/deleteUser/:id/:role_id",
+  "/:id/:role_id",
   verificarAutenticacion,
-  permitirRoles("SuperAdmin"),
+  permitirRoles("sudo"),
   deleteUser,
 );
-router.put(
-  "/updateUser",
-  verificarAutenticacion,
-  permitirRoles("SuperAdmin"),
-  updateUser,
-);
+router.put("/", verificarAutenticacion, permitirRoles("sudo"), updateUser);
 
-router.get("/profile", verificarAutenticacion, getProfile);
+router.get("/profile",   verificarAutenticacion,  getProfile);
 
 export default router;

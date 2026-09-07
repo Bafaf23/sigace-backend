@@ -1,4 +1,5 @@
 import { pool } from "../db.js";
+import { prisma } from "../lib/prisma.js";
 
 export class Sections {
   constructor(name, SIG, id_period, id_year, guide_id, capacity) {
@@ -11,38 +12,21 @@ export class Sections {
   }
 
   /**
-   * Obtiene el ID del período académico por su nombre
-   */
-  static async getPeriodIdByName(periodName) {
-    try {
-      const [rows] = await pool.query(
-        "SELECT id FROM academic_periods WHERE name = ? LIMIT 1",
-        [periodName],
-      );
-      return rows[0]?.id ?? null;
-    } catch (error) {
-      console.error("Error al obtener el período académico:", error);
-      throw error;
-    }
-  }
-
-  /**
    * Crea una sección en la base de datos
+   * @param {object} section - Objeto con la imformacion de la section
    */
-  static async createSection(section) {
+  static async create(section) {
     try {
-      const [result] = await pool.query(
-        "INSERT INTO sections (name, SIG, id_period, id_year, guide_id, capacity) VALUES (?, ?, ?, ?, ?, ?)",
-        [
-          section.name,
-          section.SIG,
-          section.id_period,
-          section.id_year,
-          section.guide_id,
-          section.capacity,
-        ],
-      );
-      return result.affectedRows > 0;
+      return await prisma.section.create({
+        data: {
+          name: section.name,
+          SIG: section.SIG,
+          id_period: section.id_period,
+          id_year: Number(section.id_year),
+          guide_id: Number(section.guide_id),
+          capacity: section.capacity,
+        },
+      });
     } catch (error) {
       console.error("Error al crear la sección:", error);
       throw error;
@@ -50,39 +34,176 @@ export class Sections {
   }
 
   /**
+   * Obtiene los estudiantes de una sección
+   * @param {object} params - Objeto con los parámetros
+   * @param {number} params.id_section - ID de la sección
+   * @param {string} params.SIG - SIG de la escuela
+   * @returns {Promise<Array<object>>} - Array de estudiantes
+   */
+  static async getStudent({ id_section, SIG }) {
+    try {
+      const enrollments = await prisma.enrollment.findMany({
+        where: {
+          id_section: Number(id_section),
+          section: {
+            SIG: SIG,
+          },
+        },
+        select: {
+          id: true,
+          status: true,
+          section: {
+            select: {
+              guide: {
+                select: {
+                  id: true,
+                  user: {
+                    select: {
+                      name: true,
+                      last_name: true,
+                      id: true,
+                      id_card: true,
+                    },
+                  },
+                },
+              },
+              id: true,
+              name: true,
+              SIG: true,
+              year: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          student: {
+            select: {
+              id: true,
+              SIG: true,
+              tuition_number: true,
+              condition: true,
+              gender: true,
+              birth_date: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  last_name: true,
+                  id_card: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // Informacion de la seccion
+      const sectioonInfo = enrollments[0]?.section;
+
+      // lista de estudiantes
+      const studentsList = enrollments.map((e) => ({
+        name: e.student?.user?.name,
+        last_name: e.student?.user?.last_name,
+        id_card: e.student?.user?.id_card,
+        id_user: e.student?.user?.id,
+        id_enrollment: e.id,
+        status: e.status,
+        condition: e.student.condition,
+        id_student: e.student?.id,
+        tuition_number: e.student?.tuition_number,
+        gender: e.student?.gender,
+        birth_date: e.student?.birth_date,
+      }));
+
+      return {
+        id: sectioonInfo?.id,
+        name: sectioonInfo?.year?.name,
+        nomenclature: sectioonInfo?.name,
+        guide: {
+          id_user: sectioonInfo?.guide?.user?.id,
+          document: sectioonInfo?.guide?.user?.id_card,
+          name: sectioonInfo?.guide?.user?.name,
+          last_name: sectioonInfo?.guide?.user?.last_name,
+          id: sectioonInfo?.guide?.id,
+        },
+        students: studentsList,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+  /**
    * Obtiene las secciones de la escuela
    */
-  static async getSections(SIG, id_period) {
+  static async get(SIG, id_period) {
     try {
-      const [rows] = await pool.query(
-        `SELECT 
-          sections.id, 
-          sections.name, 
-          sections.id_period, 
-          sections.id_year, 
-          sections.guide_id, 
-          sections.capacity,
-          years.name AS year_name, 
-          teachers.id AS teacher_id,
-          users.name AS teacher_name, 
-          users.last_name AS teacher_last_name,
-          (
-            SELECT COUNT(e.id) 
-            FROM enrollments e 
-            WHERE e.id_section = sections.id 
-              AND e.id_period = sections.id_period 
-              AND e.status IN ('Activo','Aprobado','Retirado','Materia Pendiente','Reprobado')
-          ) AS total_students
-        FROM sections
-        INNER JOIN years ON sections.id_year = years.id
-        INNER JOIN academic_periods ap ON sections.id_period = ap.id
-        LEFT JOIN teachers ON sections.guide_id = teachers.id
-        LEFT JOIN users ON teachers.id_user = users.id
-        WHERE sections.SIG = ? 
-          AND sections.id_period = ?;`,
-        [SIG, id_period],
-      );
-      return rows;
+      const sectionsList = await prisma.section.findMany({
+        where: { SIG: SIG, id_period: Number(id_period) },
+        include: {
+          year: {
+            select: {
+              name: true,
+            },
+          },
+          load_academics: {
+            select: {
+              id: true,
+              subject: {
+                select: {
+                  code_subject: true,
+                  name: true,
+                  abbreviation: true,
+                },
+              },
+              teacher: {
+                select: {
+                  id: true,
+                  user: {
+                    id: true,
+                    name: true,
+                    last_name: true,
+                    id_card: true,
+                  },
+                },
+              },
+            },
+          },
+          guide: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  last_name: true,
+                  id_card: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const sections = sectionsList.map((section) => {
+        return {
+          id: section.id,
+          name: section.year.name,
+          nomenclature: section.name,
+          period: section.id_period,
+          year_id: section.id_year,
+          capacity: section.capacity,
+          guide: {
+            id: section.guide_id,
+            id_user: section.guide.user.id,
+            document: section.guide.user.id_card,
+            name: section.guide.user.name,
+            last_name: section.guide.user.last_name,
+          },
+        };
+      });
+
+      return sections;
     } catch (error) {
       console.error("Error al obtener las secciones:", error);
       throw error;
@@ -94,81 +215,41 @@ export class Sections {
    */
   static async getSectionByStudent(SIG, id, id_period) {
     try {
-      const query = `
-   SELECT
-          -- Datos del Usuario
-          u.id AS user_id,
-          u.name AS user_name,
-          
-          -- Datos del Estudiante
-          s.id AS student_id,
-          
-          -- Datos de Inscripción
-          e.id AS enrollment_id,
-          e.status AS enrollment_status,
-          
-          -- Datos de la Sección
-          sec.id AS id_section,
-          sec.id_period AS section_period_id,
-          
-          -- Parámetro enviado para comparar
-          ? AS period_param_enviado
-        FROM users u
-        LEFT JOIN students s ON u.id = s.id_user
-        LEFT JOIN enrollments e ON s.id = e.id_student
-        LEFT JOIN sections sec ON e.id_section = sec.id
-        WHERE u.id = ?
-        ORDER BY e.id DESC
-        LIMIT 1;
-      `;
-
-      const [rows] = await pool.execute(query, [id_period, id]);
-      return rows.length > 0 ? rows[0] : null;
+      return await prisma.users.findUnique({
+        where: {
+          id: id,
+        },
+        select: {
+          id: true, // user_id
+          name: true, // user_name
+          student_profile: {
+            select: {
+              id: true, // student_id
+              enrollments: {
+                orderBy: {
+                  id: "desc", // ORDER BY e.id DESC
+                },
+                take: 1, // LIMIT 1
+                select: {
+                  id: true,
+                  status: true,
+                  section: {
+                    select: {
+                      id: true,
+                      id_period: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
     } catch (error) {
       console.error(
         "❌ Error en el modelo al ejecutar getSectionByStudent:",
         error,
       );
-      throw error;
-    }
-  }
-
-  /**
-   * Obtiene una sección por su id mapeando metadatos escolares para reportes
-   */
-  static async getSectionByID(SIG, id_section) {
-    try {
-      const query = `
-      SELECT
-    s.id AS id_section,
-    s.name AS section_name,        
-    y.name AS year_name,             
-    u.name AS teacher_name,         
-    u.last_name AS teacher_last_name,
-    u.document AS teacher_document,
-    sho.name AS school_name,
-    sho.SIG AS SIG,
-    sho.DEA_CODE AS school_code,
-    sho.logo_school,
-    acp.name AS period
-  FROM sections s
-  -- 1. Conectamos con el año escolar asignado a la sección
-  INNER JOIN years y ON s.id_year = y.id
-  -- 2. Conectamos con el profesor guía de la sección
-  INNER JOIN teachers t ON s.guide_id = t.id
-  INNER JOIN schools sho ON s.SIG = sho.SIG
-  INNER JOIN academic_periods acp ON s.id_period = acp.id
-  -- 3. Conectamos con los datos personales del profesor en la tabla de usuarios
-  INNER JOIN users u ON t.id_user = u.id
-  WHERE s.SIG = ? AND s.id = ?;
-    `;
-
-      // 🌟 ¡CORREGIDO!: Ahora pasamos los 3 argumentos que la query necesita en orden exacto
-      const [rows] = await pool.execute(query, [SIG, id_section]);
-
-      return rows.length > 0 ? rows[0] : null;
-    } catch (error) {
-      console.error("❌ Error en el modelo al ejecutar getSectionByID:", error);
       throw error;
     }
   }

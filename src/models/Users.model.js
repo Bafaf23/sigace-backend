@@ -1,6 +1,8 @@
 import { pool } from "../db.js";
+import { prisma } from "../lib/prisma.js";
 import bcrypt from "bcryptjs";
-import { getCurrentPeriod } from "../utils/periodAc.js";
+import logger from "../utils/logger.js";
+import { generateTuitionNumber } from "../utils/tuitoinNumber.js";
 
 /**
  * Constructor de la clase Users
@@ -28,7 +30,12 @@ export class Users {
     this.password = password;
     this.SIG = SIG;
   }
-
+  /**
+   * Obtiene el token vejente para el cambio de pass
+   * TODO: remplazar sql por prisma
+   * @param {string} token
+   * @returns {object}
+   */
   static async getUserToken(token) {
     try {
       const sql = `SELECT id_user FROM auth_tokens
@@ -46,6 +53,7 @@ export class Users {
 
   /**
    ** Perserva el token de cambio de contrasena solicitado por el usuario
+   * TODO: remplazar el sql por prisma
    * @param {number} id_user - id del solicitante
    * @param {string} token
    * @param {Date} expires_at - fecha de expiracion del token
@@ -73,106 +81,34 @@ export class Users {
    * @returns {null} Null si no se encuentra el usuario
    * @returns {boolean} False si ocurre un error al obtener los usuarios
    */
-  static async getUsers(email) {
+  static async getUsers(email = null) {
     try {
-      let queryEmail = `SELECT 
-        u.id, u.document, u.name, u.last_name, u.email, u.phone, u.role_id,
-        u.is_first_login, u.is_active,
-        r.name AS role,
-        s.SIG AS student_sig, s.representative_id, s.tuition_number, 
-        s.allergies, s.medical_condition, s.weight, s.height, 
-        s.shirt_size, s.pants_size, s.shoe_size,
-        t.SIG AS teacher_sig,
-        a.SIG AS admin_sig,
-        sc.SIG AS school_sig, sc.name AS school_name, sc.address AS school_address,
-        sc.phone AS school_phone, sc.email AS school_email, sc.type AS school_type,
-        sc.DEA_CODE AS school_DEA_CODE, sc.RIF AS school_RIF, sc.company_name AS school_company_name
-      FROM users u
-      INNER JOIN roles r ON u.role_id = r.id
-      LEFT JOIN students s ON u.id = s.id_user
-      LEFT JOIN teachers t ON u.id = t.id_user
-      LEFT JOIN administrators a ON u.id = a.id_user
-      LEFT JOIN schools sc ON sc.SIG = COALESCE(s.SIG, t.SIG, a.SIG) WHERE u.email = ?`;
+      let whereClause = {};
 
-      let queryAll = `SELECT 
-        u.id, u.document, u.name, u.last_name, u.email, u.phone, u.role_id,
-        u.is_first_login, u.is_active,
-        r.name AS role,
-        s.id AS id_student,
-        s.SIG AS student_sig, s.representative_id, s.tuition_number, 
-        s.allergies, s.medical_condition, s.weight, s.height, 
-        s.shirt_size, s.pants_size, s.shoe_size,
-        t.SIG AS teacher_sig,
-        a.SIG AS admin_sig,
-        sc.SIG AS school_sig, sc.name AS school_name, sc.address AS school_address,
-        sc.phone AS school_phone, sc.email AS school_email, sc.type AS school_type,
-        sc.DEA_CODE AS school_DEA_CODE, sc.RIF AS school_RIF, sc.company_name AS school_company_name
+      if (email) {
+        whereClause.email = email;
+      }
 
-      FROM users u
-      INNER JOIN roles r ON u.role_id = r.id
-      LEFT JOIN students s ON u.id = s.id_user
-      LEFT JOIN teachers t ON u.id = t.id_user
-      LEFT JOIN administrators a ON u.id = a.id_user
-      LEFT JOIN schools sc ON sc.SIG = COALESCE(s.SIG, t.SIG, a.SIG)`;
-
-      let query = email ? queryEmail : queryAll;
-
-      const [rows] = await pool.query(query, email ? [email] : []);
-
-      return rows.map((row) => {
-        const user = {
-          id: row.id,
-          document: row.document,
-          name: row.name,
-          last_name: row.last_name,
-          email: row.email,
-          phone: row.phone,
-          role_id: row.role_id,
-          role: row.role,
-          is_first_login: row.is_first_login,
-          is_active: row.is_active,
-        };
-
-        if (row.student_sig) {
-          user.students = {
-            id_student: row.id_student,
-            SIG: row.student_sig,
-            representative_id: row.representative_id,
-            tuition_number: row.tuition_number,
-            year_id: row.year_id,
-            id_section: row.id_section,
-            id_period: row.id_period,
-          };
-        }
-
-        if (row.teacher_sig) {
-          user.teachers = {
-            SIG: row.teacher_sig,
-          };
-        }
-        if (row.admin_sig) {
-          user.administrators = {
-            SIG: row.admin_sig,
-            id_administrators: row.id,
-          };
-        }
-
-        if (row.school_sig) {
-          user.school = {
-            SIG: row.school_sig,
-            name: row.school_name,
-            address: row.school_address,
-            phone: row.school_phone,
-            email: row.school_email,
-            type: row.school_type,
-            DEA_CODE: row.school_DEA_CODE,
-            RIF: row.school_RIF,
-            company_name: row.school_company_name,
-          };
-        }
-
-        return user;
+      const rows = await prisma.users.findMany({
+        where: whereClause,
+        include: {
+          role: true,
+          student_profile: {
+            include: { school: true },
+          },
+          teacher_profile: {
+            include: { school: true },
+          },
+          administrator_profile: {
+            include: { school: true },
+          },
+          user_schools: {
+            include: { school: true },
+          },
+        },
       });
+
+      return rows.map((row) => this.#formatUser(row));
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
       return [];
@@ -180,95 +116,178 @@ export class Users {
   }
 
   /**
+   * Helper privado para mapear la estructura de datos de Prisma a la respuesta deseada.
+   */
+  static #formatUser(row) {
+    const user = {
+      id: row.id,
+      id_card: row.id_card,
+      name: row.name,
+      last_name: row.last_name,
+      email: row.email,
+      phone: row.phone,
+      role_id: row.role_id,
+      role: row.role?.name,
+      is_first_login: row.is_first_login,
+      is_active: row.is_active,
+    };
+
+    // Validar de forma segura cada perfil
+    if (row.student_profile) {
+      user.students = {
+        id_student: row.student_profile.id,
+        representative_id: row.student_profile.representative_id,
+        tuition_number: row.student_profile.tuition_number,
+        allergies: row.student_profile.allergies,
+        medical_condition: row.student_profile.medical_condition,
+        weight: row.student_profile.weight,
+        height: row.student_profile.height,
+        shirt_size: row.student_profile.shirt_size,
+        pants_size: row.student_profile.pants_size,
+        shoe_size: row.student_profile.shoe_size,
+        gender: row.student_profile.gender,
+        birth_date: row.student_profile.birth_date,
+        condition: row.student_profile.condition,
+      };
+    }
+
+    if (row.teacher_profile) {
+      user.teachers = {
+        id_teacher: row.teacher_profile.id,
+        SIG: row.teacher_profile.SIG,
+        is_active: row.teacher_profile.is_active,
+      };
+    }
+
+    if (row.administrator_profile) {
+      user.administrators = {
+        id_administrator: row.administrator_profile.id,
+        SIG: row.administrator_profile.SIG,
+      };
+    }
+
+    const gestorRelation = Array.isArray(row.user_schools)
+      ? row.user_schools[0]
+      : null;
+
+    if (gestorRelation) {
+      user.gestion = {
+        id_gestor: gestorRelation.id,
+        SIG: gestorRelation.SIG,
+      };
+    }
+    // Extraer la escuela de forma segura, evaluando todos los posibles roles
+    const schoolData =
+      row.student_profile?.school ||
+      row.teacher_profile?.school ||
+      row.administrator_profile?.school ||
+      row.supervised_school ||
+      gestorRelation?.school;
+
+    // Solo asignar si schoolData realmente es un objeto válido
+    if (schoolData && typeof schoolData === "object") {
+      user.school = {
+        SIG: schoolData?.SIG,
+        name: schoolData?.school_name,
+      };
+    } else {
+      user.school = null;
+    }
+
+    return user;
+  }
+
+  /**
    * Crea un nuevo usuario en la base de datos y relaciona el usuario con la tabla correspondiente
    * @param {Users} user - Objeto de la clase Users
-   * @returns {number|boolean} El ID del usuario creado o False si ocurre un error
+   * @returns {object} El ID del usuario creado o False si ocurre un error
    */
-  static async createUser(user) {
-    const connection = await pool.getConnection();
-
+  static async create(user) {
     try {
-      // 2. Iniciamos la transacción sobre esta conexión exclusiva
-      await connection.beginTransaction();
-
       const hashedPassword = await bcrypt.hash(user.password, 10);
 
-      // NOTA: Usamos 'connection.query', NO 'pool.query'
-      const [result] = await connection.query(
-        "INSERT INTO users (document, name, last_name, email, phone, role_id, pass) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [
-          user.document,
-          user.name,
-          user.last_name,
-          user.email,
-          user.phone,
-          user.role_id,
-          hashedPassword,
-        ],
-      );
+      const newUser = await prisma.$transaction(async (tx) => {
+        const createUser = await tx.users.create({
+          data: {
+            id_card: user.document,
+            name: user.name,
+            last_name: user.last_name,
+            email: user.email,
+            phone: user.phone,
+            role_id: Number(user.role_id),
+            is_active: true,
+            is_first_login: true,
+            pass: hashedPassword,
+          },
+        });
 
-      const idUser = result.insertId;
-      const roleUser = Number(user.role_id);
+        const idUser = createUser.id;
+        const roleUser = Number(user.role_id);
 
-      switch (roleUser) {
-        case 2:
-          await connection.query(
-            "INSERT INTO students (id_user, gender, SIG, representative_id, tuition_number, allergies, medical_condition, weight, birth_date, height, shirt_size, pants_size, shoe_size, `condition`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [
-              idUser,
-              user.gender,
-              user.SIG,
-              user.representative_id,
-              user.tuition_number,
-              user.allergies,
-              user.medical_condition,
-              user.weight,
-              user.birth_date,
-              user.height,
-              user.shirt_size,
-              user.pants_size,
-              user.shoe_size,
-              user.status,
-            ],
-          );
-          break;
-        case 3:
-          await connection.query(
-            "INSERT INTO teachers (id_user, SIG) VALUES (?, ?)",
-            [idUser, user.SIG],
-          );
-          break;
-        case 4:
-          await connection.query(
-            "INSERT INTO directors (id_user, SIG) VALUES (?, ?)",
-            [idUser, user.SIG],
-          );
-          break;
-        case 5:
-          await connection.query(
-            "INSERT INTO administrators (id_user, SIG) VALUES (?, ?)",
-            [idUser, user.SIG],
-          );
-          break;
-        default:
-          console.error(
-            `El role ${roleUser} no requiere registro en una tabla secundaria`,
-          );
-          break;
-      }
-
-      // 3. Si todas las consultas funcionaron sin errores, guardamos los cambios de forma definitiva
-      await connection.commit();
-      return idUser;
+        switch (roleUser) {
+          case 3:
+            await tx.school.update({
+              where: { SIG: user.SIG },
+              data: { director_id: idUser },
+            });
+            break;
+          case 4:
+            const tuition_number = await generateTuitionNumber(user.SIG);
+            await tx.student.create({
+              data: {
+                id_user: idUser,
+                SIG: user.SIG,
+                representative_id: user.representative_id,
+                tuition_number: tuition_number,
+                allergies: user.allergies,
+                medical_condition: user.medical_condition,
+                weight: user.weight ? parseInt(user.weight, 10) : null,
+                height: user.height ? parseInt(user.height) : null,
+                shirt_size: user.shirt_size,
+                pants_size: user.pants_size,
+                shoe_size: user.shoe_size,
+                gender: user.gender,
+                birth_date: user.birth_date ? new Date(user.birth_date) : null,
+                condition: "nuevo_ingreso",
+              },
+            });
+            break;
+          case 5:
+            await tx.teacher.create({
+              data: {
+                id_user: idUser,
+                SIG: user.SIG,
+                is_active: true,
+              },
+            });
+            break;
+          case 6:
+            await tx.administrator.create({
+              data: {
+                id_user: idUser,
+                SIG: user.SIG,
+              },
+            });
+            break;
+          case 7:
+          case 8:
+            await tx.user_schools.create({
+              data: {
+                user_id: idUser,
+                SIG: user.SIG,
+              },
+            });
+            break;
+          default:
+            logger.warn(`Este usuario no requiere un registro especial`);
+            break;
+        }
+        return createUser;
+      });
+      return newUser;
     } catch (error) {
-      // 4. Si algo falla en cualquier punto del proceso, revertimos TODO (no se creará el usuario ni el rol)
-      await connection.rollback();
-
       console.error("Error al crear usuario (Transacción revertida):", error);
-      return false;
-    } finally {
-      // 5. CRÍTICO: Devolvemos la conexión al pool pase lo que pase
-      connection.release();
+      throw error;
     }
   }
 
@@ -280,35 +299,28 @@ export class Users {
    */
   static async getUserByEmail(email) {
     try {
-      const [result] = await pool.query(
-        `SELECT 
-    u.id AS id_user,                       
-    COALESCE(s.id, t.id, a.id) AS id,     
-    u.document, 
-    u.name, 
-    u.last_name, 
-    u.email, 
-    u.phone, 
-    u.pass AS password, 
-    r.name AS role, 
-    u.is_first_login, 
-    u.is_active,
-    COALESCE(t.SIG, a.SIG, s.SIG) AS SIG
-FROM users u 
-INNER JOIN roles r ON u.role_id = r.id 
-LEFT JOIN students s ON u.id = s.id_user
-LEFT JOIN schools sch_est ON s.SIG = sch_est.SIG
-LEFT JOIN teachers t ON u.id = t.id_user
-LEFT JOIN schools sch_prof ON t.SIG = sch_prof.SIG
-LEFT JOIN administrators a ON u.id = a.id_user
-LEFT JOIN schools sch_adm ON a.SIG = sch_adm.SIG
-WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
-        [email],
-      );
-      if (!result[0]) {
-        return null;
-      }
-      return { ...result[0] };
+      return await prisma.users.findFirst({
+        where: { email },
+        select: {
+          id: true,
+          email: true,
+          pass: true,
+          role_id: true,
+          name: true,
+          last_name: true,
+          is_first_login: true,
+          role: {
+            select: {
+              name: true,
+            },
+          },
+          user_schools: {
+            select: {
+              SIG: true,
+            },
+          },
+        },
+      });
     } catch (error) {
       console.error("Error al obtener usuario por email:", error);
       return null;
@@ -317,6 +329,7 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
 
   /**
    * Cambia la contraseña de un usuario
+   * TODO: remplazar sql por prisma
    * @param {number} id - ID del usuario
    * @param {string} newPassword - Nueva contraseña del usuario
    * @returns {boolean} True si la contraseña se cambió correctamente, false si no se pudo cambiar
@@ -353,28 +366,13 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
    * @param {number} role_id - ID del rol del usuario
    * @returns {boolean} True si el usuario se eliminó correctamente, false si no se pudo eliminar
    */
-  static async deleteUser(id, role_id) {
+  static async deleteUser(id) {
     try {
-      switch (role_id) {
-        case 2:
-          await pool.query("DELETE FROM students WHERE id_user = ?", [id]);
-          break;
-        case 3:
-          await pool.query("DELETE FROM teachers WHERE id_user = ?", [id]);
-          break;
-        case 5:
-          await pool.query("DELETE FROM administrators WHERE id_user = ?", [
-            id,
-          ]);
-          break;
-        default:
-          console.error(
-            `El role ${role_id} no requiere eliminación en una tabla`,
-          );
-          break;
-      }
-      const [result] = await pool.query("DELETE FROM users WHERE id = ?", [id]);
-      return result.affectedRows > 0;
+      return await prisma.users.delete({
+        where: {
+          id: Number(id),
+        },
+      });
     } catch (error) {
       console.error("Error al eliminar usuario:", error);
       return false;
@@ -383,6 +381,7 @@ WHERE LOWER(TRIM(u.email)) = LOWER(TRIM(?))`,
 
   /**
    * Actualiza un usuario en la base de datos
+   * TODO: remplazar sql por prisma
    * @param {Users} user - Objeto de la clase Users
    * @returns {boolean} True si el usuario se actualizó correctamente, false si no se pudo actualizar
    */
