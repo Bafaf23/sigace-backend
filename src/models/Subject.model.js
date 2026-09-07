@@ -190,48 +190,4 @@ export class Subject {
       throw error;
     }
   }
-
-  /**
-   ** Obtiene todas las calificaciones de una sección crudas para armar la sábana de notas en el controlador
-   * @param {Object} param0
-   * @param {string} param0.id_lapse
-   * @param {number} param0.id_section
-   * @param {string} param0.SIG
-   */
-  static async getGradesForSheetNote({ id_lapse, id_section, SIG }) {
-    try {
-      const query = `
-     SELECT 
-        u.document AS student_document,
-        u.name AS student_name,
-        u.last_name AS student_last_name,
-        s.name AS subject_name,
-        s.code_subject AS subject_code,
-        s.abbreviation,
-        epd.porcentage AS evaluation_porcentage,
-        g.grade AS evaluation_grade
-      FROM enrollments e
-      INNER JOIN students est ON e.id_student = est.id
-      INNER JOIN users u ON est.id_user = u.id
-      -- Acoplamos la sección para poder validar el SIG institucional de forma estricta
-      INNER JOIN sections sec ON e.id_section = sec.id
-      INNER JOIN load_academic la ON la.id_section = e.id_section AND la.id_period = e.id_period
-      INNER JOIN subjects s ON la.id_subject = s.code_subject
-      LEFT JOIN evaluation_plans ep ON ep.id_load_academic = la.id AND ep.id_lapse = ?
-      LEFT JOIN evaluation_plan_details epd ON epd.id_evaluation_plan = ep.id
-      LEFT JOIN grades g ON g.id_evaluation = epd.id AND g.id_student = est.id
-      WHERE e.id_section = ? 
-        AND sec.SIG = ? -- 🔥 CORRECCIÓN: Filtramos usando la tabla de secciones (sec)
-        AND e.status IN ('Activo', 'Materia Pendiente', 'Repitiente')
-      ORDER BY u.last_name ASC, u.name ASC, s.name ASC, epd.date ASC;
-    `;
-
-      // Pasamos los parámetros de forma limpia y segura
-      const [rows] = await pool.execute(query, [id_lapse, id_section, SIG]);
-      return rows;
-    } catch (error) {
-      console.error("❌ Error en getGradesForSheetNote:", error);
-      throw error;
-    }
-  }
 }

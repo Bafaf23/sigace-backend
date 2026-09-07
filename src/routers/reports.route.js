@@ -35,16 +35,16 @@ router.get(
 );
 
 router.get(
-  "/noteSheet/:id_section",
-  verificarAutenticacion,
-  permitirRoles("administrador", "gestion"),
+  "/:id_section/noteSheet",
+  /* verificarAutenticacion,
+  permitirRoles("administrador", "gestion"), */
   sheetNote,
 );
 
 router.get(
   "/:id_section/rfre",
-  /*  verificarAutenticacion,
-  permitirRoles("administrador", "gestion", "director"), */
+  verificarAutenticacion,
+  permitirRoles("administrador", "gestion", "director"),
   resumenFinalE,
 );
 export default router;

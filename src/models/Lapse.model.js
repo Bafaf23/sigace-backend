@@ -27,6 +27,13 @@ export class Lapse {
             SIG: SIG,
           },
         },
+        include: {
+          period: {
+            select: {
+              name: true,
+            },
+          },
+        },
         orderBy: {
           id: "asc",
         },

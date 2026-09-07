@@ -16,6 +16,7 @@ import path from "path";
 import logger from "../utils/logger.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
 import { LoadAcademic } from "../models/LoadAcademic.model.js";
+import { promises } from "dns";
 
 /**
  * CONFIGURACIÓN REUSABLE DE LANZAMIENTO PUPPETEER
@@ -367,13 +368,17 @@ export const enrollmetP = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 4. GENERAR SÁBANA COMPLETA DE CALIFICACIONES DE UNA SECCIÓN
- * ==========================================================================
+ ** Genera un reporte con todas las califiaciones de una seccion, distinto a RFRE para el control interno, con esatdisticas.
+ *
+ * @async
+ * @function sheetNote
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const sheetNote = async (req, res) => {
-  const SIG = req.user?.SIG;
-  const id_period = req.user?.id_period;
+  const SIG = /* req.user?.SIG */ "SIG3728";
+  const id_period = /* req.user?.id_period */ 2;
   const { id_section } = req.params;
 
   let browser = null;
@@ -389,7 +394,7 @@ export const sheetNote = async (req, res) => {
 
   try {
     const lapses = await Lapse.getLapses(SIG, id_period);
-    const lapseActive = lapses?.find((lapse) => lapse.is_active === 1);
+    const lapseActive = lapses?.find((lapse) => lapse.is_active === true);
 
     if (!lapseActive) {
       return res.status(404).json({
@@ -400,13 +405,13 @@ export const sheetNote = async (req, res) => {
       });
     }
 
-    const rows = await Subject.getGradesForSheetNote({
-      id_lapse: lapseActive.id,
-      id_section: Number(id_section),
-      SIG: SIG,
-    });
+    const [section, school, loadAcademic] = await Promise.all([
+      Sections.getStudent({ id_section, SIG }),
+      School.getSchoolBySIG(SIG),
+      LoadAcademic.get({ SIG, id_section }),
+    ]);
 
-    if (!rows || rows.length === 0) {
+    if (!section || section.length === 0) {
       return res.status(404).json({
         success: false,
         code: "SHEET_NOTES_EMPTY",
@@ -415,26 +420,23 @@ export const sheetNote = async (req, res) => {
       });
     }
 
-    const sectionResult = await Sections.getSectionByID(SIG, id_section);
-    const section = sectionResult?.[0] || sectionResult;
+    // lista de ids de las cargaas academicas de una seccion
+    const loadAcademicId = loadAcademic
+      .flatMap((load) => load.academicLoad)
+      .map((load) => load.id_load_academic);
 
-    if (!section) {
-      return res.status(404).json({
-        success: false,
-        code: "SHEET_SECTION_NOT_FOUND",
-        message:
-          "La sección a la que intenta acceder no se encuentra activa o configurada.",
-      });
-    }
+    const grades = await Promise.all(
+      loadAcademicId.map((id) => Grade.getBySection(id)),
+    );
 
-    const studentsMap = rows.reduce((acc, row) => {
-      const doc = row.student_document;
+    /*   const studentsMap = rows.students.reduce((acc, row) => {
+      const doc = row.student.user.id_card;
 
       if (!acc[doc]) {
         acc[doc] = {
           document: doc,
-          name: row.student_name,
-          last_name: row.student_last_name,
+          name: row.students.user.name,
+          last_name: row.students.user.student_last_name,
           _acumuladores: {},
           definitivas: {},
           promedio: 0,
@@ -453,8 +455,8 @@ export const sheetNote = async (req, res) => {
 
       est._acumuladores[materia] += nota * porcentaje;
       return acc;
-    }, {});
-
+    }, {}); */
+    /* 
     const processedStudents = Object.values(studentsMap).map((student) => {
       let sumaDefinitivas = 0;
       let totalMaterias = 0;
@@ -486,9 +488,9 @@ export const sheetNote = async (req, res) => {
 
       delete student._acumuladores;
       return student;
-    });
+    }); */
 
-    const uniqueSubjects = rows.reduce((acc, row) => {
+    /* const uniqueSubjects = rows.reduce((acc, row) => {
       if (!acc.some((sub) => sub.code_subject === row.subject_code)) {
         acc.push({
           code_subject: row.subject_code,
@@ -497,14 +499,16 @@ export const sheetNote = async (req, res) => {
         });
       }
       return acc;
-    }, []);
+    }, []); */
 
-    const htmlContent = noteSheet(
+    console.dir(grades[0], { depth: null, color: true });
+    const htmlContent = noteSheet({
       section,
-      processedStudents,
-      uniqueSubjects,
-      lapseActive,
-    );
+      school,
+      loadAcademic,
+      laspseActive: lapseActive,
+      grades,
+    });
 
     browser = await puppeteer.launch(LAUNCH_ARGS);
     const page = await browser.newPage();
@@ -553,8 +557,8 @@ export const sheetNote = async (req, res) => {
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const resumenFinalE = async (req, res) => {
-  const SIG = /* req.user?.SIG */ "SIG8587";
-  const id_period = /* req.user?.id_period */ 1;
+  const SIG = req.user?.SIG;
+  const id_period = req.user?.id_period;
   const { id_section } = req.params;
 
   if (!SIG || !id_section) {
@@ -582,7 +586,7 @@ export const resumenFinalE = async (req, res) => {
     const gradesRawList = await Promise.all(
       loadAcademicIds.map((id) => Grade.getBySection(id)),
     );
-    console.log(gradesRawList);
+
     if (!school || !section || !loadAcademic)
       return logger.info("No hay informacion necesaria para generar el RFRE");
 

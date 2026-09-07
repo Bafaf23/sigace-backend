@@ -51,6 +51,7 @@ export class Sections {
         },
         select: {
           id: true,
+          status: true,
           section: {
             select: {
               guide: {
@@ -81,6 +82,7 @@ export class Sections {
               id: true,
               SIG: true,
               tuition_number: true,
+              condition: true,
               gender: true,
               birth_date: true,
               user: {
@@ -106,6 +108,8 @@ export class Sections {
         id_card: e.student?.user?.id_card,
         id_user: e.student?.user?.id,
         id_enrollment: e.id,
+        status: e.status,
+        condition: e.student.condition,
         id_student: e.student?.id,
         tuition_number: e.student?.tuition_number,
         gender: e.student?.gender,
