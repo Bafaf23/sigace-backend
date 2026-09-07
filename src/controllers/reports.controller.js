@@ -501,7 +501,6 @@ export const sheetNote = async (req, res) => {
       return acc;
     }, []); */
 
-    console.dir(grades[0], { depth: null, color: true });
     const htmlContent = noteSheet({
       section,
       school,

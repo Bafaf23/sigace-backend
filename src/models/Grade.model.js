@@ -18,7 +18,6 @@ export class Grade {
    * @returns {Promise<boolean>}
    */
   static async create({ id_evaluation, id_student, grade }) {
-    console.log("ID de evaluación a insertar:", id_evaluation);
     try {
       return await prisma.grade.create({
         data: {
@@ -60,6 +59,7 @@ export class Grade {
               id: true,
               id_user: true,
               gender: true,
+              tuition_number: true,
               birth_date: true,
               user: {
                 select: {
@@ -98,7 +98,7 @@ export class Grade {
         },
       });
       const gradesMap = grades.reduce((acc, curr) => {
-        const studentCard = curr.student?.user?.id_card || curr.id_student;
+        const studentTuitionNumber = curr.student?.tuition_number;
         const subject =
           curr.evaluation?.evaluation_plan?.load_academic.subject.abbreviation;
 
@@ -107,15 +107,15 @@ export class Grade {
 
         const aporteEvaluacion = grade * (percentage / 100);
 
-        if (!acc[studentCard]) {
-          acc[studentCard] = {};
+        if (!acc[studentTuitionNumber]) {
+          acc[studentTuitionNumber] = {};
         }
 
-        if (!acc[studentCard][subject]) {
-          acc[studentCard][subject] = 0;
+        if (!acc[studentTuitionNumber][subject]) {
+          acc[studentTuitionNumber][subject] = 0;
         }
 
-        acc[studentCard][subject] += aporteEvaluacion;
+        acc[studentTuitionNumber][subject] += aporteEvaluacion;
 
         return acc;
       }, {});

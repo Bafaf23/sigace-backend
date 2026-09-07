@@ -36,8 +36,8 @@ router.get(
 
 router.get(
   "/:id_section/noteSheet",
-  /* verificarAutenticacion,
-  permitirRoles("administrador", "gestion"), */
+  verificarAutenticacion,
+  permitirRoles("administrador", "gestion"),
   sheetNote,
 );
 

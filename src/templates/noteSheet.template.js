@@ -20,8 +20,7 @@ export function noteSheet({
   const validStudents = Array.isArray(section?.students)
     ? section?.students
     : [];
-  console.log(grades);
-  // CÁLCULO DE ESTADÍSTICAS REALES DE LA SECCIÓN
+
   const totalEstudiantes = validStudents.length;
   const aprobados = validStudents.filter((s) => s.status === "aprobado").length;
   const aplazados = totalEstudiantes - aprobados;
@@ -120,7 +119,6 @@ export function noteSheet({
                       student.id_card || student.tuition_number;
 
                     const studentGrades = normalizedGrades[studentCardId] || {};
-                    console.log(studentGrades);
                     const scoresList = Object.values(studentGrades).filter(
                       (val) => typeof val === "number" && !isNaN(val),
                     );
@@ -146,7 +144,7 @@ export function noteSheet({
                         const score = studentGrades[subjectId];
                         const scoreValid = score ? score : "0";
                         const esAplazado = scoreValid < 10;
-                        console.log(subject);
+
                         return `
                       <td class="p-1.5 border-r ${
                         esAplazado ? "text-red-600 font-bold bg-red-50/40" : ""
