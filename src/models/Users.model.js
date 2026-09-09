@@ -2,7 +2,7 @@ import { pool } from "../db.js";
 import { prisma } from "../lib/prisma.js";
 import bcrypt from "bcryptjs";
 import logger from "../utils/logger.js";
-import { generateTuitionNumber } from "../utils/tuitoinNumber.js";
+import { tuitionNumber } from "../utils/tuitionNumber.js";
 
 /**
  * Constructor de la clase Users

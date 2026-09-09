@@ -23,11 +23,9 @@ export const TablaRendimiento = ({
 
   // Helper local para extraer la cédula normalizada (ej: "V30123456")
   const getStudentCard = (s) => {
-    const rawCard = String(s?.id_card || s?.user?.id_card || "").trim();
-    if (!rawCard) return "";
-    return rawCard.startsWith("V") || rawCard.startsWith("E")
-      ? rawCard
-      : `V${rawCard}`;
+    const rawCard = String(s?.tuition_number).trim();
+    if (!rawCard) return;
+    return rawCard;
   };
 
   // 2. Generación de las filas de los estudiantes
@@ -91,12 +89,12 @@ export const TablaRendimiento = ({
       return `
       <tr class="h-[17px] text-[10.5px] font-medium text-center border-b border-slate-300 uppercase">
         <td class="font-bold text-slate-950 border-r border-slate-300">${num}</td>
-        <td class="whitespace-nowrap border-r border-slate-300">${s?.id_card || s?.user?.id_card || "*"}</td>
-        <td class="text-left px-1 border-r border-slate-300">${s?.last_name || s?.user?.last_name || "*"}</td>
-        <td class="text-left px-1 border-r border-slate-300">${s?.name || s?.user?.name || "*"}</td>
+        <td class="whitespace-nowrap border-r border-slate-300">${s?.id_card || s?.tuition_number || "*"}</td>
+        <td class="text-left px-1 border-r border-slate-300">${s?.last_name || "*"}</td>
+        <td class="text-left px-1 border-r border-slate-300">${s?.name || "*"}</td>
         <td class="text-left px-1 border-r border-slate-300">${s?.birth_place || "*"}</td>
         <td class="border-r border-slate-300">${s?.ef || "*"}</td>
-        <td class="border-r border-slate-300">${s?.gender || s?.user?.gender || "*"}</td>
+        <td class="border-r border-slate-300">${s?.gender || "*"}</td>
         <td class="border-r border-slate-300">${day}</td>
         <td class="border-r border-slate-300">${month}</td>
         <td class="border-r border-slate-300">${year}</td>

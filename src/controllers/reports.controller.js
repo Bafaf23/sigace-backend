@@ -288,7 +288,7 @@ export const reportCard = async (req, res) => {
  */
 export const enrollmetP = async (req, res) => {
   const { id_student } = req.params;
-  const SIG = /* req.user?.SIG */ "SIG3728";
+  const SIG = req.user?.SIG ;
   const id_period = req.user?.id_period;
   let browser = null;
 
@@ -377,8 +377,8 @@ export const enrollmetP = async (req, res) => {
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const sheetNote = async (req, res) => {
-  const SIG = /* req.user?.SIG */ "SIG3728";
-  const id_period = /* req.user?.id_period */ 2;
+  const SIG = req.user?.SIG;
+  const id_period = req.user?.id_period;
   const { id_section } = req.params;
 
   let browser = null;

@@ -8,8 +8,7 @@ export const footerRFRE = (loadAcademic = [], section = {}, school) => {
   const rootData = Array.isArray(loadAcademic) ? loadAcademic[0] || {} : data;
 
   // Extraemos la sección y la carga académica desde rootData
-  const sectionData =
-    rootData.section || sectionOverride.section || sectionOverride || {};
+  const sectionData = rootData.section || sectionOverride.section || {};
 
   // Aplanamos academicLoad por si viene como array anidado [[Object], [Object]]
   const academicLoad = Array.isArray(rootData.academicLoad)
@@ -34,9 +33,9 @@ export const footerRFRE = (loadAcademic = [], section = {}, school) => {
     {
       key: "CT",
       num: 8,
-      label: "CT",
+      label: "CIE",
       title: "Ciencias de la Tierra",
-      code: "CT",
+      code: "CIE",
     },
     {
       key: "GHC",
@@ -61,6 +60,7 @@ export const footerRFRE = (loadAcademic = [], section = {}, school) => {
     },
     { key: "PGCRP", num: 12, label: "PGCRP", title: "PGCRP", code: "PGCRP" },
   ];
+  console.log(academicLoad);
 
   const director = school?.usersByRole?.director?.[0];
 

@@ -45,5 +45,3 @@ export const tuitionNumber = async (SIG) => {
     await prisma.$disconnect;
   }
 };
-
-await tuitionNumber("SIG3728");

@@ -1,7 +1,7 @@
 import { Students } from "../models/Students.model.js";
 import { Representative } from "../models/Representative.model.js";
 import { Users } from "../models/Users.model.js";
-import { generateTuitionNumber } from "../utils/tuitoinNumber.js";
+import { tuitionNumber } from "../utils/tuitionNumber.js";
 import { welcomeEmail } from "../services/resend.service.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
 import { Subject } from "../models/Subject.model.js";
@@ -190,7 +190,7 @@ export const createStudent = async (req, res) => {
     const repDoc = `${repdniType}${repdni}`.trim();
     const SIG = req.user?.SIG;
 
-    const tuitionNumber = await generateTuitionNumber(SIG);
+    const tuitionNumber = await tuitionNumber(SIG);
 
     if (!tuitionNumber) {
       logger.warn("Ocurrio un problema generando la matricula", {

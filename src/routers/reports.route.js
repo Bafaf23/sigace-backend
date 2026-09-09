@@ -43,8 +43,8 @@ router.get(
 
 router.get(
   "/:id_section/rfre",
-  verificarAutenticacion,
-  permitirRoles("administrador", "gestion", "director"),
+  /*  verificarAutenticacion,
+  permitirRoles("administrador", "gestion", "director"), */
   resumenFinalE,
 );
 export default router;
