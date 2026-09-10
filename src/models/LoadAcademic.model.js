@@ -27,10 +27,10 @@ export class LoadAcademic {
     try {
       const result = await prisma.load_academic.create({
         data: {
-          id_teacher: loadAcademic.id_teacher,
+          id_teacher: Number(loadAcademic.id_teacher),
           SIG: loadAcademic.SIG,
-          id_section: loadAcademic.id_section,
-          id_period: loadAcademic.id_period,
+          id_section: Number(loadAcademic.id_section),
+          id_period: Number(loadAcademic.id_period),
           id_subject: loadAcademic.id_subject,
           created_at: loadAcademic.created_at,
         },

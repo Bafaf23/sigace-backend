@@ -167,11 +167,12 @@ export const getStudentsBySection = async (req, res) => {
 
     if (!section || section.length === 0) {
       logger.info("No hay estudiantes en esta seccion o la seccion no exite");
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
         code: "SECTION_EMPTY",
         message:
           "Aula disponible: Esta sección no cuenta con estudiantes inscritos actualmente.",
+        data: [],
       });
     }
 
