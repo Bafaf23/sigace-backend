@@ -18,6 +18,7 @@ export const createAcademicPeriod = async (req, res) => {
     const dateStart = body.dateStart || body.dateStard;
     const dateEnd = body.dateEnd;
     const SIG = req.user?.SIG;
+    console.log(req.user);
 
     if (!namePeriod || !dateStart || !dateEnd) {
       logger.debug(

@@ -13,7 +13,7 @@ import logger from "../utils/logger.js";
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getSubjects = async (req, res) => {
-  const SIG = /* req.user?.SIG */ "SIG3728";
+  const SIG = req.user?.SIG;
 
   if (!SIG) {
     return res.status(400).json({
@@ -51,6 +51,7 @@ export const getSubjects = async (req, res) => {
           code_subject: subject.code_subject,
           name: subject.name,
           SIG: subject.SIG,
+          year: subject.year.name,
         })),
       );
     }
@@ -190,7 +191,7 @@ export const getYears = async (req, res) => {
   }
 
   try {
-    logger.inf("Buscando años de fromacion academcos para ", { SIG: SIG });
+    logger.info("Buscando años de fromacion academcos para ", { SIG: SIG });
     const years = await Subject.getYears(SIG);
 
     if (!years || years.length === 0) {

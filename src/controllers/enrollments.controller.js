@@ -1,52 +1,58 @@
 import { Enrollments } from "../models/Enrollments.model.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
+import logger from "../utils/logger.js";
 
 /**
- * ==========================================================================
- * 1. REGISTRAR UNA NUEVA INSCRIPCIÓN / MATRÍCULA
- * ==========================================================================
+ * Inserta un registro en la tabla enrollment
+ *
+ * @async
+ * @function createEnrollment
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const createEnrollment = async (req, res) => {
+  const { id_student, id_period, id_section, status, id_year } = req.body;
+
+  if (!id_student || !id_period || !id_section || !status || !id_year) {
+    logger.info("Parámetros de inscripción incompletos.");
+    return res.status(400).json({
+      success: false,
+      code: "INCOMPLETE_ENROLLMENT_DATA",
+      message:
+        "No se pudo procesar la matrícula: El alumno, período, sección y estado son obligatorios.",
+    });
+  }
   try {
-    console.log(
-      "⚠️ [SIGACE API]: Iniciando proceso de matriculación estudiantil...",
-    );
-    const { id_student, id_period, id_section, status } = req.body ?? {};
-
-    if (!id_student || !id_period || !id_section || !status) {
-      console.log("❌ [SIGACE API]: Parámetros de inscripción incompletos.");
-      return res.status(400).json({
-        success: false,
-        code: "INCOMPLETE_ENROLLMENT_DATA",
-        message:
-          "No se pudo procesar la matrícula: El alumno, período, sección y estado son obligatorios.",
-      });
-    }
-
-    const enrollmentData = { id_student, id_period, id_section, status };
-    console.log(
-      `🔄 [SIGACE API]: Asignando estudiante [${id_student}] a la sección [${id_section}]...`,
+    const enrollmentData = {
+      id_student,
+      id_period,
+      id_section,
+      status,
+      id_year,
+    };
+    logger.info(
+      `🔄 Asignando estudiante [${id_student}] a la sección [${id_section}]...`,
     );
 
     const result = await Enrollments.createEnrollment(enrollmentData);
 
-    if (result > 0) {
-      console.log(
-        "✅ [SIGACE API]: Matrícula formalizada en la base de datos.",
-      );
-      return res.status(201).json({
-        success: true,
-        code: "ENROLLMENT_CREATED",
+    if (!result) {
+      logger.info("Error al procesar la inscripcion", { resurlt });
+      return res.status(400).json({
+        success: false,
+        code: "ENROLLMENT_FAILED",
         message:
-          "El estudiante ha sido inscrito y asignado a su sección de forma exitosa.",
+          "No se pudo procesar la inscripción. Verifique que el alumno no esté ya matriculado en este ciclo.",
       });
     }
 
-    return res.status(400).json({
-      success: false,
-      code: "ENROLLMENT_FAILED",
+    logger.info("Exito, inscripcion formalizada.");
+    return res.status(201).json({
+      success: true,
+      code: "ENROLLMENT_CREATED",
       message:
-        "No se pudo procesar la inscripción. Verifique que el alumno no esté ya matriculado en este ciclo.",
+        "El estudiante ha sido inscrito y asignado a su sección de forma exitosa.",
     });
   } catch (error) {
     console.error("❌ Error crítico en createEnrollment:", error);

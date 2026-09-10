@@ -13,8 +13,8 @@ import logger from "../utils/logger.js";
  */
 export const getTeachers = async (req, res) => {
   try {
-    const SIG = /* req.user.SIG */ "SIG3728";
-    const id_period = /* req.user.id_period */ 2;
+    const SIG = req.user.SIG ;
+    const id_period = req.user.id_period;
 
     if (!SIG) {
       logger.error("Si codigo SIG");

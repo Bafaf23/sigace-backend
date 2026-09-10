@@ -72,8 +72,8 @@ router.get(
 
 router.get(
   "/:id_student/grade",
-  /* verificarAutenticacion,
-  permitirRoles("administrador", "director", "estudiante", "gestion"), */
+  verificarAutenticacion,
+  permitirRoles("administrador", "director", "estudiante", "gestion"),
   getGrade,
 );
 

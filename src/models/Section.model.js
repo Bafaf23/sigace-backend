@@ -98,6 +98,9 @@ export class Sections {
         },
       });
 
+      if (!enrollments || enrollments.length === 0) {
+        return [];
+      }
       // Informacion de la seccion
       const sectioonInfo = enrollments[0]?.section;
 
@@ -138,6 +141,7 @@ export class Sections {
    */
   static async get(SIG, id_period) {
     try {
+      console.log(SIG, id_period);
       const sectionsList = await prisma.section.findMany({
         where: { SIG: SIG, id_period: Number(id_period) },
         include: {
@@ -158,12 +162,13 @@ export class Sections {
               },
               teacher: {
                 select: {
-                  id: true,
                   user: {
-                    id: true,
-                    name: true,
-                    last_name: true,
-                    id_card: true,
+                    select: {
+                      id: true,
+                      name: true,
+                      last_name: true,
+                      id_card: true,
+                    },
                   },
                 },
               },
@@ -171,7 +176,6 @@ export class Sections {
           },
           guide: {
             select: {
-              id: true,
               user: {
                 select: {
                   id: true,

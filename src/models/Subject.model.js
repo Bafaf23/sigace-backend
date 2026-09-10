@@ -21,7 +21,7 @@ export class Subject {
         data: {
           code_subject: subject.code_subject,
           name: subject.name,
-          year_id: subject.year_id,
+          year_id: Number(subject.year_id),
           SIG: subject.SIG,
           abbreviation: subject.abbreviation,
         },
@@ -40,6 +40,11 @@ export class Subject {
     try {
       return await prisma.subject.findMany({
         where: { SIG: SIG },
+        include: {
+          year: {
+            select: { name: true },
+          },
+        },
       });
     } catch (error) {
       throw error;

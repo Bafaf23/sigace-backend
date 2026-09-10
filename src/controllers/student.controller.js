@@ -27,6 +27,7 @@ function formatText(text) {
 const normalizeToDate = (rawDate) => {
   if (!rawDate) return null;
 
+  logger.debug("normalizando...", { rawDate });
   // Reemplazar / por - y separar año, mes, día
   const parts = rawDate.toString().trim().replace(/\//g, "-").split("-");
 
@@ -57,8 +58,8 @@ const safeTrim = (val) => (typeof val === "string" ? val.trim() : "");
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getStudents = async (req, res) => {
-  const SIG = /* req.user.SIG */ "SIG8587";
-  const id_period = /* req.user.id_period */ 1;
+  const SIG = req.user.SIG;
+  const id_period = req.user.id_period;
 
   if (!SIG) {
     return res.status(400).json({
@@ -190,11 +191,11 @@ export const createStudent = async (req, res) => {
     const repDoc = `${repdniType}${repdni}`.trim();
     const SIG = req.user?.SIG;
 
-    const tuitionNumber = await tuitionNumber(SIG);
+    const tuitionNumberN = await tuitionNumber(SIG);
 
-    if (!tuitionNumber) {
+    if (!tuitionNumberN) {
       logger.warn("Ocurrio un problema generando la matricula", {
-        tuitionNumber,
+        tuitionNumberN,
         SIG,
       });
       return res.status(400).json({
@@ -205,7 +206,7 @@ export const createStudent = async (req, res) => {
     }
     const passgeneric = `${studentDoc.substring(0, 4)}@2026`;
 
-    const birthDate = normalizeToDate(req.body.birth_date);
+    const birthDate = normalizeToDate(req.body.birthDate);
     if (!birthDate) {
       logger.error(
         "La fecha de nacimiento es inválida. Usa un formato válido como YYYY-MM-DD o YYYY/MM/DD.",
@@ -223,7 +224,7 @@ export const createStudent = async (req, res) => {
     // insercion el la DB
     const newStudent = await Students.createStudent({
       student: {
-        tuition_number: tuitionNumber,
+        tuition_number: tuitionNumberN,
         allergies: req.body.allergies || null,
         medical_condition: req.body.medicalCondition || null,
         weight: req.body.weight || null,
@@ -231,9 +232,8 @@ export const createStudent = async (req, res) => {
         shirt_size: req.body.shirtSize || null,
         pants_size: req.body.pantSize || null,
         shoe_size: req.body.shoeSize || null,
-        condition: req.body.condition || null,
+        condition: req.body.condition || "nuevo_ingreso",
         SIG: SIG,
-        tuition_number: tuitionNumber,
         gender: gender?.trim(),
         birth_date: birthDate,
       },
@@ -398,7 +398,7 @@ export const updateStudent = async (req, res) => {
  */
 export const getStudentNotEnrolled = async (req, res) => {
   const SIG = req.user?.SIG;
-  const { id_period } = req.user.id_period;
+  const { id_period } = req.params;
 
   if (!SIG) {
     logger.error(`No se encontro el codigo SIG. ${SIG}`);
@@ -410,7 +410,7 @@ export const getStudentNotEnrolled = async (req, res) => {
     });
   }
 
-  if (!id_period || isNaN(parseInt(id_period))) {
+  if (!id_period) {
     logger.error(`No se encontro el perido academico. ${id_period}`);
     return res.status(400).json({
       success: false,
@@ -431,6 +431,7 @@ export const getStudentNotEnrolled = async (req, res) => {
         code: "ALL_STUDENTS_ENROLLED",
         message:
           "Organización completa: Todos los estudiantes registrados ya cuentan con un aula asignada en este lapso.",
+        data: [],
       });
     }
 

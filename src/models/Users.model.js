@@ -226,9 +226,8 @@ export class Users {
 
         switch (roleUser) {
           case 3:
-            await tx.school.update({
-              where: { SIG: user.SIG },
-              data: { director_id: idUser },
+            await tx.user_schools.create({
+              data: { user_id: idUser, SIG: user.SIG },
             });
             break;
           case 4:
@@ -299,7 +298,7 @@ export class Users {
    */
   static async getUserByEmail(email) {
     try {
-      return await prisma.users.findFirst({
+      const row = await prisma.users.findFirst({
         where: { email },
         select: {
           id: true,
@@ -314,13 +313,56 @@ export class Users {
               name: true,
             },
           },
-          user_schools: {
+        },
+      });
+
+      let sigRecord = null;
+      const role = row.role?.name?.toLowerCase();
+
+      switch (role) {
+        case "estudiante":
+          sigRecord = await prisma.student.findFirst({
+            where: { id_user: row.id },
+            select: { SIG: true },
+          });
+          break;
+        case "profesor":
+          sigRecord = await prisma.teacher.findFirst({
+            where: { id_user: row.id },
+            select: { SIG: true },
+          });
+          break;
+        case "administrador":
+          sigRecord = await prisma.administrator.findFirst({
+            where: { id_user: row.id },
             select: {
               SIG: true,
             },
-          },
-        },
-      });
+          });
+          break;
+        case "director":
+        case "subdirector":
+        case "gestion":
+          sigRecord = await prisma.user_schools.findFirst({
+            where: { user_id: row.id },
+            select: { SIG: true },
+          });
+          break;
+
+        default:
+          sigRecord = null;
+      }
+
+      return {
+        id: row.id,
+        name: row.name,
+        last_name: row.last_name,
+        pass: row.pass,
+        email: row.email,
+        is_first_login: row.is_first_login,
+        role: row.role.name,
+        SIG: sigRecord.SIG || null,
+      };
     } catch (error) {
       console.error("Error al obtener usuario por email:", error);
       return null;

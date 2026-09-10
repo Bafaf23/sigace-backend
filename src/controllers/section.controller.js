@@ -5,7 +5,7 @@ import logger from "../utils/logger.js";
 import { getCurrentPeriod } from "../utils/periodAc.js";
 
 export const createSection = async (req, res) => {
-  const SIG = /* req.user.SIG */ "SIG3728";
+  const SIG = req.user.SIG;
   const id_year = req.body.yearId;
   const name = req.body.name;
   const guide_id = req.body.teacherId;

@@ -56,17 +56,16 @@ export class Enrollments {
    */
   static async createEnrollment(enrollment) {
     try {
-      const [result] = await pool.query(
-        "INSERT INTO enrollments (id_student, id_period, id_section, status, id_year) VALUES (?, ?, ?, ?, ?)",
-        [
-          enrollment.id_student,
-          enrollment.id_period,
-          enrollment.id_section,
-          enrollment.status,
-          enrollment.id_year,
-        ],
-      );
-      return result.insertId;
+      const result = await prisma.enrollment.create({
+        data: {
+          id_student: Number(enrollment.id_student),
+          id_period: Number(enrollment.id_period),
+          id_section: Number(enrollment.id_section),
+          id_year: Number(enrollment.id_year),
+          status: enrollment.status,
+        },
+      });
+      return result;
     } catch (error) {
       console.error("Error al crear el registro de matrícula:", error);
       throw error;

@@ -90,6 +90,8 @@ export const createLoadAcademic = async (req, res) => {
 export const getLoadAcademic = async (req, res) => {
   const SIG = req.user?.SIG;
 
+  console.log(SIG);
+
   if (!SIG) {
     return res.status(400).json({
       success: false,

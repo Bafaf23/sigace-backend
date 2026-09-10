@@ -42,7 +42,7 @@ router.get(
 router.delete(
   "/deleteSub/:code_subject",
   verificarAutenticacion,
-  permitirRoles("Administrador"),
+  permitirRoles("administrador"),
   deleteSubjects,
 );
 

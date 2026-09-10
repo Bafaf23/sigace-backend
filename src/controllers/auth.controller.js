@@ -48,13 +48,10 @@ export const login = async (req, res) => {
       });
     }
 
-    const userId = user.id_user || user.id;
-    const roleName = user.role?.name || user.role || "usuario";
+    const userId = user.id;
+    const roleName = user.role || "usuario";
 
-    const passwordMatch = await bcrypt.compare(
-      password,
-      user.pass || user.password,
-    );
+    const passwordMatch = await bcrypt.compare(password, user.pass);
 
     if (!passwordMatch) {
       logger.error(
@@ -73,10 +70,7 @@ export const login = async (req, res) => {
     }
 
     // Extraer SIG con fallbacks seguros para evitar que Prisma reciba null/undefined
-    const userSchools = Array.isArray(user.user_schools)
-      ? user.user_schools
-      : [];
-    const SIG = userSchools[0]?.SIG || school?.SIG || "";
+    const SIG = user?.SIG;
 
     const isAdmin = ["administrador", "sudo", "director"].includes(
       roleName.toLowerCase(),

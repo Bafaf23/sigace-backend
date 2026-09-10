@@ -37,14 +37,10 @@ export const createUser = async (req, res) => {
   }
 
   try {
-    console.log("BODY RECIBIDO EN BACKEND:", req.body);
-    console.log("SIG EXTRAÍDO:", req.user?.SIG);
-
     const document = (req.body.typeDocuement + req.body.document).trim();
     const rawDocument = req.body.document ? String(req.body.document) : "";
     const passgeneric = rawDocument.substring(0, 4) + "@2026";
 
-    console.log(req.body.SIG);
     const formattedName = formatText(req.body.name);
 
     const user = await Users.create({
@@ -70,7 +66,7 @@ export const createUser = async (req, res) => {
 
     const userFir = user.name;
 
-    logger.debug("Iniciaindo proceso de envio de correo de bienvenida.");
+    logger.info("Iniciaindo proceso de envio de correo de bienvenida.");
     await welcomeEmail(formattedName, req.body.email).catch((error) => {
       console.error(
         "❌ [Background Task Error]: Falló el envío del correo de bienvenida:",
@@ -78,7 +74,7 @@ export const createUser = async (req, res) => {
       );
     });
 
-    logger.debug("Registro prosesado con exito.", { name: userFir });
+    logger.info("Registro prosesado con exito.", { name: userFir });
 
     return res.status(201).json({
       success: true,
