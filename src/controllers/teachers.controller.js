@@ -13,7 +13,7 @@ import logger from "../utils/logger.js";
  */
 export const getTeachers = async (req, res) => {
   try {
-    const SIG = req.user.SIG ;
+    const SIG = req.user.SIG;
     const id_period = req.user.id_period;
 
     if (!SIG) {
@@ -129,7 +129,7 @@ export const getTeachers = async (req, res) => {
  */
 export const getLoadAcademicTeacher = async (req, res) => {
   const SIG = req.user.SIG;
-  const id =  req.user.id;
+  const id = req.user.id;
 
   if (!id || !SIG) {
     return res.status(400).json({
@@ -142,7 +142,13 @@ export const getLoadAcademicTeacher = async (req, res) => {
 
   try {
     logger.info("Sincorniznado carga academia");
-    const teacherData = await Teachers.getTeacherWithLoadByID(SIG, id);
+    const id_teacher = await Teachers.id(id);
+
+    console.log(SIG, id_teacher);
+    const teacherData = await Teachers.getTeacherWithLoadByID({
+      SIG,
+      id_teacher,
+    });
 
     if (!teacherData) {
       return res.status(404).json({

@@ -1,11 +1,33 @@
 import { pool } from "../db.js";
 import { prisma } from "../lib/prisma.js";
+import logger from "../utils/logger.js";
 export class Teachers {
   constructor(id, id_user, SIG, is_active) {
     this.id = id;
     this.id_user = id_user;
     this.SIG = SIG;
     this.is_active = is_active;
+  }
+
+  /**
+   * Obtiene el id de un profesor pasando su id de usuario
+   * @param {number} id - id del usuario
+   * @returns {number} idTearches
+   */
+  static async id(id) {
+    try {
+      const teacherId = await prisma.teacher.findUnique({
+        where: {
+          id_user: Number(id),
+        },
+        select: {
+          id: true,
+        },
+      });
+      return teacherId.id;
+    } catch (err) {
+      logger.error(err);
+    }
   }
 
   /**
@@ -79,7 +101,7 @@ export class Teachers {
    * @param {number} id_teacher - ID de usuario del profesor (u.id / id_user)
    * @returns {Promise<object|null>} - Datos del profesor con su carga o null
    */
-  static async getTeacherWithLoadByID(SIG, id_teacher) {
+  static async getTeacherWithLoadByID({ SIG, id_teacher }) {
     try {
       return await prisma.teacher.findFirst({
         where: {
