@@ -1,4 +1,5 @@
 import { pool } from "../db.js";
+import { prisma } from "../lib/prisma.js";
 
 export class EvaluationModel {
   constructor(
@@ -64,46 +65,41 @@ export class EvaluationModel {
   /**
    * Crea una o varias evaluaciones en la base de datos
    * @param {object} evaluation
-   * @returns {Promise<{ id_evaluation_plan: number, ids: number[] }>}
+   * @returns {Promise<objetc>}
    */
-  static async createEvaluation(evaluation) {
+  static async create(evaluation) {
     try {
-      const idEvaluationPlan = await this.resolveEvaluationPlanId(evaluation);
+      const newEvaluation = await prisma.$transaction(async (tx) => {
+        const createEvaluation = await tx.evaluation_plan.upsert({
+          where: {
+            id_load_academic_id_lapse: {
+              id_lapse: Number(evaluation.id_lapse),
+              id_load_academic: Number(evaluation.id_load_academic),
+            },
+          },
+          update: {},
+          create: {
+            id_lapse: Number(evaluation.id_lapse),
+            id_load_academic: Number(evaluation.id_load_academic),
+          },
+        });
 
-      const details = Array.isArray(evaluation.details)
-        ? evaluation.details
-        : [evaluation];
+        const createEvaluationD = await tx.evaluation_plan_detail.create({
+          data: {
+            id_evaluation_plan: Number(createEvaluation.id),
+            date: new Date(evaluation.date),
+            referent_teorical: evaluation.referent_teorical,
+            activity: evaluation.activity,
+            technical: evaluation.technical,
+            instrument: evaluation.instrument,
+            porcentage: Number(evaluation.porcentage),
+          },
+        });
 
-      const query = `INSERT INTO evaluation_plan_details (id_evaluation_plan, date, referent_teorical, activity, technical, instrument, porcentage) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-      const ids = [];
+        return createEvaluation;
+      });
 
-      for (const detail of details) {
-        const {
-          date,
-          referent_teorical = "",
-          activity,
-          technical = "",
-          instrument,
-          porcentage,
-        } = detail;
-
-        const [resultDetail] = await pool.query(query, [
-          idEvaluationPlan, // 🌟 Ahora sí está perfectamente definido
-          date,
-          referent_teorical,
-          activity,
-          technical,
-          instrument,
-          porcentage,
-        ]);
-        ids.push(resultDetail.insertId);
-      }
-
-      return {
-        id_evaluation_plan: idEvaluationPlan,
-        ids,
-        id: ids[0],
-      };
+      return newEvaluation;
     } catch (error) {
       console.error("❌ Error en createEvaluation:", error);
       throw error;

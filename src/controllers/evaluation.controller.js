@@ -1,4 +1,5 @@
 import { EvaluationModel } from "../models/Evaluation.model.js";
+import logger from "../utils/logger.js";
 
 /**
  * Normaliza la entrada para que siempre operemos sobre un Array estructurado
@@ -18,36 +19,39 @@ function normalizeDetails(body) {
 }
 
 /**
- * ==========================================================================
- * 1. REGISTRAR EVALUACIONES (LOTE O INDIVIDUAL) CON CONTROL DE TOPE (100%)
- * ==========================================================================
+ * Crea una evaluacion en la BD
+ *
+ * @async
+ * @function createEvaluation
+ * @param {import("express").Request} req - Objeto de solicitud de Express (recibe id_load_academic en params).
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de calificaciones.
  */
 export const createEvaluation = async (req, res) => {
+  const { id_load_academic, id_lapse } = req.body;
+
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).json({
+      success: false,
+      code: "EMPTY_PAYLOAD",
+      message: "No se proporcionaron datos en el cuerpo de la solicitud.",
+    });
+  }
+
+  if (!id_load_academic || !id_lapse) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_REQUIRED_PARAMS",
+      message:
+        "El identificador de la carga académica y el lapso son estrictamente requeridos.",
+    });
+  }
+
   try {
-    console.log("⚠️ [SIGACE API]: Validando y cubicando plan de evaluación...");
-
-    if (!req.body || Object.keys(req.body).length === 0) {
-      return res.status(400).json({
-        success: false,
-        code: "EMPTY_PAYLOAD",
-        message: "No se proporcionaron datos en el cuerpo de la solicitud.",
-      });
-    }
-
-    const { id_load_academic, id_lapse } = req.body;
-
-    if (!id_load_academic || !id_lapse) {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_REQUIRED_PARAMS",
-        message:
-          "El identificador de la carga académica y el lapso son estrictamente requeridos.",
-      });
-    }
-
+    logger.info("Iniciando comprovaciones sobre la actividades guardadas...");
     const details = normalizeDetails(req.body);
 
-    // 1. Validar rangos individuales y sumar las nuevas actividades del lote
+    // Validacion sobre porcentaje, no mayor a 100%
     let nuevoPorcentajeAcumulado = 0;
     for (const detail of details) {
       const porc = parseFloat(detail.porcentage);
@@ -77,8 +81,8 @@ export const createEvaluation = async (req, res) => {
       porcentajeYaGuardado + nuevoPorcentajeAcumulado;
 
     if (porcentajeTotalFuturo > 100) {
-      console.log(
-        `❌ [SIGACE API]: Plan excedido. Acumulado: ${porcentajeYaGuardado}%, Intento: ${nuevoPorcentajeAcumulado}%`,
+      logger.error(
+        `Plan excedido. Acumulado: ${porcentajeYaGuardado}%, Intento: ${nuevoPorcentajeAcumulado}%`,
       );
       return res.status(400).json({
         success: false,
@@ -87,9 +91,10 @@ export const createEvaluation = async (req, res) => {
       });
     }
 
-    // 3. Guardar si la suma es matemáticamente válida
-    const result = await EvaluationModel.createEvaluation(req.body);
+    logger.info("guardando evaluacion...");
+    const result = await EvaluationModel.create(req.body);
 
+    logger.info("Exito, la informacion fue guardada");
     return res.status(201).json({
       success: true,
       code: "EVALUATION_PLAN_UPDATED",
@@ -114,28 +119,29 @@ export const createEvaluation = async (req, res) => {
  * ==========================================================================
  */
 export const getEvaluations = async (req, res) => {
+  const { id_load_academic } = req.params;
+  const { id_lapse } = req.query;
+
+  if (!id_load_academic || id_load_academic === "undefined") {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_ACADEMIC_LOAD_ID",
+      message:
+        "El identificador de la carga académica es totalmente requerido para filtrar los planes.",
+    });
+  }
+
   try {
-    const { id_load_academic } = req.params;
-    const { id_lapse } = req.query;
-
-    console.log(
-      `🔍 [SIGACE API]: Solicitando evaluaciones para Carga: ${id_load_academic} | Lapso: ${id_lapse || "Todos"}`,
+    logger.info(
+      `Cargando evaluaciones para Carga: ${id_load_academic} | Lapso: ${id_lapse || "Todos"}`,
     );
-
-    if (!id_load_academic || id_load_academic === "undefined") {
-      return res.status(400).json({
-        success: false,
-        code: "MISSING_ACADEMIC_LOAD_ID",
-        message:
-          "El identificador de la carga académica es totalmente requerido para filtrar los planes.",
-      });
-    }
 
     const evaluations = await EvaluationModel.getEvaluations(
       id_load_academic,
       id_lapse,
     );
 
+    logger.info("Exito, evaluaciones cargadas");
     return res.status(200).json({
       success: true,
       code: "EVALUATIONS_FETCHED",

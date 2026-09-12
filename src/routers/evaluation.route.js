@@ -12,27 +12,23 @@ import {
 const router = Router();
 
 router.post(
-  "/create",
+  "/",
   verificarAutenticacion,
-  permitirRoles("Profesor"),
+  permitirRoles("profesor"),
   createEvaluation,
 );
+
 router.get(
-  "/get/:id_load_academic",
+  "/:id_load_academic",
   verificarAutenticacion,
-  permitirRoles("Profesor", "Administrador"),
+  permitirRoles("profesor", "administrador"),
   getEvaluations,
 );
-router.get(
-  "/get",
-  verificarAutenticacion,
-  permitirRoles("Profesor", "Administrador"),
-  getEvaluations,
-);
+
 router.delete(
-  "/delete/:id",
+  "/:id",
   verificarAutenticacion,
-  permitirRoles("Administrador", "Profesor"),
+  permitirRoles("administrador", "profesor"),
   deleteEvaluation,
 );
 export default router;

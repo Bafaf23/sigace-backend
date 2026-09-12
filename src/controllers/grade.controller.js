@@ -95,6 +95,7 @@ export const createGrade = async (req, res) => {
  */
 export const getGradeStudents = async (req, res) => {
   const { id_load_academic } = req.params;
+  const { id_lapse } = req.query;
 
   // Validar presencia y formato válido del ID de la carga académica
   if (

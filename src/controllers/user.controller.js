@@ -425,3 +425,61 @@ export const getProfile = async (req, res) => {
     });
   }
 };
+
+/**
+ * Obtiene a todos el personal de un colegio, excluyendo a los estudiantes
+ *
+ * @async
+ * @function userSchool
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
+ */
+export const userSchool = async (req, res) => {
+  const SIG = /* req.user.SIG */ "SIG4320";
+  const id = /* req.user.id */ 55;
+
+  if (!SIG) {
+    logger.error("SIG no encontrado", { SIG });
+    return res.status(404).json({
+      success: false,
+      code: "MISSING_SCHOOL_SIG",
+      message: "El codigo SIG es necesario",
+    });
+  }
+
+  try {
+    logger.info("cargando..., por favor espera...");
+    const users = await Users.usersSchool(SIG);
+
+    if (!users || users.length == 0) {
+      logger.error("No hay usuarios es este colegio o el SIG es incorrecto.");
+      return res.status(402).json({
+        success: false,
+        code: "USER_CREATION_FAILED",
+        message:
+          "No se pudo procesar la inserción del usuario. Verifica los campos duplicados.",
+      });
+    }
+
+    const usersProces = users.filter((item) => item.id !== id);
+
+    logger.info("Carga completada!");
+
+    return res.status(201).json({
+      success: true,
+      code: "USER_CREATED",
+      message: "Cuenta de usuario creada correctamente.",
+      data: usersProces,
+    });
+  } catch (error) {
+    console.error("❌ Error en createUser:", error);
+    return res.status(500).json({
+      success: false,
+      code: "CREATE_USER_INTERNAL_ERROR",
+      message:
+        "Fallo técnico en el servidor al intentar dar de alta al usuario.",
+      error: error.message,
+    });
+  }
+};

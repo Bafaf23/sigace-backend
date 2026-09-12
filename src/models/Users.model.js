@@ -466,4 +466,46 @@ export class Users {
       return false;
     }
   }
+
+  /**
+   ** Busca a todo el personal de una escuela, excluyendo a los estudiantes de la misma
+   * @param {string} SIG
+   * @returns {Array<object>}
+   */
+  static async usersSchool(SIG) {
+    const rows = await prisma.users.findMany({
+      where: {
+        OR: [
+          {
+            teacher_profile: {
+              SIG: SIG,
+            },
+          },
+          {
+            administrator_profile: {
+              SIG: SIG,
+            },
+          },
+          {
+            user_schools: {
+              some: {
+                SIG: SIG,
+              },
+            },
+          },
+        ],
+      },
+      select: {
+        name: true,
+        last_name: true,
+        id: true,
+        id_card: true,
+        role: true,
+        phone: true,
+        email: true,
+        is_active: true,
+      },
+    });
+    return rows;
+  }
 }

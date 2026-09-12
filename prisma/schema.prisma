@@ -164,6 +164,8 @@ model user_schools{
   user_id  Int
   SIG      String
 
+  is_active   Boolean @default(true)
+
   user     users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   school   school    @relation(fields: [SIG], references: [SIG], onDelete: Cascade)
 }
@@ -201,6 +203,8 @@ model administrator {
 
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
+
+  is_active Boolean @default(true)
 
   user   users  @relation(fields: [id_user], references: [id], onDelete: Cascade)
   school school @relation(fields: [SIG], references: [SIG], onDelete: Cascade)

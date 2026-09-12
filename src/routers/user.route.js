@@ -6,6 +6,7 @@ import {
   deleteUser,
   updateUser,
   getProfile,
+  userSchool,
 } from "../controllers/user.controller.js";
 import {
   verificarAutenticacion,
@@ -36,6 +37,8 @@ router.delete(
 );
 router.put("/", verificarAutenticacion, permitirRoles("sudo"), updateUser);
 
-router.get("/profile",   verificarAutenticacion,  getProfile);
+router.get("/profile", verificarAutenticacion, getProfile);
+
+router.get("/userSchool", /* verificarAutenticacion, */ userSchool);
 
 export default router;
