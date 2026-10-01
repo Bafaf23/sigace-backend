@@ -63,4 +63,12 @@ export class Services {
       },
     });
   }
+
+  /**
+   * Cuenta el total de servicios
+   * @returns {number}
+   */
+  static async count() {
+    return await prisma.services.count();
+  }
 }

@@ -82,9 +82,11 @@ export class Users {
    * @returns {null} Null si no se encuentra el usuario
    * @returns {boolean} False si ocurre un error al obtener los usuarios
    */
-  static async getUsers({ limit, page }) {
+  static async getUsers({ limit, page, document }) {
+    const where = document ? { id_card: document } : {};
     try {
       const rows = await prisma.users.findMany({
+        where,
         skip: (page - 1) * limit,
         take: limit,
         include: {

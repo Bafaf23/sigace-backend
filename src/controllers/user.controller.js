@@ -105,8 +105,11 @@ export const createUser = async (req, res) => {
 export const getUsers = async (req, res) => {
   const limit = parseInt(req.query.limit) || 20;
   const page = parseInt(req.query.page) || 1;
+  const document = req.query.search ? String(req.query.search) : null;
+
   try {
-    const users = await Users.getUsers({ limit, page });
+    console.log("Parametros de consulta:", { limit, page, document });
+    const users = await Users.getUsers({ limit, page, document });
     const countUsers = await Users.count();
 
     if (!users || users.length === 0) {
@@ -126,6 +129,9 @@ export const getUsers = async (req, res) => {
       name: user.name,
       last_name: user.last_name,
       role: user.role,
+      school: user.school
+        ? { SIG: user.school.SIG, name: user.school.name }
+        : null,
     }));
 
     logger.debug("Usuarios cargados desde la base de datos", {
