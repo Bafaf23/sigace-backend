@@ -10,6 +10,8 @@ import schoolRouter from "./routers/school.route.js";
 import studentRouter from "./routers/student.route.js";
 import academic_periodRouter from "./routers/academic_period.route.js";
 import sectionRouter from "./routers/section.route.js";
+import serviceRouter from "./routers/service.route.js";
+import metricsRouter from "./routers/metrics.route.js";
 import reportsRouter from "./routers/reports.route.js";
 import subjectRouter from "./routers/subject.route.js";
 import teachersRouter from "./routers/teachers.route.js";
@@ -92,6 +94,8 @@ app.use("/loadAcademic", loadAcademicRouter);
 app.use("/reports", reportsRouter);
 app.use("/evaluations", evaluationRouter);
 app.use("/lapses", lapseRouter);
+app.use("/service", serviceRouter);
+app.use("/metrics", metricsRouter);
 app.use("/grades", gredeRouter);
 
 app.get("/", (_req, res) => {

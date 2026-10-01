@@ -82,16 +82,11 @@ export class Users {
    * @returns {null} Null si no se encuentra el usuario
    * @returns {boolean} False si ocurre un error al obtener los usuarios
    */
-  static async getUsers(email = null) {
+  static async getUsers({ limit, page }) {
     try {
-      let whereClause = {};
-
-      if (email) {
-        whereClause.email = email;
-      }
-
       const rows = await prisma.users.findMany({
-        where: whereClause,
+        skip: (page - 1) * limit,
+        take: limit,
         include: {
           role: true,
           student_profile: {
@@ -550,5 +545,12 @@ export class Users {
       },
     });
     return rows;
+  }
+  /**
+   * Cuenta a todos los usuairos registrados
+   * @returns {number}
+   */
+  static async count() {
+    return await prisma.users.count();
   }
 }

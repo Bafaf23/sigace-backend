@@ -67,20 +67,23 @@ export class Students {
   }
 
   /**
-   ** Obtiene a todos los estudiantes matriculados en un periodo específico, sin importar si ya tienen año o sección      *  asignados en su matrícula.
+   ** Obtiene a todos los estudiantes matriculados en un periodo específico, sin importar si ya tienen año o sección  asignados en su matrícula.
    *
    * @param {object} param
    * @param {string} param.SIG - código único del colegio
    * @param {number} param.id_period - id del período académico
    * @returns {Promise<Array<object>>}
    */
-  static async getAllStudents({ SIG, id_period, page, limit }) {
+  static async getAllStudents({ SIG, id_period, page, limit, tuitionNumber }) {
     try {
+      const where = tuitionNumber
+        ? { SIG: SIG, tuition_number: tuitionNumber }
+        : SIG
+          ? { SIG: SIG }
+          : {};
       const [studnets, count] = await Promise.all([
         prisma.student.findMany({
-          where: {
-            SIG: SIG,
-          },
+          where,
           skip: (page - 1) * limit,
           take: limit,
           orderBy: {
@@ -141,7 +144,7 @@ export class Students {
         }),
 
         prisma.student.count({
-          where: { SIG },
+          where,
         }),
       ]);
 

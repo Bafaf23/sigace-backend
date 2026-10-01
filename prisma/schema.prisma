@@ -52,6 +52,7 @@ model school {
   subjects         subject[]
   load_academics   load_academic[]
   user_schools     user_schools[]
+  services         school_service[]
 
   @@map("schools")
 }
@@ -419,4 +420,39 @@ model auth_token {
   user users @relation(fields: [id_user], references: [id], onDelete: Cascade)
 
   @@map("auth_tokens")
+}
+
+/**
+ * Modelo de servicios ofrecidos al cliente
+ */
+model services {
+  id          Int      @id @default(autoincrement())
+  name        String
+  price       Float
+  description String
+  updated_at  DateTime @default(now()) @updatedAt
+  created_at  DateTime @default(now())
+
+  schools school_service[]
+}
+
+enum estatus_service {
+  activo
+  suspendido
+  cancelado
+}
+
+model school_service {
+  id_service Int
+  SIG        String          @db.VarChar(10)
+  status     estatus_service @default(activo)
+  created_at DateTime        @default(now())
+  expires_at DateTime?
+  updated_at DateTime        @default(now()) @updatedAt
+
+  school school @relation(fields: [SIG], references: [SIG], onDelete: Cascade)
+
+  service services @relation(fields: [id_service], references: [id], onDelete: Cascade)
+
+  @@unique([SIG, id_service])
 }

@@ -103,8 +103,11 @@ export const createUser = async (req, res) => {
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getUsers = async (req, res) => {
+  const limit = parseInt(req.query.limit) || 20;
+  const page = parseInt(req.query.page) || 1;
   try {
-    const users = await Users.getUsers();
+    const users = await Users.getUsers({ limit, page });
+    const countUsers = await Users.count();
 
     if (!users || users.length === 0) {
       logger.warn(`No hay usuarios registrados.`);
@@ -112,7 +115,6 @@ export const getUsers = async (req, res) => {
         success: false,
         code: "USERS_NOT_FOUND",
         message: "No se registran cuentas de usuario creadas en el sistema.",
-        data: [],
       });
     }
 
@@ -123,13 +125,7 @@ export const getUsers = async (req, res) => {
       document: user.id_card,
       name: user.name,
       last_name: user.last_name,
-      email: user.email,
       role: user.role,
-      phone: user.phone,
-      school: {
-        name: user.school?.name ?? "Sin asignación",
-        SIG: user.school?.SIG ?? "Sin asignación",
-      },
     }));
 
     logger.debug("Usuarios cargados desde la base de datos", {
@@ -140,10 +136,23 @@ export const getUsers = async (req, res) => {
       console.table(userProser);
     }
 
+    const totalPage = Math.ceil(countUsers / limit);
+    const netxPage = page < totalPage ? page + 1 : null;
+    const prevPage = page > 1 ? page - 1 : null;
     return res.status(200).json({
       success: true,
       message: "Colección de usuarios cargada exitosamente.",
       data: userProser,
+      pagination: {
+        total: countUsers,
+        page,
+        limit,
+        totalPage,
+        netxPage,
+        prevPage,
+        hasNextPage: netxPage !== null,
+        hasPrevPage: prevPage !== null,
+      },
     });
   } catch (error) {
     console.error("❌ Error en getUsers:", error);

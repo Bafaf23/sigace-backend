@@ -236,6 +236,10 @@ export class School {
     }
   }
 
+  /**
+   * obtiene las zonas educativas
+   * @returns
+   */
   static async getCdde() {
     return await prisma.cdcee.findMany({
       select: {
@@ -243,5 +247,12 @@ export class School {
         name: true,
       },
     });
+  }
+  /**
+   * cuanta todas las escuelas registradas
+   * @returns {number}
+   */
+  static async count() {
+    return prisma.school.count();
   }
 }

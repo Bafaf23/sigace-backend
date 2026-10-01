@@ -1,10 +1,8 @@
 import { Students } from "../models/Students.model.js";
-import { Representative } from "../models/Representative.model.js";
 import { Users } from "../models/Users.model.js";
-import { tuitionNumber } from "../utils/tuitionNumber.js";
 import { welcomeEmail } from "../services/resend.service.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
-import { Subject } from "../models/Subject.model.js";
+
 import logger from "../utils/logger.js";
 
 function formatText(text) {
@@ -62,7 +60,8 @@ export const getStudents = async (req, res) => {
   const limit = parseInt(req.query.limit) || 20;
   const SIG = req.user.SIG;
   const id_period = req.user.id_period;
-
+  const tuitionNumber = req.query.tuitionNumber || null;
+  
   if (!SIG) {
     return res.status(400).json({
       success: false,
@@ -99,6 +98,7 @@ export const getStudents = async (req, res) => {
       id_period: Number(targetPeriodId),
       limit,
       page,
+      tuitionNumber,
     });
 
     if (!dataStudents || dataStudents.students.length === 0) {
@@ -465,7 +465,7 @@ export const getStudentNotEnrolled = async (req, res) => {
 };
 
 /**
- * Busca a un studiante por si numero de cedula
+ * Busca a un studiante por si numero de id
  *
  * @async
  * @function getStudentByID
@@ -474,12 +474,10 @@ export const getStudentNotEnrolled = async (req, res) => {
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getStudentByID = async (req, res) => {
-  const id_card = req.params.id_card;
+  const id = req.params.id;
 
-  if (!id_card) {
-    console.error(
-      `⚠️ [NOT FOUND] El documento es necesario para realizar la consulta`,
-    );
+  if (!id) {
+    logger.error(`El documento es necesario para realizar la consulta`);
     return res.status(400).json({
       success: false,
       code: "MISSING_STUDENT_ID",
@@ -487,11 +485,11 @@ export const getStudentByID = async (req, res) => {
     });
   }
   try {
-    const student = await Students.byID(id_card);
+    const student = await Students.byID(id);
 
     if (!student) {
-      console.error(
-        `⚠️ [NOT FOUND] No se encontro informacion relacionada con esta id_card: ${id_card}`,
+      logger.error(
+        `No se encontro informacion relacionada con esta id_card: ${id}`,
       );
       return res.status(404).json({
         success: false,
@@ -558,8 +556,6 @@ export const getStudentByID = async (req, res) => {
           }
         : null,
     };
-
-    console.dir(formattedStudent);
 
     return res.status(200).json({
       success: true,

@@ -38,7 +38,7 @@ router.get(
 );
 
 router.get(
-  "/:id_card",
+  "/:id",
   verificarAutenticacion,
   permitirRoles("administrador", "director", "gestion"),
   getStudentByID,
