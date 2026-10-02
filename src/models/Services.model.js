@@ -42,6 +42,7 @@ export class Services {
       return {
         id: row.id,
         name: row.name,
+        type: row.type,
         price: row.price,
         description: row.description,
         created_at: row.created_at,
