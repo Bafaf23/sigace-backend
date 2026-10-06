@@ -321,16 +321,21 @@ export class Students {
   }
 
   /**
-   * Busca a un estudiante por su id
-   * @param {number} id - id del estudiante
+   * Busca a un estudiante por su id o numero de matricula
+   * @param {object} params - Objecto con los parámetros
+   * @param {string} params.tuitionNumber - numero de matricula del estudiante
+   * @param {number} params.id - id del estudiante
    * @return {object|null} - info del estudiante o null si no existe
    */
-  static async byID(id) {
+  static async byID({ id, tuitionNumber }) {
+    let whereClause = { id: Number(id) };
+
+    if (tuitionNumber) {
+      whereClause = { tuition_number: tuitionNumber };
+    }
     try {
       return await prisma.student.findFirst({
-        where: {
-          id: Number(id),
-        },
+        where: whereClause,
         include: {
           user: {
             select: {

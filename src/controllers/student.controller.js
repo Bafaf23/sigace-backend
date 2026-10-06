@@ -1,9 +1,10 @@
+import { Academic_periods } from "../models/Academin_period.model.js";
 import { Students } from "../models/Students.model.js";
 import { Users } from "../models/Users.model.js";
 import { welcomeEmail } from "../services/resend.service.js";
-import { Academic_periods } from "../models/Academin_period.model.js";
-
+import { sendOTPVerify } from "../services/resend.service.js";
 import logger from "../utils/logger.js";
+import crypto from "node:crypto";
 
 function formatText(text) {
   if (typeof text !== "string") return text;
@@ -61,7 +62,7 @@ export const getStudents = async (req, res) => {
   const SIG = req.user.SIG;
   const id_period = req.user.id_period;
   const tuitionNumber = req.query.tuitionNumber || null;
-  
+
   if (!SIG) {
     return res.status(400).json({
       success: false,
@@ -478,14 +479,14 @@ export const getStudentByID = async (req, res) => {
 
   if (!id) {
     logger.error(`El documento es necesario para realizar la consulta`);
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       code: "MISSING_STUDENT_ID",
       message: "Es requerido especificar el código ID único del estudiante.",
     });
   }
   try {
-    const student = await Students.byID(id);
+    const student = await Students.byID({ id });
 
     if (!student) {
       logger.error(
@@ -584,7 +585,7 @@ export const getStudentByID = async (req, res) => {
  */
 export const getRecordStudent = async (req, res) => {
   const { id } = req.params;
-  const id_period = req.query.id_period || req.user.id_period;
+  let id_period = req.query.id_period || req.user.id_period;
   const SIG = req.user.SIG;
 
   if (!id) {
@@ -597,6 +598,14 @@ export const getRecordStudent = async (req, res) => {
     });
   }
 
+  if (!id_period) {
+    logger.info("El perido es requerido... iniciando sincronizacion...");
+    const periods = await Academic_periods.getAcademicPeriods(SIG);
+
+    const periodActive = periods.filter((period) => (period.is_active = true));
+
+    id_period = periodActive[0].id;
+  }
   try {
     logger.info(`Cargando récord académico del estudiante: ${id}`);
     const record = await Students.grade({
@@ -911,5 +920,107 @@ export const getGrade = async (req, res) => {
         "Error en el servidor, no se pudo estraer la informacion, intenta nuevamente.",
       error: error.message,
     });
+  }
+};
+
+export const consultStudent = async (req, res) => {
+  const { tuitionNumber } = req.body;
+  const expiresAt = 5;
+  console.log(tuitionNumber);
+  if (!tuitionNumber) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_TUITION_NUMBER",
+      message: "El número de matrícula es obligatorio.",
+    });
+  }
+
+  try {
+    logger.info("Buscando informacion en la base de datos...");
+    const student = await Students.byID({ tuitionNumber });
+    if (!student) {
+      logger.error("No exite registro de este estudiante en la base datos");
+      return res.status(404).json({
+        success: false,
+        code: "STUDENT_NOT_FOUND",
+        message:
+          "No se encontró un estudiante con el número de matrícula proporcionado.",
+      });
+    }
+
+    logger.debug("Generando OTP...");
+    function generarTokenNode(length = 6) {
+      return crypto
+        .randomBytes(length)
+        .toString("hex")
+        .substring(0, length)
+        .toUpperCase();
+    }
+
+    /*  console.dir(student, { dephet: null, color: true }); */
+
+    const OTP = generarTokenNode(6);
+
+    const saveTokern = await Users.saveToken({
+      id_user: student.user.id,
+      token: OTP,
+      expires_at: new Date(Date.now() + expiresAt * 60 * 1000),
+    });
+
+    if (!saveTokern) {
+      logger.error("No se pudo guardar el codigo de verificacion");
+      return res.status(404).json({
+        code: "CODE_FALLID",
+        success: false,
+        message: "Ocurrio un error en el servidor, intenta de nuevo.",
+      });
+    }
+
+    sendOTPVerify(
+      student.user.name,
+      student.user.email,
+      student.school.school_name,
+      OTP,
+    );
+
+    return res.status(202).json({
+      success: true,
+      message: "Fue enviado al correo un codigo de verificacion",
+    });
+  } catch (error) {
+    console.error("❌ Error en consultStudent:", error);
+    return res.status(500).json({
+      success: false,
+      code: "CONSULT_STUDENT_INTERNAL_ERROR",
+      message: "Fallo interno al procesar la consulta del estudiante.",
+      error: error.message,
+    });
+  }
+};
+
+export const getTuitionNumber = async (req, res) => {
+  const tuitionNumber = req.params.tuitionNumber;
+
+  if (!tuitionNumber) {
+    logger.error(`El documento es necesario para realizar la consulta`);
+    res.status(400).json({
+      success: false,
+      code: "MISSING_STUDENT_ID",
+      message: "Es requerido especificar el código ID único del estudiante.",
+    });
+  }
+
+  if (tuitionNumber !== req.user.tuitionNumber) {
+    logger.warn("Intento de aceder a un recurso no permitido");
+    return;
+  }
+  
+  try {
+    const student = await Students.byID({ tuitionNumber });
+    return res.status(200).json({
+      student,
+    });
+  } catch (error) {
+    console.error(error);
   }
 };

@@ -1,9 +1,9 @@
 import { pool } from "../db.js";
 import { prisma } from "../lib/prisma.js";
-import bcrypt from "bcryptjs";
 import logger from "../utils/logger.js";
 import { tuitionNumber } from "../utils/tuitionNumber.js";
 import { Representative } from "./Representative.model.js";
+import bcrypt from "bcryptjs";
 
 /**
  * Constructor de la clase Users
@@ -33,20 +33,17 @@ export class Users {
   }
   /**
    * Obtiene el token vejente para el cambio de pass
-   * TODO: remplazar sql por prisma
    * @param {string} token
    * @returns {object}
    */
-  static async getUserToken(token) {
+  static async getToken({ token }) {
     try {
-      const sql = `SELECT id_user FROM auth_tokens
-       WHERE token = ? AND expires_at > NOW() 
-       LIMIT 1`;
-      const value = [token];
-
-      const [rows] = await pool.query(sql, value);
-
-      return rows.length > 0 ? rows[0] : null;
+      const tokenSave = await prisma.auth_token.findFirst({
+        where: {
+          token,
+        },
+      });
+      return tokenSave;
     } catch (error) {
       throw error;
     }
@@ -54,18 +51,19 @@ export class Users {
 
   /**
    ** Perserva el token de cambio de contrasena solicitado por el usuario
-   * TODO: remplazar el sql por prisma
    * @param {number} id_user - id del solicitante
    * @param {string} token
    * @param {Date} expires_at - fecha de expiracion del token
    */
-  static async saveToken(id_user, token, expires_at) {
+  static async saveToken({ id_user, token, expires_at }) {
     try {
-      const [result] = await pool.query(
-        "INSERT INTO auth_tokens (id_user, token, expires_at) VALUES (?, ?, ?)",
-        [id_user, token, expires_at],
-      );
-      return result.insertId;
+      return await prisma.auth_token.create({
+        data: {
+          id_user,
+          token,
+          expires_at,
+        },
+      });
     } catch (error) {
       console.error(
         "Error al guardar el token de cambio de contraseña:",

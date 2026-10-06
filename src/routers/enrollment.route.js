@@ -1,4 +1,3 @@
-import { Router } from "express";
 import {
   createEnrollment,
   getApprovedStudents,
@@ -10,6 +9,7 @@ import {
   verificarAutenticacion,
   permitirRoles,
 } from "../middlewares/auth.middleware.js";
+import { Router } from "express";
 
 const router = Router();
 

@@ -1,4 +1,3 @@
-import { Router } from "express";
 import {
   getStudents,
   createStudent,
@@ -9,11 +8,14 @@ import {
   getSubjectPending,
   getPreinscription,
   getGrade,
+  consultStudent,
+  getTuitionNumber,
 } from "../controllers/student.controller.js";
 import {
   verificarAutenticacion,
   permitirRoles,
 } from "../middlewares/auth.middleware.js";
+import { Router } from "express";
 
 const router = Router();
 
@@ -71,5 +73,13 @@ router.get(
   permitirRoles("administrador", "director", "estudiante", "gestion"),
   getGrade,
 );
+
+router.get(
+  "/:tuitionNumber/tuitionNumber",
+  verificarAutenticacion,
+  getTuitionNumber,
+);
+
+router.post("/consult", consultStudent);
 
 export default router;

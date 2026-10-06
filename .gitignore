@@ -13,3 +13,5 @@ dist/
 /generated/prisma
 
 /src/generated/prisma
+
+.prettierrc

@@ -2,6 +2,8 @@ import fs from "fs/promises"; // Cambiado a promesas asíncronas
 import path from "path";
 import juice from "juice";
 import { Resend } from "resend";
+import logger from "../utils/logger.js";
+import { response } from "express";
 
 export const welcomeEmail = async (userName, userEmail) => {
   try {
@@ -131,5 +133,54 @@ export const sendResetPasswordEmail = async (userName, userEmail, resetUrl) => {
       error.message || error,
     );
     return { success: false, error: error.message || error };
+  }
+};
+
+export const sendOTPVerify = async (userName, userEmail, schoolName, OTP) => {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      logger.warn("La llave del Resend no se encuentra en el sistema");
+      return;
+    }
+
+    logger.info("Enviando el correo...");
+    const resend = new Resend();
+
+    const templatePath = path.join(
+      process.cwd(),
+      "src/templates/OTPVerify.html",
+    );
+
+    logger.debug("cargando plantilla...");
+    let htmlContent = await fs.readFile(templatePath, "utf8");
+
+    const schoolNameFormat = schoolName.slice(5)
+
+    htmlContent = htmlContent
+      .replace(/{{userName}}/g, userName)
+      .replace(/{{OTP}}/g, OTP)
+      .replace(/{{nameSchool}}/g, schoolNameFormat);
+
+    logger.debug("Aplicando estilos...");
+    const htmlWithInlineStyles = juice(htmlContent);
+
+    const reponse = await resend.emails.send({
+      from: `SIGACE- ${schoolNameFormat} <no-replay@sigace.xyz>`,
+      to: userEmail,
+      subject: "Codígo de verificacion",
+      html: htmlWithInlineStyles,
+    });
+
+    if (reponse.error) {
+      throw new Error(
+        `Resend API Error: ${reponse.error.message || JSON.stringify(reponse.error)}`,
+      );
+    }
+
+    logger.info("correo enviado");
+    const emailId = reponse?.id;
+    return { success: true, code: emailId };
+  } catch (error) {
+    console.error("Error al intentar enviar el correo", error);
   }
 };
