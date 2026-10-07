@@ -25,7 +25,13 @@ router.get(
   permitirRoles("administrador", "director", "gestion"),
   getStudents,
 );
-router.post("/", createStudent);
+router.post(
+  "/",
+  verificarAutenticacion,
+  permitirRoles("administrador", "gestion"),
+  createStudent,
+);
+
 router.put(
   "/updateStudent",
   verificarAutenticacion,

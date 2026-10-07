@@ -179,6 +179,8 @@ export const createStudent = async (req, res) => {
       ...medicalAndSizes
     } = req.body;
 
+    const SIG = req.body.SIG || req.user?.SIG;
+
     if (
       !document ||
       !name ||
@@ -201,9 +203,18 @@ export const createStudent = async (req, res) => {
       });
     }
 
+    if (!SIG) {
+      logger.warn("No se proporcionó el SIG de la institución.");
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_SIG",
+        message:
+          "Se requiere el SIG de la institución para registrar al estudiante.",
+      });
+    }
+
     const studentDoc = `${documentType}${document}`.trim();
     const repDoc = `${repdniType}${repdni}`.trim();
-    const SIG = req.body.SIG || req.user?.SIG;
 
     const passgeneric = `${document.substring(0, 4)}@2026`;
 
@@ -1014,7 +1025,7 @@ export const getTuitionNumber = async (req, res) => {
     logger.warn("Intento de aceder a un recurso no permitido");
     return;
   }
-  
+
   try {
     const student = await Students.byID({ tuitionNumber });
     return res.status(200).json({

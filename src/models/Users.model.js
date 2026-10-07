@@ -75,10 +75,8 @@ export class Users {
 
   /**
    * Obtiene todos los usuarios de la base de datos o un usuario por su email
-   * @param {string} email - El email del usuario a buscar
+   * @param {string} document - Identificacion del usuario
    * @returns {Array<object>} Los usuarios encontrados
-   * @returns {null} Null si no se encuentra el usuario
-   * @returns {boolean} False si ocurre un error al obtener los usuarios
    */
   static async getUsers({ limit, page, document }) {
     const where = document ? { id_card: document } : {};
