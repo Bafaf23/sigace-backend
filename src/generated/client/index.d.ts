@@ -123,6 +123,17 @@ export type pending_subject = $Result.DefaultSelection<Prisma.$pending_subjectPa
  * 
  */
 export type auth_token = $Result.DefaultSelection<Prisma.$auth_tokenPayload>
+/**
+ * Model services
+ * *
+ *  * Modelo de servicios ofrecidos al cliente
+ */
+export type services = $Result.DefaultSelection<Prisma.$servicesPayload>
+/**
+ * Model school_service
+ * 
+ */
+export type school_service = $Result.DefaultSelection<Prisma.$school_servicePayload>
 
 /**
  * Enums
@@ -173,6 +184,15 @@ export const pending_subject_status: {
 
 export type pending_subject_status = (typeof pending_subject_status)[keyof typeof pending_subject_status]
 
+
+export const estatus_service: {
+  activo: 'activo',
+  suspendido: 'suspendido',
+  cancelado: 'cancelado'
+};
+
+export type estatus_service = (typeof estatus_service)[keyof typeof estatus_service]
+
 }
 
 export type school_type = $Enums.school_type
@@ -194,6 +214,10 @@ export const enrollment_status: typeof $Enums.enrollment_status
 export type pending_subject_status = $Enums.pending_subject_status
 
 export const pending_subject_status: typeof $Enums.pending_subject_status
+
+export type estatus_service = $Enums.estatus_service
+
+export const estatus_service: typeof $Enums.estatus_service
 
 /**
  * ##  Prisma Client ʲˢ
@@ -535,6 +559,26 @@ export class PrismaClient<
     * ```
     */
   get auth_token(): Prisma.auth_tokenDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.services`: Exposes CRUD operations for the **services** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Services
+    * const services = await prisma.services.findMany()
+    * ```
+    */
+  get services(): Prisma.servicesDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.school_service`: Exposes CRUD operations for the **school_service** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more School_services
+    * const school_services = await prisma.school_service.findMany()
+    * ```
+    */
+  get school_service(): Prisma.school_serviceDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1003,7 +1047,9 @@ export namespace Prisma {
     evaluation_plan_detail: 'evaluation_plan_detail',
     grade: 'grade',
     pending_subject: 'pending_subject',
-    auth_token: 'auth_token'
+    auth_token: 'auth_token',
+    services: 'services',
+    school_service: 'school_service'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1019,7 +1065,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "session" | "cdcee" | "school" | "subject" | "lapse" | "year" | "users" | "user_schools" | "role" | "academic_periods" | "administrator" | "teacher" | "student" | "representative" | "load_academic" | "section" | "enrollment" | "evaluation_plan" | "evaluation_plan_detail" | "grade" | "pending_subject" | "auth_token"
+      modelProps: "session" | "cdcee" | "school" | "subject" | "lapse" | "year" | "users" | "user_schools" | "role" | "academic_periods" | "administrator" | "teacher" | "student" | "representative" | "load_academic" | "section" | "enrollment" | "evaluation_plan" | "evaluation_plan_detail" | "grade" | "pending_subject" | "auth_token" | "services" | "school_service"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2475,6 +2521,138 @@ export namespace Prisma {
           }
         }
       }
+      services: {
+        payload: Prisma.$servicesPayload<ExtArgs>
+        fields: Prisma.servicesFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.servicesFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$servicesPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.servicesFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$servicesPayload>
+          }
+          findFirst: {
+            args: Prisma.servicesFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$servicesPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.servicesFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$servicesPayload>
+          }
+          findMany: {
+            args: Prisma.servicesFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$servicesPayload>[]
+          }
+          create: {
+            args: Prisma.servicesCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$servicesPayload>
+          }
+          createMany: {
+            args: Prisma.servicesCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.servicesDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$servicesPayload>
+          }
+          update: {
+            args: Prisma.servicesUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$servicesPayload>
+          }
+          deleteMany: {
+            args: Prisma.servicesDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.servicesUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.servicesUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$servicesPayload>
+          }
+          aggregate: {
+            args: Prisma.ServicesAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateServices>
+          }
+          groupBy: {
+            args: Prisma.servicesGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ServicesGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.servicesCountArgs<ExtArgs>
+            result: $Utils.Optional<ServicesCountAggregateOutputType> | number
+          }
+        }
+      }
+      school_service: {
+        payload: Prisma.$school_servicePayload<ExtArgs>
+        fields: Prisma.school_serviceFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.school_serviceFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$school_servicePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.school_serviceFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$school_servicePayload>
+          }
+          findFirst: {
+            args: Prisma.school_serviceFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$school_servicePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.school_serviceFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$school_servicePayload>
+          }
+          findMany: {
+            args: Prisma.school_serviceFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$school_servicePayload>[]
+          }
+          create: {
+            args: Prisma.school_serviceCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$school_servicePayload>
+          }
+          createMany: {
+            args: Prisma.school_serviceCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.school_serviceDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$school_servicePayload>
+          }
+          update: {
+            args: Prisma.school_serviceUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$school_servicePayload>
+          }
+          deleteMany: {
+            args: Prisma.school_serviceDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.school_serviceUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.school_serviceUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$school_servicePayload>
+          }
+          aggregate: {
+            args: Prisma.School_serviceAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSchool_service>
+          }
+          groupBy: {
+            args: Prisma.school_serviceGroupByArgs<ExtArgs>
+            result: $Utils.Optional<School_serviceGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.school_serviceCountArgs<ExtArgs>
+            result: $Utils.Optional<School_serviceCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2620,6 +2798,8 @@ export namespace Prisma {
     grade?: gradeOmit
     pending_subject?: pending_subjectOmit
     auth_token?: auth_tokenOmit
+    services?: servicesOmit
+    school_service?: school_serviceOmit
   }
 
   /* Types for Logging */
@@ -2740,6 +2920,7 @@ export namespace Prisma {
     subjects: number
     load_academics: number
     user_schools: number
+    services: number
   }
 
   export type SchoolCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2752,6 +2933,7 @@ export namespace Prisma {
     subjects?: boolean | SchoolCountOutputTypeCountSubjectsArgs
     load_academics?: boolean | SchoolCountOutputTypeCountLoad_academicsArgs
     user_schools?: boolean | SchoolCountOutputTypeCountUser_schoolsArgs
+    services?: boolean | SchoolCountOutputTypeCountServicesArgs
   }
 
   // Custom InputTypes
@@ -2826,6 +3008,13 @@ export namespace Prisma {
    */
   export type SchoolCountOutputTypeCountUser_schoolsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: user_schoolsWhereInput
+  }
+
+  /**
+   * SchoolCountOutputType without action
+   */
+  export type SchoolCountOutputTypeCountServicesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: school_serviceWhereInput
   }
 
 
@@ -3328,6 +3517,37 @@ export namespace Prisma {
    */
   export type Evaluation_plan_detailCountOutputTypeCountGradesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: gradeWhereInput
+  }
+
+
+  /**
+   * Count Type ServicesCountOutputType
+   */
+
+  export type ServicesCountOutputType = {
+    schools: number
+  }
+
+  export type ServicesCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    schools?: boolean | ServicesCountOutputTypeCountSchoolsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ServicesCountOutputType without action
+   */
+  export type ServicesCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServicesCountOutputType
+     */
+    select?: ServicesCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ServicesCountOutputType without action
+   */
+  export type ServicesCountOutputTypeCountSchoolsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: school_serviceWhereInput
   }
 
 
@@ -5230,6 +5450,7 @@ export namespace Prisma {
     RIF: string | null
     is_active: boolean | null
     subdomain: string | null
+    is_enrollment_open: boolean | null
     created_at: Date | null
     updated_at: Date | null
     cdceId: number | null
@@ -5250,6 +5471,7 @@ export namespace Prisma {
     RIF: string | null
     is_active: boolean | null
     subdomain: string | null
+    is_enrollment_open: boolean | null
     created_at: Date | null
     updated_at: Date | null
     cdceId: number | null
@@ -5270,6 +5492,7 @@ export namespace Prisma {
     RIF: number
     is_active: number
     subdomain: number
+    is_enrollment_open: number
     created_at: number
     updated_at: number
     cdceId: number
@@ -5300,6 +5523,7 @@ export namespace Prisma {
     RIF?: true
     is_active?: true
     subdomain?: true
+    is_enrollment_open?: true
     created_at?: true
     updated_at?: true
     cdceId?: true
@@ -5320,6 +5544,7 @@ export namespace Prisma {
     RIF?: true
     is_active?: true
     subdomain?: true
+    is_enrollment_open?: true
     created_at?: true
     updated_at?: true
     cdceId?: true
@@ -5340,6 +5565,7 @@ export namespace Prisma {
     RIF?: true
     is_active?: true
     subdomain?: true
+    is_enrollment_open?: true
     created_at?: true
     updated_at?: true
     cdceId?: true
@@ -5447,6 +5673,7 @@ export namespace Prisma {
     RIF: string | null
     is_active: boolean
     subdomain: string | null
+    is_enrollment_open: boolean
     created_at: Date
     updated_at: Date
     cdceId: number
@@ -5486,6 +5713,7 @@ export namespace Prisma {
     RIF?: boolean
     is_active?: boolean
     subdomain?: boolean
+    is_enrollment_open?: boolean
     created_at?: boolean
     updated_at?: boolean
     cdceId?: boolean
@@ -5499,6 +5727,7 @@ export namespace Prisma {
     subjects?: boolean | school$subjectsArgs<ExtArgs>
     load_academics?: boolean | school$load_academicsArgs<ExtArgs>
     user_schools?: boolean | school$user_schoolsArgs<ExtArgs>
+    services?: boolean | school$servicesArgs<ExtArgs>
     _count?: boolean | SchoolCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["school"]>
 
@@ -5519,12 +5748,13 @@ export namespace Prisma {
     RIF?: boolean
     is_active?: boolean
     subdomain?: boolean
+    is_enrollment_open?: boolean
     created_at?: boolean
     updated_at?: boolean
     cdceId?: boolean
   }
 
-  export type schoolOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"SIG" | "school_name" | "type" | "company_name" | "address" | "city" | "municipality" | "state" | "phone" | "email" | "DEA_CODE" | "RIF" | "is_active" | "subdomain" | "created_at" | "updated_at" | "cdceId", ExtArgs["result"]["school"]>
+  export type schoolOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"SIG" | "school_name" | "type" | "company_name" | "address" | "city" | "municipality" | "state" | "phone" | "email" | "DEA_CODE" | "RIF" | "is_active" | "subdomain" | "is_enrollment_open" | "created_at" | "updated_at" | "cdceId", ExtArgs["result"]["school"]>
   export type schoolInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     cdcee?: boolean | cdceeDefaultArgs<ExtArgs>
     students?: boolean | school$studentsArgs<ExtArgs>
@@ -5536,6 +5766,7 @@ export namespace Prisma {
     subjects?: boolean | school$subjectsArgs<ExtArgs>
     load_academics?: boolean | school$load_academicsArgs<ExtArgs>
     user_schools?: boolean | school$user_schoolsArgs<ExtArgs>
+    services?: boolean | school$servicesArgs<ExtArgs>
     _count?: boolean | SchoolCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -5552,6 +5783,7 @@ export namespace Prisma {
       subjects: Prisma.$subjectPayload<ExtArgs>[]
       load_academics: Prisma.$load_academicPayload<ExtArgs>[]
       user_schools: Prisma.$user_schoolsPayload<ExtArgs>[]
+      services: Prisma.$school_servicePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       SIG: string
@@ -5568,6 +5800,7 @@ export namespace Prisma {
       RIF: string | null
       is_active: boolean
       subdomain: string | null
+      is_enrollment_open: boolean
       created_at: Date
       updated_at: Date
       cdceId: number
@@ -5921,6 +6154,7 @@ export namespace Prisma {
     subjects<T extends school$subjectsArgs<ExtArgs> = {}>(args?: Subset<T, school$subjectsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$subjectPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     load_academics<T extends school$load_academicsArgs<ExtArgs> = {}>(args?: Subset<T, school$load_academicsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$load_academicPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     user_schools<T extends school$user_schoolsArgs<ExtArgs> = {}>(args?: Subset<T, school$user_schoolsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$user_schoolsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    services<T extends school$servicesArgs<ExtArgs> = {}>(args?: Subset<T, school$servicesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$school_servicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5964,6 +6198,7 @@ export namespace Prisma {
     readonly RIF: FieldRef<"school", 'String'>
     readonly is_active: FieldRef<"school", 'Boolean'>
     readonly subdomain: FieldRef<"school", 'String'>
+    readonly is_enrollment_open: FieldRef<"school", 'Boolean'>
     readonly created_at: FieldRef<"school", 'DateTime'>
     readonly updated_at: FieldRef<"school", 'DateTime'>
     readonly cdceId: FieldRef<"school", 'Int'>
@@ -6528,6 +6763,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: User_schoolsScalarFieldEnum | User_schoolsScalarFieldEnum[]
+  }
+
+  /**
+   * school.services
+   */
+  export type school$servicesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the school_service
+     */
+    select?: school_serviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the school_service
+     */
+    omit?: school_serviceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: school_serviceInclude<ExtArgs> | null
+    where?: school_serviceWhereInput
+    orderBy?: school_serviceOrderByWithRelationInput | school_serviceOrderByWithRelationInput[]
+    cursor?: school_serviceWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: School_serviceScalarFieldEnum | School_serviceScalarFieldEnum[]
   }
 
   /**
@@ -26386,6 +26645,1998 @@ export namespace Prisma {
 
 
   /**
+   * Model services
+   */
+
+  export type AggregateServices = {
+    _count: ServicesCountAggregateOutputType | null
+    _avg: ServicesAvgAggregateOutputType | null
+    _sum: ServicesSumAggregateOutputType | null
+    _min: ServicesMinAggregateOutputType | null
+    _max: ServicesMaxAggregateOutputType | null
+  }
+
+  export type ServicesAvgAggregateOutputType = {
+    id: number | null
+    price: number | null
+  }
+
+  export type ServicesSumAggregateOutputType = {
+    id: number | null
+    price: number | null
+  }
+
+  export type ServicesMinAggregateOutputType = {
+    id: number | null
+    name: string | null
+    price: number | null
+    description: string | null
+    updated_at: Date | null
+    created_at: Date | null
+  }
+
+  export type ServicesMaxAggregateOutputType = {
+    id: number | null
+    name: string | null
+    price: number | null
+    description: string | null
+    updated_at: Date | null
+    created_at: Date | null
+  }
+
+  export type ServicesCountAggregateOutputType = {
+    id: number
+    name: number
+    price: number
+    description: number
+    updated_at: number
+    created_at: number
+    _all: number
+  }
+
+
+  export type ServicesAvgAggregateInputType = {
+    id?: true
+    price?: true
+  }
+
+  export type ServicesSumAggregateInputType = {
+    id?: true
+    price?: true
+  }
+
+  export type ServicesMinAggregateInputType = {
+    id?: true
+    name?: true
+    price?: true
+    description?: true
+    updated_at?: true
+    created_at?: true
+  }
+
+  export type ServicesMaxAggregateInputType = {
+    id?: true
+    name?: true
+    price?: true
+    description?: true
+    updated_at?: true
+    created_at?: true
+  }
+
+  export type ServicesCountAggregateInputType = {
+    id?: true
+    name?: true
+    price?: true
+    description?: true
+    updated_at?: true
+    created_at?: true
+    _all?: true
+  }
+
+  export type ServicesAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which services to aggregate.
+     */
+    where?: servicesWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of services to fetch.
+     */
+    orderBy?: servicesOrderByWithRelationInput | servicesOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: servicesWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` services from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` services.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned services
+    **/
+    _count?: true | ServicesCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ServicesAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ServicesSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ServicesMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ServicesMaxAggregateInputType
+  }
+
+  export type GetServicesAggregateType<T extends ServicesAggregateArgs> = {
+        [P in keyof T & keyof AggregateServices]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateServices[P]>
+      : GetScalarType<T[P], AggregateServices[P]>
+  }
+
+
+
+
+  export type servicesGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: servicesWhereInput
+    orderBy?: servicesOrderByWithAggregationInput | servicesOrderByWithAggregationInput[]
+    by: ServicesScalarFieldEnum[] | ServicesScalarFieldEnum
+    having?: servicesScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ServicesCountAggregateInputType | true
+    _avg?: ServicesAvgAggregateInputType
+    _sum?: ServicesSumAggregateInputType
+    _min?: ServicesMinAggregateInputType
+    _max?: ServicesMaxAggregateInputType
+  }
+
+  export type ServicesGroupByOutputType = {
+    id: number
+    name: string
+    price: number
+    description: string
+    updated_at: Date
+    created_at: Date
+    _count: ServicesCountAggregateOutputType | null
+    _avg: ServicesAvgAggregateOutputType | null
+    _sum: ServicesSumAggregateOutputType | null
+    _min: ServicesMinAggregateOutputType | null
+    _max: ServicesMaxAggregateOutputType | null
+  }
+
+  type GetServicesGroupByPayload<T extends servicesGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ServicesGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ServicesGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ServicesGroupByOutputType[P]>
+            : GetScalarType<T[P], ServicesGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type servicesSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    price?: boolean
+    description?: boolean
+    updated_at?: boolean
+    created_at?: boolean
+    schools?: boolean | services$schoolsArgs<ExtArgs>
+    _count?: boolean | ServicesCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["services"]>
+
+
+
+  export type servicesSelectScalar = {
+    id?: boolean
+    name?: boolean
+    price?: boolean
+    description?: boolean
+    updated_at?: boolean
+    created_at?: boolean
+  }
+
+  export type servicesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "price" | "description" | "updated_at" | "created_at", ExtArgs["result"]["services"]>
+  export type servicesInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    schools?: boolean | services$schoolsArgs<ExtArgs>
+    _count?: boolean | ServicesCountOutputTypeDefaultArgs<ExtArgs>
+  }
+
+  export type $servicesPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "services"
+    objects: {
+      schools: Prisma.$school_servicePayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      name: string
+      price: number
+      description: string
+      updated_at: Date
+      created_at: Date
+    }, ExtArgs["result"]["services"]>
+    composites: {}
+  }
+
+  type servicesGetPayload<S extends boolean | null | undefined | servicesDefaultArgs> = $Result.GetResult<Prisma.$servicesPayload, S>
+
+  type servicesCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<servicesFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ServicesCountAggregateInputType | true
+    }
+
+  export interface servicesDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['services'], meta: { name: 'services' } }
+    /**
+     * Find zero or one Services that matches the filter.
+     * @param {servicesFindUniqueArgs} args - Arguments to find a Services
+     * @example
+     * // Get one Services
+     * const services = await prisma.services.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends servicesFindUniqueArgs>(args: SelectSubset<T, servicesFindUniqueArgs<ExtArgs>>): Prisma__servicesClient<$Result.GetResult<Prisma.$servicesPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Services that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {servicesFindUniqueOrThrowArgs} args - Arguments to find a Services
+     * @example
+     * // Get one Services
+     * const services = await prisma.services.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends servicesFindUniqueOrThrowArgs>(args: SelectSubset<T, servicesFindUniqueOrThrowArgs<ExtArgs>>): Prisma__servicesClient<$Result.GetResult<Prisma.$servicesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Services that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {servicesFindFirstArgs} args - Arguments to find a Services
+     * @example
+     * // Get one Services
+     * const services = await prisma.services.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends servicesFindFirstArgs>(args?: SelectSubset<T, servicesFindFirstArgs<ExtArgs>>): Prisma__servicesClient<$Result.GetResult<Prisma.$servicesPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Services that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {servicesFindFirstOrThrowArgs} args - Arguments to find a Services
+     * @example
+     * // Get one Services
+     * const services = await prisma.services.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends servicesFindFirstOrThrowArgs>(args?: SelectSubset<T, servicesFindFirstOrThrowArgs<ExtArgs>>): Prisma__servicesClient<$Result.GetResult<Prisma.$servicesPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Services that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {servicesFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Services
+     * const services = await prisma.services.findMany()
+     * 
+     * // Get first 10 Services
+     * const services = await prisma.services.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const servicesWithIdOnly = await prisma.services.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends servicesFindManyArgs>(args?: SelectSubset<T, servicesFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$servicesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Services.
+     * @param {servicesCreateArgs} args - Arguments to create a Services.
+     * @example
+     * // Create one Services
+     * const Services = await prisma.services.create({
+     *   data: {
+     *     // ... data to create a Services
+     *   }
+     * })
+     * 
+     */
+    create<T extends servicesCreateArgs>(args: SelectSubset<T, servicesCreateArgs<ExtArgs>>): Prisma__servicesClient<$Result.GetResult<Prisma.$servicesPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Services.
+     * @param {servicesCreateManyArgs} args - Arguments to create many Services.
+     * @example
+     * // Create many Services
+     * const services = await prisma.services.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends servicesCreateManyArgs>(args?: SelectSubset<T, servicesCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a Services.
+     * @param {servicesDeleteArgs} args - Arguments to delete one Services.
+     * @example
+     * // Delete one Services
+     * const Services = await prisma.services.delete({
+     *   where: {
+     *     // ... filter to delete one Services
+     *   }
+     * })
+     * 
+     */
+    delete<T extends servicesDeleteArgs>(args: SelectSubset<T, servicesDeleteArgs<ExtArgs>>): Prisma__servicesClient<$Result.GetResult<Prisma.$servicesPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Services.
+     * @param {servicesUpdateArgs} args - Arguments to update one Services.
+     * @example
+     * // Update one Services
+     * const services = await prisma.services.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends servicesUpdateArgs>(args: SelectSubset<T, servicesUpdateArgs<ExtArgs>>): Prisma__servicesClient<$Result.GetResult<Prisma.$servicesPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Services.
+     * @param {servicesDeleteManyArgs} args - Arguments to filter Services to delete.
+     * @example
+     * // Delete a few Services
+     * const { count } = await prisma.services.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends servicesDeleteManyArgs>(args?: SelectSubset<T, servicesDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Services.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {servicesUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Services
+     * const services = await prisma.services.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends servicesUpdateManyArgs>(args: SelectSubset<T, servicesUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Services.
+     * @param {servicesUpsertArgs} args - Arguments to update or create a Services.
+     * @example
+     * // Update or create a Services
+     * const services = await prisma.services.upsert({
+     *   create: {
+     *     // ... data to create a Services
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Services we want to update
+     *   }
+     * })
+     */
+    upsert<T extends servicesUpsertArgs>(args: SelectSubset<T, servicesUpsertArgs<ExtArgs>>): Prisma__servicesClient<$Result.GetResult<Prisma.$servicesPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Services.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {servicesCountArgs} args - Arguments to filter Services to count.
+     * @example
+     * // Count the number of Services
+     * const count = await prisma.services.count({
+     *   where: {
+     *     // ... the filter for the Services we want to count
+     *   }
+     * })
+    **/
+    count<T extends servicesCountArgs>(
+      args?: Subset<T, servicesCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ServicesCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Services.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServicesAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ServicesAggregateArgs>(args: Subset<T, ServicesAggregateArgs>): Prisma.PrismaPromise<GetServicesAggregateType<T>>
+
+    /**
+     * Group by Services.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {servicesGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends servicesGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: servicesGroupByArgs['orderBy'] }
+        : { orderBy?: servicesGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, servicesGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetServicesGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the services model
+   */
+  readonly fields: servicesFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for services.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__servicesClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    schools<T extends services$schoolsArgs<ExtArgs> = {}>(args?: Subset<T, services$schoolsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$school_servicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the services model
+   */
+  interface servicesFieldRefs {
+    readonly id: FieldRef<"services", 'Int'>
+    readonly name: FieldRef<"services", 'String'>
+    readonly price: FieldRef<"services", 'Float'>
+    readonly description: FieldRef<"services", 'String'>
+    readonly updated_at: FieldRef<"services", 'DateTime'>
+    readonly created_at: FieldRef<"services", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * services findUnique
+   */
+  export type servicesFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the services
+     */
+    select?: servicesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the services
+     */
+    omit?: servicesOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: servicesInclude<ExtArgs> | null
+    /**
+     * Filter, which services to fetch.
+     */
+    where: servicesWhereUniqueInput
+  }
+
+  /**
+   * services findUniqueOrThrow
+   */
+  export type servicesFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the services
+     */
+    select?: servicesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the services
+     */
+    omit?: servicesOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: servicesInclude<ExtArgs> | null
+    /**
+     * Filter, which services to fetch.
+     */
+    where: servicesWhereUniqueInput
+  }
+
+  /**
+   * services findFirst
+   */
+  export type servicesFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the services
+     */
+    select?: servicesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the services
+     */
+    omit?: servicesOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: servicesInclude<ExtArgs> | null
+    /**
+     * Filter, which services to fetch.
+     */
+    where?: servicesWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of services to fetch.
+     */
+    orderBy?: servicesOrderByWithRelationInput | servicesOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for services.
+     */
+    cursor?: servicesWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` services from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` services.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of services.
+     */
+    distinct?: ServicesScalarFieldEnum | ServicesScalarFieldEnum[]
+  }
+
+  /**
+   * services findFirstOrThrow
+   */
+  export type servicesFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the services
+     */
+    select?: servicesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the services
+     */
+    omit?: servicesOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: servicesInclude<ExtArgs> | null
+    /**
+     * Filter, which services to fetch.
+     */
+    where?: servicesWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of services to fetch.
+     */
+    orderBy?: servicesOrderByWithRelationInput | servicesOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for services.
+     */
+    cursor?: servicesWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` services from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` services.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of services.
+     */
+    distinct?: ServicesScalarFieldEnum | ServicesScalarFieldEnum[]
+  }
+
+  /**
+   * services findMany
+   */
+  export type servicesFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the services
+     */
+    select?: servicesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the services
+     */
+    omit?: servicesOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: servicesInclude<ExtArgs> | null
+    /**
+     * Filter, which services to fetch.
+     */
+    where?: servicesWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of services to fetch.
+     */
+    orderBy?: servicesOrderByWithRelationInput | servicesOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing services.
+     */
+    cursor?: servicesWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` services from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` services.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of services.
+     */
+    distinct?: ServicesScalarFieldEnum | ServicesScalarFieldEnum[]
+  }
+
+  /**
+   * services create
+   */
+  export type servicesCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the services
+     */
+    select?: servicesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the services
+     */
+    omit?: servicesOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: servicesInclude<ExtArgs> | null
+    /**
+     * The data needed to create a services.
+     */
+    data: XOR<servicesCreateInput, servicesUncheckedCreateInput>
+  }
+
+  /**
+   * services createMany
+   */
+  export type servicesCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many services.
+     */
+    data: servicesCreateManyInput | servicesCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * services update
+   */
+  export type servicesUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the services
+     */
+    select?: servicesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the services
+     */
+    omit?: servicesOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: servicesInclude<ExtArgs> | null
+    /**
+     * The data needed to update a services.
+     */
+    data: XOR<servicesUpdateInput, servicesUncheckedUpdateInput>
+    /**
+     * Choose, which services to update.
+     */
+    where: servicesWhereUniqueInput
+  }
+
+  /**
+   * services updateMany
+   */
+  export type servicesUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update services.
+     */
+    data: XOR<servicesUpdateManyMutationInput, servicesUncheckedUpdateManyInput>
+    /**
+     * Filter which services to update
+     */
+    where?: servicesWhereInput
+    /**
+     * Limit how many services to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * services upsert
+   */
+  export type servicesUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the services
+     */
+    select?: servicesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the services
+     */
+    omit?: servicesOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: servicesInclude<ExtArgs> | null
+    /**
+     * The filter to search for the services to update in case it exists.
+     */
+    where: servicesWhereUniqueInput
+    /**
+     * In case the services found by the `where` argument doesn't exist, create a new services with this data.
+     */
+    create: XOR<servicesCreateInput, servicesUncheckedCreateInput>
+    /**
+     * In case the services was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<servicesUpdateInput, servicesUncheckedUpdateInput>
+  }
+
+  /**
+   * services delete
+   */
+  export type servicesDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the services
+     */
+    select?: servicesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the services
+     */
+    omit?: servicesOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: servicesInclude<ExtArgs> | null
+    /**
+     * Filter which services to delete.
+     */
+    where: servicesWhereUniqueInput
+  }
+
+  /**
+   * services deleteMany
+   */
+  export type servicesDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which services to delete
+     */
+    where?: servicesWhereInput
+    /**
+     * Limit how many services to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * services.schools
+   */
+  export type services$schoolsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the school_service
+     */
+    select?: school_serviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the school_service
+     */
+    omit?: school_serviceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: school_serviceInclude<ExtArgs> | null
+    where?: school_serviceWhereInput
+    orderBy?: school_serviceOrderByWithRelationInput | school_serviceOrderByWithRelationInput[]
+    cursor?: school_serviceWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: School_serviceScalarFieldEnum | School_serviceScalarFieldEnum[]
+  }
+
+  /**
+   * services without action
+   */
+  export type servicesDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the services
+     */
+    select?: servicesSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the services
+     */
+    omit?: servicesOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: servicesInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model school_service
+   */
+
+  export type AggregateSchool_service = {
+    _count: School_serviceCountAggregateOutputType | null
+    _avg: School_serviceAvgAggregateOutputType | null
+    _sum: School_serviceSumAggregateOutputType | null
+    _min: School_serviceMinAggregateOutputType | null
+    _max: School_serviceMaxAggregateOutputType | null
+  }
+
+  export type School_serviceAvgAggregateOutputType = {
+    id_service: number | null
+  }
+
+  export type School_serviceSumAggregateOutputType = {
+    id_service: number | null
+  }
+
+  export type School_serviceMinAggregateOutputType = {
+    id_service: number | null
+    SIG: string | null
+    status: $Enums.estatus_service | null
+    created_at: Date | null
+    expires_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type School_serviceMaxAggregateOutputType = {
+    id_service: number | null
+    SIG: string | null
+    status: $Enums.estatus_service | null
+    created_at: Date | null
+    expires_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type School_serviceCountAggregateOutputType = {
+    id_service: number
+    SIG: number
+    status: number
+    created_at: number
+    expires_at: number
+    updated_at: number
+    _all: number
+  }
+
+
+  export type School_serviceAvgAggregateInputType = {
+    id_service?: true
+  }
+
+  export type School_serviceSumAggregateInputType = {
+    id_service?: true
+  }
+
+  export type School_serviceMinAggregateInputType = {
+    id_service?: true
+    SIG?: true
+    status?: true
+    created_at?: true
+    expires_at?: true
+    updated_at?: true
+  }
+
+  export type School_serviceMaxAggregateInputType = {
+    id_service?: true
+    SIG?: true
+    status?: true
+    created_at?: true
+    expires_at?: true
+    updated_at?: true
+  }
+
+  export type School_serviceCountAggregateInputType = {
+    id_service?: true
+    SIG?: true
+    status?: true
+    created_at?: true
+    expires_at?: true
+    updated_at?: true
+    _all?: true
+  }
+
+  export type School_serviceAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which school_service to aggregate.
+     */
+    where?: school_serviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of school_services to fetch.
+     */
+    orderBy?: school_serviceOrderByWithRelationInput | school_serviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: school_serviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` school_services from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` school_services.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned school_services
+    **/
+    _count?: true | School_serviceCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: School_serviceAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: School_serviceSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: School_serviceMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: School_serviceMaxAggregateInputType
+  }
+
+  export type GetSchool_serviceAggregateType<T extends School_serviceAggregateArgs> = {
+        [P in keyof T & keyof AggregateSchool_service]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSchool_service[P]>
+      : GetScalarType<T[P], AggregateSchool_service[P]>
+  }
+
+
+
+
+  export type school_serviceGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: school_serviceWhereInput
+    orderBy?: school_serviceOrderByWithAggregationInput | school_serviceOrderByWithAggregationInput[]
+    by: School_serviceScalarFieldEnum[] | School_serviceScalarFieldEnum
+    having?: school_serviceScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: School_serviceCountAggregateInputType | true
+    _avg?: School_serviceAvgAggregateInputType
+    _sum?: School_serviceSumAggregateInputType
+    _min?: School_serviceMinAggregateInputType
+    _max?: School_serviceMaxAggregateInputType
+  }
+
+  export type School_serviceGroupByOutputType = {
+    id_service: number
+    SIG: string
+    status: $Enums.estatus_service
+    created_at: Date
+    expires_at: Date | null
+    updated_at: Date
+    _count: School_serviceCountAggregateOutputType | null
+    _avg: School_serviceAvgAggregateOutputType | null
+    _sum: School_serviceSumAggregateOutputType | null
+    _min: School_serviceMinAggregateOutputType | null
+    _max: School_serviceMaxAggregateOutputType | null
+  }
+
+  type GetSchool_serviceGroupByPayload<T extends school_serviceGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<School_serviceGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof School_serviceGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], School_serviceGroupByOutputType[P]>
+            : GetScalarType<T[P], School_serviceGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type school_serviceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id_service?: boolean
+    SIG?: boolean
+    status?: boolean
+    created_at?: boolean
+    expires_at?: boolean
+    updated_at?: boolean
+    school?: boolean | schoolDefaultArgs<ExtArgs>
+    service?: boolean | servicesDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["school_service"]>
+
+
+
+  export type school_serviceSelectScalar = {
+    id_service?: boolean
+    SIG?: boolean
+    status?: boolean
+    created_at?: boolean
+    expires_at?: boolean
+    updated_at?: boolean
+  }
+
+  export type school_serviceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id_service" | "SIG" | "status" | "created_at" | "expires_at" | "updated_at", ExtArgs["result"]["school_service"]>
+  export type school_serviceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    school?: boolean | schoolDefaultArgs<ExtArgs>
+    service?: boolean | servicesDefaultArgs<ExtArgs>
+  }
+
+  export type $school_servicePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "school_service"
+    objects: {
+      school: Prisma.$schoolPayload<ExtArgs>
+      service: Prisma.$servicesPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id_service: number
+      SIG: string
+      status: $Enums.estatus_service
+      created_at: Date
+      expires_at: Date | null
+      updated_at: Date
+    }, ExtArgs["result"]["school_service"]>
+    composites: {}
+  }
+
+  type school_serviceGetPayload<S extends boolean | null | undefined | school_serviceDefaultArgs> = $Result.GetResult<Prisma.$school_servicePayload, S>
+
+  type school_serviceCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<school_serviceFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: School_serviceCountAggregateInputType | true
+    }
+
+  export interface school_serviceDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['school_service'], meta: { name: 'school_service' } }
+    /**
+     * Find zero or one School_service that matches the filter.
+     * @param {school_serviceFindUniqueArgs} args - Arguments to find a School_service
+     * @example
+     * // Get one School_service
+     * const school_service = await prisma.school_service.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends school_serviceFindUniqueArgs>(args: SelectSubset<T, school_serviceFindUniqueArgs<ExtArgs>>): Prisma__school_serviceClient<$Result.GetResult<Prisma.$school_servicePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one School_service that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {school_serviceFindUniqueOrThrowArgs} args - Arguments to find a School_service
+     * @example
+     * // Get one School_service
+     * const school_service = await prisma.school_service.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends school_serviceFindUniqueOrThrowArgs>(args: SelectSubset<T, school_serviceFindUniqueOrThrowArgs<ExtArgs>>): Prisma__school_serviceClient<$Result.GetResult<Prisma.$school_servicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first School_service that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {school_serviceFindFirstArgs} args - Arguments to find a School_service
+     * @example
+     * // Get one School_service
+     * const school_service = await prisma.school_service.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends school_serviceFindFirstArgs>(args?: SelectSubset<T, school_serviceFindFirstArgs<ExtArgs>>): Prisma__school_serviceClient<$Result.GetResult<Prisma.$school_servicePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first School_service that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {school_serviceFindFirstOrThrowArgs} args - Arguments to find a School_service
+     * @example
+     * // Get one School_service
+     * const school_service = await prisma.school_service.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends school_serviceFindFirstOrThrowArgs>(args?: SelectSubset<T, school_serviceFindFirstOrThrowArgs<ExtArgs>>): Prisma__school_serviceClient<$Result.GetResult<Prisma.$school_servicePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more School_services that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {school_serviceFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all School_services
+     * const school_services = await prisma.school_service.findMany()
+     * 
+     * // Get first 10 School_services
+     * const school_services = await prisma.school_service.findMany({ take: 10 })
+     * 
+     * // Only select the `id_service`
+     * const school_serviceWithId_serviceOnly = await prisma.school_service.findMany({ select: { id_service: true } })
+     * 
+     */
+    findMany<T extends school_serviceFindManyArgs>(args?: SelectSubset<T, school_serviceFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$school_servicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a School_service.
+     * @param {school_serviceCreateArgs} args - Arguments to create a School_service.
+     * @example
+     * // Create one School_service
+     * const School_service = await prisma.school_service.create({
+     *   data: {
+     *     // ... data to create a School_service
+     *   }
+     * })
+     * 
+     */
+    create<T extends school_serviceCreateArgs>(args: SelectSubset<T, school_serviceCreateArgs<ExtArgs>>): Prisma__school_serviceClient<$Result.GetResult<Prisma.$school_servicePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many School_services.
+     * @param {school_serviceCreateManyArgs} args - Arguments to create many School_services.
+     * @example
+     * // Create many School_services
+     * const school_service = await prisma.school_service.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends school_serviceCreateManyArgs>(args?: SelectSubset<T, school_serviceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a School_service.
+     * @param {school_serviceDeleteArgs} args - Arguments to delete one School_service.
+     * @example
+     * // Delete one School_service
+     * const School_service = await prisma.school_service.delete({
+     *   where: {
+     *     // ... filter to delete one School_service
+     *   }
+     * })
+     * 
+     */
+    delete<T extends school_serviceDeleteArgs>(args: SelectSubset<T, school_serviceDeleteArgs<ExtArgs>>): Prisma__school_serviceClient<$Result.GetResult<Prisma.$school_servicePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one School_service.
+     * @param {school_serviceUpdateArgs} args - Arguments to update one School_service.
+     * @example
+     * // Update one School_service
+     * const school_service = await prisma.school_service.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends school_serviceUpdateArgs>(args: SelectSubset<T, school_serviceUpdateArgs<ExtArgs>>): Prisma__school_serviceClient<$Result.GetResult<Prisma.$school_servicePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more School_services.
+     * @param {school_serviceDeleteManyArgs} args - Arguments to filter School_services to delete.
+     * @example
+     * // Delete a few School_services
+     * const { count } = await prisma.school_service.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends school_serviceDeleteManyArgs>(args?: SelectSubset<T, school_serviceDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more School_services.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {school_serviceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many School_services
+     * const school_service = await prisma.school_service.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends school_serviceUpdateManyArgs>(args: SelectSubset<T, school_serviceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one School_service.
+     * @param {school_serviceUpsertArgs} args - Arguments to update or create a School_service.
+     * @example
+     * // Update or create a School_service
+     * const school_service = await prisma.school_service.upsert({
+     *   create: {
+     *     // ... data to create a School_service
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the School_service we want to update
+     *   }
+     * })
+     */
+    upsert<T extends school_serviceUpsertArgs>(args: SelectSubset<T, school_serviceUpsertArgs<ExtArgs>>): Prisma__school_serviceClient<$Result.GetResult<Prisma.$school_servicePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of School_services.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {school_serviceCountArgs} args - Arguments to filter School_services to count.
+     * @example
+     * // Count the number of School_services
+     * const count = await prisma.school_service.count({
+     *   where: {
+     *     // ... the filter for the School_services we want to count
+     *   }
+     * })
+    **/
+    count<T extends school_serviceCountArgs>(
+      args?: Subset<T, school_serviceCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], School_serviceCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a School_service.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {School_serviceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends School_serviceAggregateArgs>(args: Subset<T, School_serviceAggregateArgs>): Prisma.PrismaPromise<GetSchool_serviceAggregateType<T>>
+
+    /**
+     * Group by School_service.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {school_serviceGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends school_serviceGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: school_serviceGroupByArgs['orderBy'] }
+        : { orderBy?: school_serviceGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, school_serviceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSchool_serviceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the school_service model
+   */
+  readonly fields: school_serviceFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for school_service.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__school_serviceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    school<T extends schoolDefaultArgs<ExtArgs> = {}>(args?: Subset<T, schoolDefaultArgs<ExtArgs>>): Prisma__schoolClient<$Result.GetResult<Prisma.$schoolPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    service<T extends servicesDefaultArgs<ExtArgs> = {}>(args?: Subset<T, servicesDefaultArgs<ExtArgs>>): Prisma__servicesClient<$Result.GetResult<Prisma.$servicesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the school_service model
+   */
+  interface school_serviceFieldRefs {
+    readonly id_service: FieldRef<"school_service", 'Int'>
+    readonly SIG: FieldRef<"school_service", 'String'>
+    readonly status: FieldRef<"school_service", 'estatus_service'>
+    readonly created_at: FieldRef<"school_service", 'DateTime'>
+    readonly expires_at: FieldRef<"school_service", 'DateTime'>
+    readonly updated_at: FieldRef<"school_service", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * school_service findUnique
+   */
+  export type school_serviceFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the school_service
+     */
+    select?: school_serviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the school_service
+     */
+    omit?: school_serviceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: school_serviceInclude<ExtArgs> | null
+    /**
+     * Filter, which school_service to fetch.
+     */
+    where: school_serviceWhereUniqueInput
+  }
+
+  /**
+   * school_service findUniqueOrThrow
+   */
+  export type school_serviceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the school_service
+     */
+    select?: school_serviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the school_service
+     */
+    omit?: school_serviceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: school_serviceInclude<ExtArgs> | null
+    /**
+     * Filter, which school_service to fetch.
+     */
+    where: school_serviceWhereUniqueInput
+  }
+
+  /**
+   * school_service findFirst
+   */
+  export type school_serviceFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the school_service
+     */
+    select?: school_serviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the school_service
+     */
+    omit?: school_serviceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: school_serviceInclude<ExtArgs> | null
+    /**
+     * Filter, which school_service to fetch.
+     */
+    where?: school_serviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of school_services to fetch.
+     */
+    orderBy?: school_serviceOrderByWithRelationInput | school_serviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for school_services.
+     */
+    cursor?: school_serviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` school_services from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` school_services.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of school_services.
+     */
+    distinct?: School_serviceScalarFieldEnum | School_serviceScalarFieldEnum[]
+  }
+
+  /**
+   * school_service findFirstOrThrow
+   */
+  export type school_serviceFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the school_service
+     */
+    select?: school_serviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the school_service
+     */
+    omit?: school_serviceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: school_serviceInclude<ExtArgs> | null
+    /**
+     * Filter, which school_service to fetch.
+     */
+    where?: school_serviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of school_services to fetch.
+     */
+    orderBy?: school_serviceOrderByWithRelationInput | school_serviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for school_services.
+     */
+    cursor?: school_serviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` school_services from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` school_services.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of school_services.
+     */
+    distinct?: School_serviceScalarFieldEnum | School_serviceScalarFieldEnum[]
+  }
+
+  /**
+   * school_service findMany
+   */
+  export type school_serviceFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the school_service
+     */
+    select?: school_serviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the school_service
+     */
+    omit?: school_serviceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: school_serviceInclude<ExtArgs> | null
+    /**
+     * Filter, which school_services to fetch.
+     */
+    where?: school_serviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of school_services to fetch.
+     */
+    orderBy?: school_serviceOrderByWithRelationInput | school_serviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing school_services.
+     */
+    cursor?: school_serviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` school_services from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` school_services.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of school_services.
+     */
+    distinct?: School_serviceScalarFieldEnum | School_serviceScalarFieldEnum[]
+  }
+
+  /**
+   * school_service create
+   */
+  export type school_serviceCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the school_service
+     */
+    select?: school_serviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the school_service
+     */
+    omit?: school_serviceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: school_serviceInclude<ExtArgs> | null
+    /**
+     * The data needed to create a school_service.
+     */
+    data: XOR<school_serviceCreateInput, school_serviceUncheckedCreateInput>
+  }
+
+  /**
+   * school_service createMany
+   */
+  export type school_serviceCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many school_services.
+     */
+    data: school_serviceCreateManyInput | school_serviceCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * school_service update
+   */
+  export type school_serviceUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the school_service
+     */
+    select?: school_serviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the school_service
+     */
+    omit?: school_serviceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: school_serviceInclude<ExtArgs> | null
+    /**
+     * The data needed to update a school_service.
+     */
+    data: XOR<school_serviceUpdateInput, school_serviceUncheckedUpdateInput>
+    /**
+     * Choose, which school_service to update.
+     */
+    where: school_serviceWhereUniqueInput
+  }
+
+  /**
+   * school_service updateMany
+   */
+  export type school_serviceUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update school_services.
+     */
+    data: XOR<school_serviceUpdateManyMutationInput, school_serviceUncheckedUpdateManyInput>
+    /**
+     * Filter which school_services to update
+     */
+    where?: school_serviceWhereInput
+    /**
+     * Limit how many school_services to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * school_service upsert
+   */
+  export type school_serviceUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the school_service
+     */
+    select?: school_serviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the school_service
+     */
+    omit?: school_serviceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: school_serviceInclude<ExtArgs> | null
+    /**
+     * The filter to search for the school_service to update in case it exists.
+     */
+    where: school_serviceWhereUniqueInput
+    /**
+     * In case the school_service found by the `where` argument doesn't exist, create a new school_service with this data.
+     */
+    create: XOR<school_serviceCreateInput, school_serviceUncheckedCreateInput>
+    /**
+     * In case the school_service was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<school_serviceUpdateInput, school_serviceUncheckedUpdateInput>
+  }
+
+  /**
+   * school_service delete
+   */
+  export type school_serviceDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the school_service
+     */
+    select?: school_serviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the school_service
+     */
+    omit?: school_serviceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: school_serviceInclude<ExtArgs> | null
+    /**
+     * Filter which school_service to delete.
+     */
+    where: school_serviceWhereUniqueInput
+  }
+
+  /**
+   * school_service deleteMany
+   */
+  export type school_serviceDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which school_services to delete
+     */
+    where?: school_serviceWhereInput
+    /**
+     * Limit how many school_services to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * school_service without action
+   */
+  export type school_serviceDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the school_service
+     */
+    select?: school_serviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the school_service
+     */
+    omit?: school_serviceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: school_serviceInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -26431,6 +28682,7 @@ export namespace Prisma {
     RIF: 'RIF',
     is_active: 'is_active',
     subdomain: 'subdomain',
+    is_enrollment_open: 'is_enrollment_open',
     created_at: 'created_at',
     updated_at: 'updated_at',
     cdceId: 'cdceId'
@@ -26690,6 +28942,30 @@ export namespace Prisma {
   export type Auth_tokenScalarFieldEnum = (typeof Auth_tokenScalarFieldEnum)[keyof typeof Auth_tokenScalarFieldEnum]
 
 
+  export const ServicesScalarFieldEnum: {
+    id: 'id',
+    name: 'name',
+    price: 'price',
+    description: 'description',
+    updated_at: 'updated_at',
+    created_at: 'created_at'
+  };
+
+  export type ServicesScalarFieldEnum = (typeof ServicesScalarFieldEnum)[keyof typeof ServicesScalarFieldEnum]
+
+
+  export const School_serviceScalarFieldEnum: {
+    id_service: 'id_service',
+    SIG: 'SIG',
+    status: 'status',
+    created_at: 'created_at',
+    expires_at: 'expires_at',
+    updated_at: 'updated_at'
+  };
+
+  export type School_serviceScalarFieldEnum = (typeof School_serviceScalarFieldEnum)[keyof typeof School_serviceScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -26877,6 +29153,21 @@ export namespace Prisma {
   export type auth_tokenOrderByRelevanceFieldEnum = (typeof auth_tokenOrderByRelevanceFieldEnum)[keyof typeof auth_tokenOrderByRelevanceFieldEnum]
 
 
+  export const servicesOrderByRelevanceFieldEnum: {
+    name: 'name',
+    description: 'description'
+  };
+
+  export type servicesOrderByRelevanceFieldEnum = (typeof servicesOrderByRelevanceFieldEnum)[keyof typeof servicesOrderByRelevanceFieldEnum]
+
+
+  export const school_serviceOrderByRelevanceFieldEnum: {
+    SIG: 'SIG'
+  };
+
+  export type school_serviceOrderByRelevanceFieldEnum = (typeof school_serviceOrderByRelevanceFieldEnum)[keyof typeof school_serviceOrderByRelevanceFieldEnum]
+
+
   /**
    * Field references
    */
@@ -26956,6 +29247,13 @@ export namespace Prisma {
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'estatus_service'
+   */
+  export type Enumestatus_serviceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'estatus_service'>
     
   /**
    * Deep Input Types
@@ -27068,6 +29366,7 @@ export namespace Prisma {
     RIF?: StringNullableFilter<"school"> | string | null
     is_active?: BoolFilter<"school"> | boolean
     subdomain?: StringNullableFilter<"school"> | string | null
+    is_enrollment_open?: BoolFilter<"school"> | boolean
     created_at?: DateTimeFilter<"school"> | Date | string
     updated_at?: DateTimeFilter<"school"> | Date | string
     cdceId?: IntFilter<"school"> | number
@@ -27081,6 +29380,7 @@ export namespace Prisma {
     subjects?: SubjectListRelationFilter
     load_academics?: Load_academicListRelationFilter
     user_schools?: User_schoolsListRelationFilter
+    services?: School_serviceListRelationFilter
   }
 
   export type schoolOrderByWithRelationInput = {
@@ -27098,6 +29398,7 @@ export namespace Prisma {
     RIF?: SortOrderInput | SortOrder
     is_active?: SortOrder
     subdomain?: SortOrderInput | SortOrder
+    is_enrollment_open?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     cdceId?: SortOrder
@@ -27111,6 +29412,7 @@ export namespace Prisma {
     subjects?: subjectOrderByRelationAggregateInput
     load_academics?: load_academicOrderByRelationAggregateInput
     user_schools?: user_schoolsOrderByRelationAggregateInput
+    services?: school_serviceOrderByRelationAggregateInput
     _relevance?: schoolOrderByRelevanceInput
   }
 
@@ -27132,6 +29434,7 @@ export namespace Prisma {
     DEA_CODE?: StringFilter<"school"> | string
     RIF?: StringNullableFilter<"school"> | string | null
     is_active?: BoolFilter<"school"> | boolean
+    is_enrollment_open?: BoolFilter<"school"> | boolean
     created_at?: DateTimeFilter<"school"> | Date | string
     updated_at?: DateTimeFilter<"school"> | Date | string
     cdceId?: IntFilter<"school"> | number
@@ -27145,6 +29448,7 @@ export namespace Prisma {
     subjects?: SubjectListRelationFilter
     load_academics?: Load_academicListRelationFilter
     user_schools?: User_schoolsListRelationFilter
+    services?: School_serviceListRelationFilter
   }, "SIG" | "subdomain">
 
   export type schoolOrderByWithAggregationInput = {
@@ -27162,6 +29466,7 @@ export namespace Prisma {
     RIF?: SortOrderInput | SortOrder
     is_active?: SortOrder
     subdomain?: SortOrderInput | SortOrder
+    is_enrollment_open?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     cdceId?: SortOrder
@@ -27190,6 +29495,7 @@ export namespace Prisma {
     RIF?: StringNullableWithAggregatesFilter<"school"> | string | null
     is_active?: BoolWithAggregatesFilter<"school"> | boolean
     subdomain?: StringNullableWithAggregatesFilter<"school"> | string | null
+    is_enrollment_open?: BoolWithAggregatesFilter<"school"> | boolean
     created_at?: DateTimeWithAggregatesFilter<"school"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"school"> | Date | string
     cdceId?: IntWithAggregatesFilter<"school"> | number
@@ -28637,6 +30943,136 @@ export namespace Prisma {
     created_at?: DateTimeWithAggregatesFilter<"auth_token"> | Date | string
   }
 
+  export type servicesWhereInput = {
+    AND?: servicesWhereInput | servicesWhereInput[]
+    OR?: servicesWhereInput[]
+    NOT?: servicesWhereInput | servicesWhereInput[]
+    id?: IntFilter<"services"> | number
+    name?: StringFilter<"services"> | string
+    price?: FloatFilter<"services"> | number
+    description?: StringFilter<"services"> | string
+    updated_at?: DateTimeFilter<"services"> | Date | string
+    created_at?: DateTimeFilter<"services"> | Date | string
+    schools?: School_serviceListRelationFilter
+  }
+
+  export type servicesOrderByWithRelationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    price?: SortOrder
+    description?: SortOrder
+    updated_at?: SortOrder
+    created_at?: SortOrder
+    schools?: school_serviceOrderByRelationAggregateInput
+    _relevance?: servicesOrderByRelevanceInput
+  }
+
+  export type servicesWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: servicesWhereInput | servicesWhereInput[]
+    OR?: servicesWhereInput[]
+    NOT?: servicesWhereInput | servicesWhereInput[]
+    name?: StringFilter<"services"> | string
+    price?: FloatFilter<"services"> | number
+    description?: StringFilter<"services"> | string
+    updated_at?: DateTimeFilter<"services"> | Date | string
+    created_at?: DateTimeFilter<"services"> | Date | string
+    schools?: School_serviceListRelationFilter
+  }, "id">
+
+  export type servicesOrderByWithAggregationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    price?: SortOrder
+    description?: SortOrder
+    updated_at?: SortOrder
+    created_at?: SortOrder
+    _count?: servicesCountOrderByAggregateInput
+    _avg?: servicesAvgOrderByAggregateInput
+    _max?: servicesMaxOrderByAggregateInput
+    _min?: servicesMinOrderByAggregateInput
+    _sum?: servicesSumOrderByAggregateInput
+  }
+
+  export type servicesScalarWhereWithAggregatesInput = {
+    AND?: servicesScalarWhereWithAggregatesInput | servicesScalarWhereWithAggregatesInput[]
+    OR?: servicesScalarWhereWithAggregatesInput[]
+    NOT?: servicesScalarWhereWithAggregatesInput | servicesScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"services"> | number
+    name?: StringWithAggregatesFilter<"services"> | string
+    price?: FloatWithAggregatesFilter<"services"> | number
+    description?: StringWithAggregatesFilter<"services"> | string
+    updated_at?: DateTimeWithAggregatesFilter<"services"> | Date | string
+    created_at?: DateTimeWithAggregatesFilter<"services"> | Date | string
+  }
+
+  export type school_serviceWhereInput = {
+    AND?: school_serviceWhereInput | school_serviceWhereInput[]
+    OR?: school_serviceWhereInput[]
+    NOT?: school_serviceWhereInput | school_serviceWhereInput[]
+    id_service?: IntFilter<"school_service"> | number
+    SIG?: StringFilter<"school_service"> | string
+    status?: Enumestatus_serviceFilter<"school_service"> | $Enums.estatus_service
+    created_at?: DateTimeFilter<"school_service"> | Date | string
+    expires_at?: DateTimeNullableFilter<"school_service"> | Date | string | null
+    updated_at?: DateTimeFilter<"school_service"> | Date | string
+    school?: XOR<SchoolScalarRelationFilter, schoolWhereInput>
+    service?: XOR<ServicesScalarRelationFilter, servicesWhereInput>
+  }
+
+  export type school_serviceOrderByWithRelationInput = {
+    id_service?: SortOrder
+    SIG?: SortOrder
+    status?: SortOrder
+    created_at?: SortOrder
+    expires_at?: SortOrderInput | SortOrder
+    updated_at?: SortOrder
+    school?: schoolOrderByWithRelationInput
+    service?: servicesOrderByWithRelationInput
+    _relevance?: school_serviceOrderByRelevanceInput
+  }
+
+  export type school_serviceWhereUniqueInput = Prisma.AtLeast<{
+    SIG_id_service?: school_serviceSIGId_serviceCompoundUniqueInput
+    AND?: school_serviceWhereInput | school_serviceWhereInput[]
+    OR?: school_serviceWhereInput[]
+    NOT?: school_serviceWhereInput | school_serviceWhereInput[]
+    id_service?: IntFilter<"school_service"> | number
+    SIG?: StringFilter<"school_service"> | string
+    status?: Enumestatus_serviceFilter<"school_service"> | $Enums.estatus_service
+    created_at?: DateTimeFilter<"school_service"> | Date | string
+    expires_at?: DateTimeNullableFilter<"school_service"> | Date | string | null
+    updated_at?: DateTimeFilter<"school_service"> | Date | string
+    school?: XOR<SchoolScalarRelationFilter, schoolWhereInput>
+    service?: XOR<ServicesScalarRelationFilter, servicesWhereInput>
+  }, "SIG_id_service">
+
+  export type school_serviceOrderByWithAggregationInput = {
+    id_service?: SortOrder
+    SIG?: SortOrder
+    status?: SortOrder
+    created_at?: SortOrder
+    expires_at?: SortOrderInput | SortOrder
+    updated_at?: SortOrder
+    _count?: school_serviceCountOrderByAggregateInput
+    _avg?: school_serviceAvgOrderByAggregateInput
+    _max?: school_serviceMaxOrderByAggregateInput
+    _min?: school_serviceMinOrderByAggregateInput
+    _sum?: school_serviceSumOrderByAggregateInput
+  }
+
+  export type school_serviceScalarWhereWithAggregatesInput = {
+    AND?: school_serviceScalarWhereWithAggregatesInput | school_serviceScalarWhereWithAggregatesInput[]
+    OR?: school_serviceScalarWhereWithAggregatesInput[]
+    NOT?: school_serviceScalarWhereWithAggregatesInput | school_serviceScalarWhereWithAggregatesInput[]
+    id_service?: IntWithAggregatesFilter<"school_service"> | number
+    SIG?: StringWithAggregatesFilter<"school_service"> | string
+    status?: Enumestatus_serviceWithAggregatesFilter<"school_service"> | $Enums.estatus_service
+    created_at?: DateTimeWithAggregatesFilter<"school_service"> | Date | string
+    expires_at?: DateTimeNullableWithAggregatesFilter<"school_service"> | Date | string | null
+    updated_at?: DateTimeWithAggregatesFilter<"school_service"> | Date | string
+  }
+
   export type SessionCreateInput = {
     session_id: string
     expires: number
@@ -28730,6 +31166,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
@@ -28742,6 +31179,7 @@ export namespace Prisma {
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
+    services?: school_serviceCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateInput = {
@@ -28759,6 +31197,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
@@ -28771,6 +31210,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
+    services?: school_serviceUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUpdateInput = {
@@ -28788,6 +31228,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
@@ -28800,6 +31241,7 @@ export namespace Prisma {
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateInput = {
@@ -28817,6 +31259,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
@@ -28829,6 +31272,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolCreateManyInput = {
@@ -28846,6 +31290,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
@@ -28866,6 +31311,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -28885,6 +31331,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
@@ -30266,6 +32713,131 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type servicesCreateInput = {
+    name: string
+    price: number
+    description: string
+    updated_at?: Date | string
+    created_at?: Date | string
+    schools?: school_serviceCreateNestedManyWithoutServiceInput
+  }
+
+  export type servicesUncheckedCreateInput = {
+    id?: number
+    name: string
+    price: number
+    description: string
+    updated_at?: Date | string
+    created_at?: Date | string
+    schools?: school_serviceUncheckedCreateNestedManyWithoutServiceInput
+  }
+
+  export type servicesUpdateInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    description?: StringFieldUpdateOperationsInput | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    schools?: school_serviceUpdateManyWithoutServiceNestedInput
+  }
+
+  export type servicesUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    description?: StringFieldUpdateOperationsInput | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    schools?: school_serviceUncheckedUpdateManyWithoutServiceNestedInput
+  }
+
+  export type servicesCreateManyInput = {
+    id?: number
+    name: string
+    price: number
+    description: string
+    updated_at?: Date | string
+    created_at?: Date | string
+  }
+
+  export type servicesUpdateManyMutationInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    description?: StringFieldUpdateOperationsInput | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type servicesUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    description?: StringFieldUpdateOperationsInput | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type school_serviceCreateInput = {
+    status?: $Enums.estatus_service
+    created_at?: Date | string
+    expires_at?: Date | string | null
+    updated_at?: Date | string
+    school: schoolCreateNestedOneWithoutServicesInput
+    service: servicesCreateNestedOneWithoutSchoolsInput
+  }
+
+  export type school_serviceUncheckedCreateInput = {
+    id_service: number
+    SIG: string
+    status?: $Enums.estatus_service
+    created_at?: Date | string
+    expires_at?: Date | string | null
+    updated_at?: Date | string
+  }
+
+  export type school_serviceUpdateInput = {
+    status?: Enumestatus_serviceFieldUpdateOperationsInput | $Enums.estatus_service
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    school?: schoolUpdateOneRequiredWithoutServicesNestedInput
+    service?: servicesUpdateOneRequiredWithoutSchoolsNestedInput
+  }
+
+  export type school_serviceUncheckedUpdateInput = {
+    id_service?: IntFieldUpdateOperationsInput | number
+    SIG?: StringFieldUpdateOperationsInput | string
+    status?: Enumestatus_serviceFieldUpdateOperationsInput | $Enums.estatus_service
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type school_serviceCreateManyInput = {
+    id_service: number
+    SIG: string
+    status?: $Enums.estatus_service
+    created_at?: Date | string
+    expires_at?: Date | string | null
+    updated_at?: Date | string
+  }
+
+  export type school_serviceUpdateManyMutationInput = {
+    status?: Enumestatus_serviceFieldUpdateOperationsInput | $Enums.estatus_service
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type school_serviceUncheckedUpdateManyInput = {
+    id_service?: IntFieldUpdateOperationsInput | number
+    SIG?: StringFieldUpdateOperationsInput | string
+    status?: Enumestatus_serviceFieldUpdateOperationsInput | $Enums.estatus_service
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -30517,6 +33089,12 @@ export namespace Prisma {
     none?: user_schoolsWhereInput
   }
 
+  export type School_serviceListRelationFilter = {
+    every?: school_serviceWhereInput
+    some?: school_serviceWhereInput
+    none?: school_serviceWhereInput
+  }
+
   export type studentOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -30553,6 +33131,10 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type school_serviceOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type schoolOrderByRelevanceInput = {
     fields: schoolOrderByRelevanceFieldEnum | schoolOrderByRelevanceFieldEnum[]
     sort: SortOrder
@@ -30574,6 +33156,7 @@ export namespace Prisma {
     RIF?: SortOrder
     is_active?: SortOrder
     subdomain?: SortOrder
+    is_enrollment_open?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     cdceId?: SortOrder
@@ -30598,6 +33181,7 @@ export namespace Prisma {
     RIF?: SortOrder
     is_active?: SortOrder
     subdomain?: SortOrder
+    is_enrollment_open?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     cdceId?: SortOrder
@@ -30618,6 +33202,7 @@ export namespace Prisma {
     RIF?: SortOrder
     is_active?: SortOrder
     subdomain?: SortOrder
+    is_enrollment_open?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     cdceId?: SortOrder
@@ -31885,6 +34470,144 @@ export namespace Prisma {
     id_user?: SortOrder
   }
 
+  export type FloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type servicesOrderByRelevanceInput = {
+    fields: servicesOrderByRelevanceFieldEnum | servicesOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type servicesCountOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    price?: SortOrder
+    description?: SortOrder
+    updated_at?: SortOrder
+    created_at?: SortOrder
+  }
+
+  export type servicesAvgOrderByAggregateInput = {
+    id?: SortOrder
+    price?: SortOrder
+  }
+
+  export type servicesMaxOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    price?: SortOrder
+    description?: SortOrder
+    updated_at?: SortOrder
+    created_at?: SortOrder
+  }
+
+  export type servicesMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    price?: SortOrder
+    description?: SortOrder
+    updated_at?: SortOrder
+    created_at?: SortOrder
+  }
+
+  export type servicesSumOrderByAggregateInput = {
+    id?: SortOrder
+    price?: SortOrder
+  }
+
+  export type FloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
+  export type Enumestatus_serviceFilter<$PrismaModel = never> = {
+    equals?: $Enums.estatus_service | Enumestatus_serviceFieldRefInput<$PrismaModel>
+    in?: $Enums.estatus_service[]
+    notIn?: $Enums.estatus_service[]
+    not?: NestedEnumestatus_serviceFilter<$PrismaModel> | $Enums.estatus_service
+  }
+
+  export type ServicesScalarRelationFilter = {
+    is?: servicesWhereInput
+    isNot?: servicesWhereInput
+  }
+
+  export type school_serviceOrderByRelevanceInput = {
+    fields: school_serviceOrderByRelevanceFieldEnum | school_serviceOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type school_serviceSIGId_serviceCompoundUniqueInput = {
+    SIG: string
+    id_service: number
+  }
+
+  export type school_serviceCountOrderByAggregateInput = {
+    id_service?: SortOrder
+    SIG?: SortOrder
+    status?: SortOrder
+    created_at?: SortOrder
+    expires_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type school_serviceAvgOrderByAggregateInput = {
+    id_service?: SortOrder
+  }
+
+  export type school_serviceMaxOrderByAggregateInput = {
+    id_service?: SortOrder
+    SIG?: SortOrder
+    status?: SortOrder
+    created_at?: SortOrder
+    expires_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type school_serviceMinOrderByAggregateInput = {
+    id_service?: SortOrder
+    SIG?: SortOrder
+    status?: SortOrder
+    created_at?: SortOrder
+    expires_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type school_serviceSumOrderByAggregateInput = {
+    id_service?: SortOrder
+  }
+
+  export type Enumestatus_serviceWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.estatus_service | Enumestatus_serviceFieldRefInput<$PrismaModel>
+    in?: $Enums.estatus_service[]
+    notIn?: $Enums.estatus_service[]
+    not?: NestedEnumestatus_serviceWithAggregatesFilter<$PrismaModel> | $Enums.estatus_service
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumestatus_serviceFilter<$PrismaModel>
+    _max?: NestedEnumestatus_serviceFilter<$PrismaModel>
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -32012,6 +34735,13 @@ export namespace Prisma {
     connect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
   }
 
+  export type school_serviceCreateNestedManyWithoutSchoolInput = {
+    create?: XOR<school_serviceCreateWithoutSchoolInput, school_serviceUncheckedCreateWithoutSchoolInput> | school_serviceCreateWithoutSchoolInput[] | school_serviceUncheckedCreateWithoutSchoolInput[]
+    connectOrCreate?: school_serviceCreateOrConnectWithoutSchoolInput | school_serviceCreateOrConnectWithoutSchoolInput[]
+    createMany?: school_serviceCreateManySchoolInputEnvelope
+    connect?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+  }
+
   export type studentUncheckedCreateNestedManyWithoutSchoolInput = {
     create?: XOR<studentCreateWithoutSchoolInput, studentUncheckedCreateWithoutSchoolInput> | studentCreateWithoutSchoolInput[] | studentUncheckedCreateWithoutSchoolInput[]
     connectOrCreate?: studentCreateOrConnectWithoutSchoolInput | studentCreateOrConnectWithoutSchoolInput[]
@@ -32073,6 +34803,13 @@ export namespace Prisma {
     connectOrCreate?: user_schoolsCreateOrConnectWithoutSchoolInput | user_schoolsCreateOrConnectWithoutSchoolInput[]
     createMany?: user_schoolsCreateManySchoolInputEnvelope
     connect?: user_schoolsWhereUniqueInput | user_schoolsWhereUniqueInput[]
+  }
+
+  export type school_serviceUncheckedCreateNestedManyWithoutSchoolInput = {
+    create?: XOR<school_serviceCreateWithoutSchoolInput, school_serviceUncheckedCreateWithoutSchoolInput> | school_serviceCreateWithoutSchoolInput[] | school_serviceUncheckedCreateWithoutSchoolInput[]
+    connectOrCreate?: school_serviceCreateOrConnectWithoutSchoolInput | school_serviceCreateOrConnectWithoutSchoolInput[]
+    createMany?: school_serviceCreateManySchoolInputEnvelope
+    connect?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
   }
 
   export type Enumschool_typeFieldUpdateOperationsInput = {
@@ -32221,6 +34958,20 @@ export namespace Prisma {
     deleteMany?: user_schoolsScalarWhereInput | user_schoolsScalarWhereInput[]
   }
 
+  export type school_serviceUpdateManyWithoutSchoolNestedInput = {
+    create?: XOR<school_serviceCreateWithoutSchoolInput, school_serviceUncheckedCreateWithoutSchoolInput> | school_serviceCreateWithoutSchoolInput[] | school_serviceUncheckedCreateWithoutSchoolInput[]
+    connectOrCreate?: school_serviceCreateOrConnectWithoutSchoolInput | school_serviceCreateOrConnectWithoutSchoolInput[]
+    upsert?: school_serviceUpsertWithWhereUniqueWithoutSchoolInput | school_serviceUpsertWithWhereUniqueWithoutSchoolInput[]
+    createMany?: school_serviceCreateManySchoolInputEnvelope
+    set?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    disconnect?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    delete?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    connect?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    update?: school_serviceUpdateWithWhereUniqueWithoutSchoolInput | school_serviceUpdateWithWhereUniqueWithoutSchoolInput[]
+    updateMany?: school_serviceUpdateManyWithWhereWithoutSchoolInput | school_serviceUpdateManyWithWhereWithoutSchoolInput[]
+    deleteMany?: school_serviceScalarWhereInput | school_serviceScalarWhereInput[]
+  }
+
   export type studentUncheckedUpdateManyWithoutSchoolNestedInput = {
     create?: XOR<studentCreateWithoutSchoolInput, studentUncheckedCreateWithoutSchoolInput> | studentCreateWithoutSchoolInput[] | studentUncheckedCreateWithoutSchoolInput[]
     connectOrCreate?: studentCreateOrConnectWithoutSchoolInput | studentCreateOrConnectWithoutSchoolInput[]
@@ -32345,6 +35096,20 @@ export namespace Prisma {
     update?: user_schoolsUpdateWithWhereUniqueWithoutSchoolInput | user_schoolsUpdateWithWhereUniqueWithoutSchoolInput[]
     updateMany?: user_schoolsUpdateManyWithWhereWithoutSchoolInput | user_schoolsUpdateManyWithWhereWithoutSchoolInput[]
     deleteMany?: user_schoolsScalarWhereInput | user_schoolsScalarWhereInput[]
+  }
+
+  export type school_serviceUncheckedUpdateManyWithoutSchoolNestedInput = {
+    create?: XOR<school_serviceCreateWithoutSchoolInput, school_serviceUncheckedCreateWithoutSchoolInput> | school_serviceCreateWithoutSchoolInput[] | school_serviceUncheckedCreateWithoutSchoolInput[]
+    connectOrCreate?: school_serviceCreateOrConnectWithoutSchoolInput | school_serviceCreateOrConnectWithoutSchoolInput[]
+    upsert?: school_serviceUpsertWithWhereUniqueWithoutSchoolInput | school_serviceUpsertWithWhereUniqueWithoutSchoolInput[]
+    createMany?: school_serviceCreateManySchoolInputEnvelope
+    set?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    disconnect?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    delete?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    connect?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    update?: school_serviceUpdateWithWhereUniqueWithoutSchoolInput | school_serviceUpdateWithWhereUniqueWithoutSchoolInput[]
+    updateMany?: school_serviceUpdateManyWithWhereWithoutSchoolInput | school_serviceUpdateManyWithWhereWithoutSchoolInput[]
+    deleteMany?: school_serviceScalarWhereInput | school_serviceScalarWhereInput[]
   }
 
   export type schoolCreateNestedOneWithoutSubjectsInput = {
@@ -33997,6 +36762,88 @@ export namespace Prisma {
     update?: XOR<XOR<usersUpdateToOneWithWhereWithoutAuth_tokensInput, usersUpdateWithoutAuth_tokensInput>, usersUncheckedUpdateWithoutAuth_tokensInput>
   }
 
+  export type school_serviceCreateNestedManyWithoutServiceInput = {
+    create?: XOR<school_serviceCreateWithoutServiceInput, school_serviceUncheckedCreateWithoutServiceInput> | school_serviceCreateWithoutServiceInput[] | school_serviceUncheckedCreateWithoutServiceInput[]
+    connectOrCreate?: school_serviceCreateOrConnectWithoutServiceInput | school_serviceCreateOrConnectWithoutServiceInput[]
+    createMany?: school_serviceCreateManyServiceInputEnvelope
+    connect?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+  }
+
+  export type school_serviceUncheckedCreateNestedManyWithoutServiceInput = {
+    create?: XOR<school_serviceCreateWithoutServiceInput, school_serviceUncheckedCreateWithoutServiceInput> | school_serviceCreateWithoutServiceInput[] | school_serviceUncheckedCreateWithoutServiceInput[]
+    connectOrCreate?: school_serviceCreateOrConnectWithoutServiceInput | school_serviceCreateOrConnectWithoutServiceInput[]
+    createMany?: school_serviceCreateManyServiceInputEnvelope
+    connect?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+  }
+
+  export type FloatFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type school_serviceUpdateManyWithoutServiceNestedInput = {
+    create?: XOR<school_serviceCreateWithoutServiceInput, school_serviceUncheckedCreateWithoutServiceInput> | school_serviceCreateWithoutServiceInput[] | school_serviceUncheckedCreateWithoutServiceInput[]
+    connectOrCreate?: school_serviceCreateOrConnectWithoutServiceInput | school_serviceCreateOrConnectWithoutServiceInput[]
+    upsert?: school_serviceUpsertWithWhereUniqueWithoutServiceInput | school_serviceUpsertWithWhereUniqueWithoutServiceInput[]
+    createMany?: school_serviceCreateManyServiceInputEnvelope
+    set?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    disconnect?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    delete?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    connect?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    update?: school_serviceUpdateWithWhereUniqueWithoutServiceInput | school_serviceUpdateWithWhereUniqueWithoutServiceInput[]
+    updateMany?: school_serviceUpdateManyWithWhereWithoutServiceInput | school_serviceUpdateManyWithWhereWithoutServiceInput[]
+    deleteMany?: school_serviceScalarWhereInput | school_serviceScalarWhereInput[]
+  }
+
+  export type school_serviceUncheckedUpdateManyWithoutServiceNestedInput = {
+    create?: XOR<school_serviceCreateWithoutServiceInput, school_serviceUncheckedCreateWithoutServiceInput> | school_serviceCreateWithoutServiceInput[] | school_serviceUncheckedCreateWithoutServiceInput[]
+    connectOrCreate?: school_serviceCreateOrConnectWithoutServiceInput | school_serviceCreateOrConnectWithoutServiceInput[]
+    upsert?: school_serviceUpsertWithWhereUniqueWithoutServiceInput | school_serviceUpsertWithWhereUniqueWithoutServiceInput[]
+    createMany?: school_serviceCreateManyServiceInputEnvelope
+    set?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    disconnect?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    delete?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    connect?: school_serviceWhereUniqueInput | school_serviceWhereUniqueInput[]
+    update?: school_serviceUpdateWithWhereUniqueWithoutServiceInput | school_serviceUpdateWithWhereUniqueWithoutServiceInput[]
+    updateMany?: school_serviceUpdateManyWithWhereWithoutServiceInput | school_serviceUpdateManyWithWhereWithoutServiceInput[]
+    deleteMany?: school_serviceScalarWhereInput | school_serviceScalarWhereInput[]
+  }
+
+  export type schoolCreateNestedOneWithoutServicesInput = {
+    create?: XOR<schoolCreateWithoutServicesInput, schoolUncheckedCreateWithoutServicesInput>
+    connectOrCreate?: schoolCreateOrConnectWithoutServicesInput
+    connect?: schoolWhereUniqueInput
+  }
+
+  export type servicesCreateNestedOneWithoutSchoolsInput = {
+    create?: XOR<servicesCreateWithoutSchoolsInput, servicesUncheckedCreateWithoutSchoolsInput>
+    connectOrCreate?: servicesCreateOrConnectWithoutSchoolsInput
+    connect?: servicesWhereUniqueInput
+  }
+
+  export type Enumestatus_serviceFieldUpdateOperationsInput = {
+    set?: $Enums.estatus_service
+  }
+
+  export type schoolUpdateOneRequiredWithoutServicesNestedInput = {
+    create?: XOR<schoolCreateWithoutServicesInput, schoolUncheckedCreateWithoutServicesInput>
+    connectOrCreate?: schoolCreateOrConnectWithoutServicesInput
+    upsert?: schoolUpsertWithoutServicesInput
+    connect?: schoolWhereUniqueInput
+    update?: XOR<XOR<schoolUpdateToOneWithWhereWithoutServicesInput, schoolUpdateWithoutServicesInput>, schoolUncheckedUpdateWithoutServicesInput>
+  }
+
+  export type servicesUpdateOneRequiredWithoutSchoolsNestedInput = {
+    create?: XOR<servicesCreateWithoutSchoolsInput, servicesUncheckedCreateWithoutSchoolsInput>
+    connectOrCreate?: servicesCreateOrConnectWithoutSchoolsInput
+    upsert?: servicesUpsertWithoutSchoolsInput
+    connect?: servicesWhereUniqueInput
+    update?: XOR<XOR<servicesUpdateToOneWithWhereWithoutSchoolsInput, servicesUpdateWithoutSchoolsInput>, servicesUncheckedUpdateWithoutSchoolsInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -34314,6 +37161,39 @@ export namespace Prisma {
     _max?: NestedEnumpending_subject_statusNullableFilter<$PrismaModel>
   }
 
+  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
+  export type NestedEnumestatus_serviceFilter<$PrismaModel = never> = {
+    equals?: $Enums.estatus_service | Enumestatus_serviceFieldRefInput<$PrismaModel>
+    in?: $Enums.estatus_service[]
+    notIn?: $Enums.estatus_service[]
+    not?: NestedEnumestatus_serviceFilter<$PrismaModel> | $Enums.estatus_service
+  }
+
+  export type NestedEnumestatus_serviceWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.estatus_service | Enumestatus_serviceFieldRefInput<$PrismaModel>
+    in?: $Enums.estatus_service[]
+    notIn?: $Enums.estatus_service[]
+    not?: NestedEnumestatus_serviceWithAggregatesFilter<$PrismaModel> | $Enums.estatus_service
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumestatus_serviceFilter<$PrismaModel>
+    _max?: NestedEnumestatus_serviceFilter<$PrismaModel>
+  }
+
   export type schoolCreateWithoutCdceeInput = {
     SIG: string
     school_name: string
@@ -34329,6 +37209,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     students?: studentCreateNestedManyWithoutSchoolInput
@@ -34340,6 +37221,7 @@ export namespace Prisma {
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
+    services?: school_serviceCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutCdceeInput = {
@@ -34357,6 +37239,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     students?: studentUncheckedCreateNestedManyWithoutSchoolInput
@@ -34368,6 +37251,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
+    services?: school_serviceUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutCdceeInput = {
@@ -34414,6 +37298,7 @@ export namespace Prisma {
     RIF?: StringNullableFilter<"school"> | string | null
     is_active?: BoolFilter<"school"> | boolean
     subdomain?: StringNullableFilter<"school"> | string | null
+    is_enrollment_open?: BoolFilter<"school"> | boolean
     created_at?: DateTimeFilter<"school"> | Date | string
     updated_at?: DateTimeFilter<"school"> | Date | string
     cdceId?: IntFilter<"school"> | number
@@ -34719,6 +37604,32 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type school_serviceCreateWithoutSchoolInput = {
+    status?: $Enums.estatus_service
+    created_at?: Date | string
+    expires_at?: Date | string | null
+    updated_at?: Date | string
+    service: servicesCreateNestedOneWithoutSchoolsInput
+  }
+
+  export type school_serviceUncheckedCreateWithoutSchoolInput = {
+    id_service: number
+    status?: $Enums.estatus_service
+    created_at?: Date | string
+    expires_at?: Date | string | null
+    updated_at?: Date | string
+  }
+
+  export type school_serviceCreateOrConnectWithoutSchoolInput = {
+    where: school_serviceWhereUniqueInput
+    create: XOR<school_serviceCreateWithoutSchoolInput, school_serviceUncheckedCreateWithoutSchoolInput>
+  }
+
+  export type school_serviceCreateManySchoolInputEnvelope = {
+    data: school_serviceCreateManySchoolInput | school_serviceCreateManySchoolInput[]
+    skipDuplicates?: boolean
+  }
+
   export type cdceeUpsertWithoutSchoolsInput = {
     update: XOR<cdceeUpdateWithoutSchoolsInput, cdceeUncheckedUpdateWithoutSchoolsInput>
     create: XOR<cdceeCreateWithoutSchoolsInput, cdceeUncheckedCreateWithoutSchoolsInput>
@@ -35004,6 +37915,34 @@ export namespace Prisma {
     is_active?: BoolFilter<"user_schools"> | boolean
   }
 
+  export type school_serviceUpsertWithWhereUniqueWithoutSchoolInput = {
+    where: school_serviceWhereUniqueInput
+    update: XOR<school_serviceUpdateWithoutSchoolInput, school_serviceUncheckedUpdateWithoutSchoolInput>
+    create: XOR<school_serviceCreateWithoutSchoolInput, school_serviceUncheckedCreateWithoutSchoolInput>
+  }
+
+  export type school_serviceUpdateWithWhereUniqueWithoutSchoolInput = {
+    where: school_serviceWhereUniqueInput
+    data: XOR<school_serviceUpdateWithoutSchoolInput, school_serviceUncheckedUpdateWithoutSchoolInput>
+  }
+
+  export type school_serviceUpdateManyWithWhereWithoutSchoolInput = {
+    where: school_serviceScalarWhereInput
+    data: XOR<school_serviceUpdateManyMutationInput, school_serviceUncheckedUpdateManyWithoutSchoolInput>
+  }
+
+  export type school_serviceScalarWhereInput = {
+    AND?: school_serviceScalarWhereInput | school_serviceScalarWhereInput[]
+    OR?: school_serviceScalarWhereInput[]
+    NOT?: school_serviceScalarWhereInput | school_serviceScalarWhereInput[]
+    id_service?: IntFilter<"school_service"> | number
+    SIG?: StringFilter<"school_service"> | string
+    status?: Enumestatus_serviceFilter<"school_service"> | $Enums.estatus_service
+    created_at?: DateTimeFilter<"school_service"> | Date | string
+    expires_at?: DateTimeNullableFilter<"school_service"> | Date | string | null
+    updated_at?: DateTimeFilter<"school_service"> | Date | string
+  }
+
   export type schoolCreateWithoutSubjectsInput = {
     SIG: string
     school_name: string
@@ -35019,6 +37958,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
@@ -35030,6 +37970,7 @@ export namespace Prisma {
     administrators?: administratorCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
+    services?: school_serviceCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutSubjectsInput = {
@@ -35047,6 +37988,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
@@ -35058,6 +38000,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
+    services?: school_serviceUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutSubjectsInput = {
@@ -35143,6 +38086,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
@@ -35154,6 +38098,7 @@ export namespace Prisma {
     administrators?: administratorUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutSubjectsInput = {
@@ -35171,6 +38116,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
@@ -35182,6 +38128,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type load_academicUpsertWithWhereUniqueWithoutSubjectInput = {
@@ -35360,6 +38307,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
@@ -35371,6 +38319,7 @@ export namespace Prisma {
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
+    services?: school_serviceCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutYearsInput = {
@@ -35388,6 +38337,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
@@ -35399,6 +38349,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
+    services?: school_serviceUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutYearsInput = {
@@ -35496,6 +38447,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
@@ -35507,6 +38459,7 @@ export namespace Prisma {
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutYearsInput = {
@@ -35524,6 +38477,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
@@ -35535,6 +38489,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type sectionUpsertWithWhereUniqueWithoutYearInput = {
@@ -35963,6 +38918,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
@@ -35974,6 +38930,7 @@ export namespace Prisma {
     administrators?: administratorCreateNestedManyWithoutSchoolInput
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
+    services?: school_serviceCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutUser_schoolsInput = {
@@ -35991,6 +38948,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
@@ -36002,6 +38960,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
+    services?: school_serviceUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutUser_schoolsInput = {
@@ -36083,6 +39042,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
@@ -36094,6 +39054,7 @@ export namespace Prisma {
     administrators?: administratorUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutUser_schoolsInput = {
@@ -36111,6 +39072,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
@@ -36122,6 +39084,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type usersCreateWithoutRoleInput = {
@@ -36220,6 +39183,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
@@ -36231,6 +39195,7 @@ export namespace Prisma {
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
+    services?: school_serviceCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutAcademic_periodsInput = {
@@ -36248,6 +39213,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
@@ -36259,6 +39225,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
+    services?: school_serviceUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutAcademic_periodsInput = {
@@ -36439,6 +39406,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
@@ -36450,6 +39418,7 @@ export namespace Prisma {
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutAcademic_periodsInput = {
@@ -36467,6 +39436,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
@@ -36478,6 +39448,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type enrollmentUpsertWithWhereUniqueWithoutPeriodInput = {
@@ -36631,6 +39602,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
@@ -36642,6 +39614,7 @@ export namespace Prisma {
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
+    services?: school_serviceCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutAdministratorsInput = {
@@ -36659,6 +39632,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
@@ -36670,6 +39644,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
+    services?: school_serviceUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutAdministratorsInput = {
@@ -36751,6 +39726,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
@@ -36762,6 +39738,7 @@ export namespace Prisma {
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutAdministratorsInput = {
@@ -36779,6 +39756,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
@@ -36790,6 +39768,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type usersCreateWithoutTeacher_profileInput = {
@@ -36849,6 +39828,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
@@ -36860,6 +39840,7 @@ export namespace Prisma {
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
+    services?: school_serviceCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutTeachersInput = {
@@ -36877,6 +39858,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
@@ -36888,6 +39870,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
+    services?: school_serviceUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutTeachersInput = {
@@ -37033,6 +40016,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
@@ -37044,6 +40028,7 @@ export namespace Prisma {
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutTeachersInput = {
@@ -37061,6 +40046,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
@@ -37072,6 +40058,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type sectionUpsertWithWhereUniqueWithoutGuideInput = {
@@ -37163,6 +40150,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
@@ -37174,6 +40162,7 @@ export namespace Prisma {
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
+    services?: school_serviceCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutStudentsInput = {
@@ -37191,6 +40180,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
@@ -37202,6 +40192,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
+    services?: school_serviceUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutStudentsInput = {
@@ -37388,6 +40379,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
@@ -37399,6 +40391,7 @@ export namespace Prisma {
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutStudentsInput = {
@@ -37416,6 +40409,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
@@ -37427,6 +40421,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type representativeUpsertWithoutStudentsInput = {
@@ -37716,6 +40711,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
@@ -37727,6 +40723,7 @@ export namespace Prisma {
     administrators?: administratorCreateNestedManyWithoutSchoolInput
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
+    services?: school_serviceCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutLoad_academicsInput = {
@@ -37744,6 +40741,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
@@ -37755,6 +40753,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
+    services?: school_serviceUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutLoad_academicsInput = {
@@ -37946,6 +40945,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
@@ -37957,6 +40957,7 @@ export namespace Prisma {
     administrators?: administratorUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutLoad_academicsInput = {
@@ -37974,6 +40975,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
@@ -37985,6 +40987,7 @@ export namespace Prisma {
     administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type evaluation_planUpsertWithWhereUniqueWithoutLoad_academicInput = {
@@ -38018,6 +41021,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdcee: cdceeCreateNestedOneWithoutSchoolsInput
@@ -38029,6 +41033,7 @@ export namespace Prisma {
     subjects?: subjectCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
+    services?: school_serviceCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolUncheckedCreateWithoutSectionsInput = {
@@ -38046,6 +41051,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
     cdceId: number
@@ -38057,6 +41063,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
     load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
     user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
+    services?: school_serviceUncheckedCreateNestedManyWithoutSchoolInput
   }
 
   export type schoolCreateOrConnectWithoutSectionsInput = {
@@ -38226,6 +41233,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
@@ -38237,6 +41245,7 @@ export namespace Prisma {
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutSectionsInput = {
@@ -38254,6 +41263,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     cdceId?: IntFieldUpdateOperationsInput | number
@@ -38265,6 +41275,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type academic_periodsUpsertWithoutSectionsInput = {
@@ -39431,6 +42442,234 @@ export namespace Prisma {
     user_schools?: user_schoolsUncheckedUpdateManyWithoutUserNestedInput
   }
 
+  export type school_serviceCreateWithoutServiceInput = {
+    status?: $Enums.estatus_service
+    created_at?: Date | string
+    expires_at?: Date | string | null
+    updated_at?: Date | string
+    school: schoolCreateNestedOneWithoutServicesInput
+  }
+
+  export type school_serviceUncheckedCreateWithoutServiceInput = {
+    SIG: string
+    status?: $Enums.estatus_service
+    created_at?: Date | string
+    expires_at?: Date | string | null
+    updated_at?: Date | string
+  }
+
+  export type school_serviceCreateOrConnectWithoutServiceInput = {
+    where: school_serviceWhereUniqueInput
+    create: XOR<school_serviceCreateWithoutServiceInput, school_serviceUncheckedCreateWithoutServiceInput>
+  }
+
+  export type school_serviceCreateManyServiceInputEnvelope = {
+    data: school_serviceCreateManyServiceInput | school_serviceCreateManyServiceInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type school_serviceUpsertWithWhereUniqueWithoutServiceInput = {
+    where: school_serviceWhereUniqueInput
+    update: XOR<school_serviceUpdateWithoutServiceInput, school_serviceUncheckedUpdateWithoutServiceInput>
+    create: XOR<school_serviceCreateWithoutServiceInput, school_serviceUncheckedCreateWithoutServiceInput>
+  }
+
+  export type school_serviceUpdateWithWhereUniqueWithoutServiceInput = {
+    where: school_serviceWhereUniqueInput
+    data: XOR<school_serviceUpdateWithoutServiceInput, school_serviceUncheckedUpdateWithoutServiceInput>
+  }
+
+  export type school_serviceUpdateManyWithWhereWithoutServiceInput = {
+    where: school_serviceScalarWhereInput
+    data: XOR<school_serviceUpdateManyMutationInput, school_serviceUncheckedUpdateManyWithoutServiceInput>
+  }
+
+  export type schoolCreateWithoutServicesInput = {
+    SIG: string
+    school_name: string
+    type: $Enums.school_type
+    company_name?: string | null
+    address: string
+    city: string
+    municipality: string
+    state: string
+    phone: string
+    email: string
+    DEA_CODE: string
+    RIF?: string | null
+    is_active?: boolean
+    subdomain?: string | null
+    is_enrollment_open?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    cdcee: cdceeCreateNestedOneWithoutSchoolsInput
+    students?: studentCreateNestedManyWithoutSchoolInput
+    sections?: sectionCreateNestedManyWithoutSchoolInput
+    academic_periods?: academic_periodsCreateNestedManyWithoutSchoolInput
+    teachers?: teacherCreateNestedManyWithoutSchoolInput
+    years?: yearCreateNestedManyWithoutSchoolInput
+    administrators?: administratorCreateNestedManyWithoutSchoolInput
+    subjects?: subjectCreateNestedManyWithoutSchoolInput
+    load_academics?: load_academicCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsCreateNestedManyWithoutSchoolInput
+  }
+
+  export type schoolUncheckedCreateWithoutServicesInput = {
+    SIG: string
+    school_name: string
+    type: $Enums.school_type
+    company_name?: string | null
+    address: string
+    city: string
+    municipality: string
+    state: string
+    phone: string
+    email: string
+    DEA_CODE: string
+    RIF?: string | null
+    is_active?: boolean
+    subdomain?: string | null
+    is_enrollment_open?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    cdceId: number
+    students?: studentUncheckedCreateNestedManyWithoutSchoolInput
+    sections?: sectionUncheckedCreateNestedManyWithoutSchoolInput
+    academic_periods?: academic_periodsUncheckedCreateNestedManyWithoutSchoolInput
+    teachers?: teacherUncheckedCreateNestedManyWithoutSchoolInput
+    years?: yearUncheckedCreateNestedManyWithoutSchoolInput
+    administrators?: administratorUncheckedCreateNestedManyWithoutSchoolInput
+    subjects?: subjectUncheckedCreateNestedManyWithoutSchoolInput
+    load_academics?: load_academicUncheckedCreateNestedManyWithoutSchoolInput
+    user_schools?: user_schoolsUncheckedCreateNestedManyWithoutSchoolInput
+  }
+
+  export type schoolCreateOrConnectWithoutServicesInput = {
+    where: schoolWhereUniqueInput
+    create: XOR<schoolCreateWithoutServicesInput, schoolUncheckedCreateWithoutServicesInput>
+  }
+
+  export type servicesCreateWithoutSchoolsInput = {
+    name: string
+    price: number
+    description: string
+    updated_at?: Date | string
+    created_at?: Date | string
+  }
+
+  export type servicesUncheckedCreateWithoutSchoolsInput = {
+    id?: number
+    name: string
+    price: number
+    description: string
+    updated_at?: Date | string
+    created_at?: Date | string
+  }
+
+  export type servicesCreateOrConnectWithoutSchoolsInput = {
+    where: servicesWhereUniqueInput
+    create: XOR<servicesCreateWithoutSchoolsInput, servicesUncheckedCreateWithoutSchoolsInput>
+  }
+
+  export type schoolUpsertWithoutServicesInput = {
+    update: XOR<schoolUpdateWithoutServicesInput, schoolUncheckedUpdateWithoutServicesInput>
+    create: XOR<schoolCreateWithoutServicesInput, schoolUncheckedCreateWithoutServicesInput>
+    where?: schoolWhereInput
+  }
+
+  export type schoolUpdateToOneWithWhereWithoutServicesInput = {
+    where?: schoolWhereInput
+    data: XOR<schoolUpdateWithoutServicesInput, schoolUncheckedUpdateWithoutServicesInput>
+  }
+
+  export type schoolUpdateWithoutServicesInput = {
+    SIG?: StringFieldUpdateOperationsInput | string
+    school_name?: StringFieldUpdateOperationsInput | string
+    type?: Enumschool_typeFieldUpdateOperationsInput | $Enums.school_type
+    company_name?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: StringFieldUpdateOperationsInput | string
+    city?: StringFieldUpdateOperationsInput | string
+    municipality?: StringFieldUpdateOperationsInput | string
+    state?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    DEA_CODE?: StringFieldUpdateOperationsInput | string
+    RIF?: NullableStringFieldUpdateOperationsInput | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    cdcee?: cdceeUpdateOneRequiredWithoutSchoolsNestedInput
+    students?: studentUpdateManyWithoutSchoolNestedInput
+    sections?: sectionUpdateManyWithoutSchoolNestedInput
+    academic_periods?: academic_periodsUpdateManyWithoutSchoolNestedInput
+    teachers?: teacherUpdateManyWithoutSchoolNestedInput
+    years?: yearUpdateManyWithoutSchoolNestedInput
+    administrators?: administratorUpdateManyWithoutSchoolNestedInput
+    subjects?: subjectUpdateManyWithoutSchoolNestedInput
+    load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
+  }
+
+  export type schoolUncheckedUpdateWithoutServicesInput = {
+    SIG?: StringFieldUpdateOperationsInput | string
+    school_name?: StringFieldUpdateOperationsInput | string
+    type?: Enumschool_typeFieldUpdateOperationsInput | $Enums.school_type
+    company_name?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: StringFieldUpdateOperationsInput | string
+    city?: StringFieldUpdateOperationsInput | string
+    municipality?: StringFieldUpdateOperationsInput | string
+    state?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    DEA_CODE?: StringFieldUpdateOperationsInput | string
+    RIF?: NullableStringFieldUpdateOperationsInput | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    cdceId?: IntFieldUpdateOperationsInput | number
+    students?: studentUncheckedUpdateManyWithoutSchoolNestedInput
+    sections?: sectionUncheckedUpdateManyWithoutSchoolNestedInput
+    academic_periods?: academic_periodsUncheckedUpdateManyWithoutSchoolNestedInput
+    teachers?: teacherUncheckedUpdateManyWithoutSchoolNestedInput
+    years?: yearUncheckedUpdateManyWithoutSchoolNestedInput
+    administrators?: administratorUncheckedUpdateManyWithoutSchoolNestedInput
+    subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
+    load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
+    user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
+  }
+
+  export type servicesUpsertWithoutSchoolsInput = {
+    update: XOR<servicesUpdateWithoutSchoolsInput, servicesUncheckedUpdateWithoutSchoolsInput>
+    create: XOR<servicesCreateWithoutSchoolsInput, servicesUncheckedCreateWithoutSchoolsInput>
+    where?: servicesWhereInput
+  }
+
+  export type servicesUpdateToOneWithWhereWithoutSchoolsInput = {
+    where?: servicesWhereInput
+    data: XOR<servicesUpdateWithoutSchoolsInput, servicesUncheckedUpdateWithoutSchoolsInput>
+  }
+
+  export type servicesUpdateWithoutSchoolsInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    description?: StringFieldUpdateOperationsInput | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type servicesUncheckedUpdateWithoutSchoolsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    description?: StringFieldUpdateOperationsInput | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type schoolCreateManyCdceeInput = {
     SIG: string
     school_name: string
@@ -39446,6 +42685,7 @@ export namespace Prisma {
     RIF?: string | null
     is_active?: boolean
     subdomain?: string | null
+    is_enrollment_open?: boolean
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -39465,6 +42705,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     students?: studentUpdateManyWithoutSchoolNestedInput
@@ -39476,6 +42717,7 @@ export namespace Prisma {
     subjects?: subjectUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateWithoutCdceeInput = {
@@ -39493,6 +42735,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     students?: studentUncheckedUpdateManyWithoutSchoolNestedInput
@@ -39504,6 +42747,7 @@ export namespace Prisma {
     subjects?: subjectUncheckedUpdateManyWithoutSchoolNestedInput
     load_academics?: load_academicUncheckedUpdateManyWithoutSchoolNestedInput
     user_schools?: user_schoolsUncheckedUpdateManyWithoutSchoolNestedInput
+    services?: school_serviceUncheckedUpdateManyWithoutSchoolNestedInput
   }
 
   export type schoolUncheckedUpdateManyWithoutCdceeInput = {
@@ -39521,6 +42765,7 @@ export namespace Prisma {
     RIF?: NullableStringFieldUpdateOperationsInput | string | null
     is_active?: BoolFieldUpdateOperationsInput | boolean
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    is_enrollment_open?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -39608,6 +42853,14 @@ export namespace Prisma {
     id?: number
     user_id: number
     is_active?: boolean
+  }
+
+  export type school_serviceCreateManySchoolInput = {
+    id_service: number
+    status?: $Enums.estatus_service
+    created_at?: Date | string
+    expires_at?: Date | string | null
+    updated_at?: Date | string
   }
 
   export type studentUpdateWithoutSchoolInput = {
@@ -39889,6 +43142,30 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     user_id?: IntFieldUpdateOperationsInput | number
     is_active?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type school_serviceUpdateWithoutSchoolInput = {
+    status?: Enumestatus_serviceFieldUpdateOperationsInput | $Enums.estatus_service
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    service?: servicesUpdateOneRequiredWithoutSchoolsNestedInput
+  }
+
+  export type school_serviceUncheckedUpdateWithoutSchoolInput = {
+    id_service?: IntFieldUpdateOperationsInput | number
+    status?: Enumestatus_serviceFieldUpdateOperationsInput | $Enums.estatus_service
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type school_serviceUncheckedUpdateManyWithoutSchoolInput = {
+    id_service?: IntFieldUpdateOperationsInput | number
+    status?: Enumestatus_serviceFieldUpdateOperationsInput | $Enums.estatus_service
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type load_academicCreateManySubjectInput = {
@@ -40820,6 +44097,38 @@ export namespace Prisma {
     id_student?: IntFieldUpdateOperationsInput | number
     grade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type school_serviceCreateManyServiceInput = {
+    SIG: string
+    status?: $Enums.estatus_service
+    created_at?: Date | string
+    expires_at?: Date | string | null
+    updated_at?: Date | string
+  }
+
+  export type school_serviceUpdateWithoutServiceInput = {
+    status?: Enumestatus_serviceFieldUpdateOperationsInput | $Enums.estatus_service
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    school?: schoolUpdateOneRequiredWithoutServicesNestedInput
+  }
+
+  export type school_serviceUncheckedUpdateWithoutServiceInput = {
+    SIG?: StringFieldUpdateOperationsInput | string
+    status?: Enumestatus_serviceFieldUpdateOperationsInput | $Enums.estatus_service
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type school_serviceUncheckedUpdateManyWithoutServiceInput = {
+    SIG?: StringFieldUpdateOperationsInput | string
+    status?: Enumestatus_serviceFieldUpdateOperationsInput | $Enums.estatus_service
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

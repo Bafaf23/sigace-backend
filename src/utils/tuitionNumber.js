@@ -33,7 +33,7 @@ export const tuitionNumber = async (SIG) => {
       },
     });
 
-    const next = totalStudents + 1;
+    const next = (totalStudents + 1).toString().padStart(4, "0");
     logger.info("Exito, numero de matricula generado", {
       tuitionNumber: `${prefix}${year}${next}`,
     });

@@ -1,11 +1,10 @@
-import { Students } from "../models/Students.model.js";
-import { Representative } from "../models/Representative.model.js";
-import { Users } from "../models/Users.model.js";
-import { tuitionNumber } from "../utils/tuitionNumber.js";
-import { welcomeEmail } from "../services/resend.service.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
-import { Subject } from "../models/Subject.model.js";
+import { Students } from "../models/Students.model.js";
+import { Users } from "../models/Users.model.js";
+import { welcomeEmail } from "../services/resend.service.js";
+import { sendOTPVerify } from "../services/resend.service.js";
 import logger from "../utils/logger.js";
+import crypto from "node:crypto";
 
 function formatText(text) {
   if (typeof text !== "string") return text;
@@ -58,8 +57,11 @@ const safeTrim = (val) => (typeof val === "string" ? val.trim() : "");
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getStudents = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
   const SIG = req.user.SIG;
   const id_period = req.user.id_period;
+  const tuitionNumber = req.query.tuitionNumber || null;
 
   if (!SIG) {
     return res.status(400).json({
@@ -92,12 +94,15 @@ export const getStudents = async (req, res) => {
       targetPeriodId = activePeriod.id;
     }
 
-    const students = await Students.getAllStudents({
+    const dataStudents = await Students.getAllStudents({
       SIG: SIG,
       id_period: Number(targetPeriodId),
+      limit,
+      page,
+      tuitionNumber,
     });
 
-    if (!students || students.length === 0) {
+    if (!dataStudents || dataStudents.students.length === 0) {
       logger.warn("No se encontraron estudiantes matriculados", {
         SIG,
         periodId: targetPeriodId,
@@ -111,19 +116,28 @@ export const getStudents = async (req, res) => {
     }
 
     logger.debug("Estudiantes matriculados recuperados exitosamente", {
-      total: students.length,
-      SIG,
-      periodId: targetPeriodId,
+      total: dataStudents.students.length,
     });
 
-    if (process.env.NODE_ENV !== "production") {
-      console.dir(students, { depth: null, colors: true });
-    }
+    const totalPage = Math.ceil(dataStudents.count / limit);
+
+    const netxPage = page < totalPage ? page + 1 : null;
+    const prevPage = page > 1 ? page - 1 : null;
 
     return res.status(200).json({
       success: true,
       message: "Matrícula general de estudiantes recuperada con éxito.",
-      data: students,
+      data: dataStudents.students,
+      pagination: {
+        total: dataStudents.count,
+        page,
+        limit,
+        totalPage,
+        netxPage,
+        prevPage,
+        hasNextPage: netxPage !== null,
+        hasPrevPage: prevPage !== null,
+      },
     });
   } catch (error) {
     console.error("❌ Error en getStudents:", error);
@@ -165,6 +179,8 @@ export const createStudent = async (req, res) => {
       ...medicalAndSizes
     } = req.body;
 
+    const SIG = req.body.SIG || req.user?.SIG;
+
     if (
       !document ||
       !name ||
@@ -187,24 +203,22 @@ export const createStudent = async (req, res) => {
       });
     }
 
-    const studentDoc = `${documentType}${document}`.trim();
-    const repDoc = `${repdniType}${repdni}`.trim();
-    const SIG = req.user?.SIG;
-
-    const tuitionNumberN = await tuitionNumber(SIG);
-
-    if (!tuitionNumberN) {
-      logger.warn("Ocurrio un problema generando la matricula", {
-        tuitionNumberN,
-        SIG,
-      });
+    if (!SIG) {
+      logger.warn("No se proporcionó el SIG de la institución.");
       return res.status(400).json({
         success: false,
-        code: "TUITION_GENERATION_FAILED",
-        message: "No se pudo generar el número de matrícula.",
+        code: "MISSING_SIG",
+        message:
+          "Se requiere el SIG de la institución para registrar al estudiante.",
       });
     }
-    const passgeneric = `${studentDoc.substring(0, 4)}@2026`;
+
+    const studentDoc = `${documentType}${document}`.trim();
+    const repDoc = `${repdniType}${repdni}`.trim();
+
+    const passgeneric = `${document.substring(0, 4)}@2026`;
+
+    console.log(studentDoc);
 
     const birthDate = normalizeToDate(req.body.birthDate);
     if (!birthDate) {
@@ -222,21 +236,19 @@ export const createStudent = async (req, res) => {
     }
 
     // insercion el la DB
-    const newStudent = await Students.createStudent({
-      student: {
-        tuition_number: tuitionNumberN,
-        allergies: req.body.allergies || null,
-        medical_condition: req.body.medicalCondition || null,
-        weight: req.body.weight || null,
-        height: req.body.height || null,
-        shirt_size: req.body.shirtSize || null,
-        pants_size: req.body.pantSize || null,
-        shoe_size: req.body.shoeSize || null,
-        condition: req.body.condition || "nuevo_ingreso",
-        SIG: SIG,
-        gender: gender?.trim(),
-        birth_date: birthDate,
-      },
+    const newStudent = await Users.create({
+      allergies: req.body.allergies || null,
+      medical_condition: req.body.medicalCondition || null,
+      weight: req.body.weight || null,
+      height: req.body.height || null,
+      shirt_size: req.body.shirtSize || null,
+      pants_size: req.body.pantSize || null,
+      shoe_size: req.body.shoeSize || null,
+      condition: req.body.condition || "nuevo_ingreso",
+      SIG: SIG,
+      gender: gender?.trim(),
+      birth_date: birthDate,
+
       representative: {
         document: repDoc,
         name: formatText(repName),
@@ -245,15 +257,14 @@ export const createStudent = async (req, res) => {
         relationship: relationship?.trim(),
         repEmail: req.body.repEmail.trim(),
       },
-      user: {
-        document: studentDoc,
-        name: formatText(name),
-        last_name: formatText(lastName),
-        email: email?.trim(),
-        phone: phone,
-        role_id: req.body.role_id || 2,
-        pass: passgeneric,
-      },
+
+      id_card: studentDoc,
+      name: formatText(name),
+      last_name: formatText(lastName),
+      email: email?.trim(),
+      phone: phone,
+      role_id: req.body.role_id || 2,
+      password: passgeneric,
     });
 
     if (!newStudent) {
@@ -279,12 +290,13 @@ export const createStudent = async (req, res) => {
     }
 
     logger.debug("¡Inscripción formalizada exitosamente!.", {
-      tuitionNumber,
+      tuitionNumber: newStudent.tuition_number,
     });
 
     return res.status(201).json({
       success: true,
-      message: `¡Inscripción formalizada exitosamente! Matrícula asignada: ${tuitionNumber}.`,
+      message: `¡Inscripción formalizada exitosamente! Matrícula asignada: ${newStudent.tuition_number}.`,
+      data: newStudent,
     });
   } catch (error) {
     console.error("❌ Error en createStudent:", error);
@@ -465,7 +477,7 @@ export const getStudentNotEnrolled = async (req, res) => {
 };
 
 /**
- * Busca a un studiante por si numero de cedula
+ * Busca a un studiante por si numero de id
  *
  * @async
  * @function getStudentByID
@@ -474,24 +486,22 @@ export const getStudentNotEnrolled = async (req, res) => {
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getStudentByID = async (req, res) => {
-  const id_card = req.params.id_card;
+  const id = req.params.id;
 
-  if (!id_card) {
-    console.error(
-      `⚠️ [NOT FOUND] El documento es necesario para realizar la consulta`,
-    );
-    return res.status(400).json({
+  if (!id) {
+    logger.error(`El documento es necesario para realizar la consulta`);
+    res.status(400).json({
       success: false,
       code: "MISSING_STUDENT_ID",
       message: "Es requerido especificar el código ID único del estudiante.",
     });
   }
   try {
-    const student = await Students.byID(id_card);
+    const student = await Students.byID({ id });
 
     if (!student) {
-      console.error(
-        `⚠️ [NOT FOUND] No se encontro informacion relacionada con esta id_card: ${id_card}`,
+      logger.error(
+        `No se encontro informacion relacionada con esta id_card: ${id}`,
       );
       return res.status(404).json({
         success: false,
@@ -559,8 +569,6 @@ export const getStudentByID = async (req, res) => {
         : null,
     };
 
-    console.dir(formattedStudent);
-
     return res.status(200).json({
       success: true,
       message: "Ficha descriptiva del alumno localizada correctamente.",
@@ -588,7 +596,7 @@ export const getStudentByID = async (req, res) => {
  */
 export const getRecordStudent = async (req, res) => {
   const { id } = req.params;
-  const id_period = req.query.id_period || req.user.id_period;
+  let id_period = req.query.id_period || req.user.id_period;
   const SIG = req.user.SIG;
 
   if (!id) {
@@ -601,6 +609,14 @@ export const getRecordStudent = async (req, res) => {
     });
   }
 
+  if (!id_period) {
+    logger.info("El perido es requerido... iniciando sincronizacion...");
+    const periods = await Academic_periods.getAcademicPeriods(SIG);
+
+    const periodActive = periods.filter((period) => (period.is_active = true));
+
+    id_period = periodActive[0].id;
+  }
   try {
     logger.info(`Cargando récord académico del estudiante: ${id}`);
     const record = await Students.grade({
@@ -915,5 +931,107 @@ export const getGrade = async (req, res) => {
         "Error en el servidor, no se pudo estraer la informacion, intenta nuevamente.",
       error: error.message,
     });
+  }
+};
+
+export const consultStudent = async (req, res) => {
+  const { tuitionNumber } = req.body;
+  const expiresAt = 5;
+  console.log(tuitionNumber);
+  if (!tuitionNumber) {
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_TUITION_NUMBER",
+      message: "El número de matrícula es obligatorio.",
+    });
+  }
+
+  try {
+    logger.info("Buscando informacion en la base de datos...");
+    const student = await Students.byID({ tuitionNumber });
+    if (!student) {
+      logger.error("No exite registro de este estudiante en la base datos");
+      return res.status(404).json({
+        success: false,
+        code: "STUDENT_NOT_FOUND",
+        message:
+          "No se encontró un estudiante con el número de matrícula proporcionado.",
+      });
+    }
+
+    logger.debug("Generando OTP...");
+    function generarTokenNode(length = 6) {
+      return crypto
+        .randomBytes(length)
+        .toString("hex")
+        .substring(0, length)
+        .toUpperCase();
+    }
+
+    /*  console.dir(student, { dephet: null, color: true }); */
+
+    const OTP = generarTokenNode(6);
+
+    const saveTokern = await Users.saveToken({
+      id_user: student.user.id,
+      token: OTP,
+      expires_at: new Date(Date.now() + expiresAt * 60 * 1000),
+    });
+
+    if (!saveTokern) {
+      logger.error("No se pudo guardar el codigo de verificacion");
+      return res.status(404).json({
+        code: "CODE_FALLID",
+        success: false,
+        message: "Ocurrio un error en el servidor, intenta de nuevo.",
+      });
+    }
+
+    sendOTPVerify(
+      student.user.name,
+      student.user.email,
+      student.school.school_name,
+      OTP,
+    );
+
+    return res.status(202).json({
+      success: true,
+      message: "Fue enviado al correo un codigo de verificacion",
+    });
+  } catch (error) {
+    console.error("❌ Error en consultStudent:", error);
+    return res.status(500).json({
+      success: false,
+      code: "CONSULT_STUDENT_INTERNAL_ERROR",
+      message: "Fallo interno al procesar la consulta del estudiante.",
+      error: error.message,
+    });
+  }
+};
+
+export const getTuitionNumber = async (req, res) => {
+  const tuitionNumber = req.params.tuitionNumber;
+
+  if (!tuitionNumber) {
+    logger.error(`El documento es necesario para realizar la consulta`);
+    res.status(400).json({
+      success: false,
+      code: "MISSING_STUDENT_ID",
+      message: "Es requerido especificar el código ID único del estudiante.",
+    });
+  }
+
+  if (tuitionNumber !== req.user.tuitionNumber) {
+    logger.warn("Intento de aceder a un recurso no permitido");
+    return;
+  }
+
+  try {
+    const student = await Students.byID({ tuitionNumber });
+    return res.status(200).json({
+      student,
+    });
+  } catch (error) {
+    console.error(error);
   }
 };

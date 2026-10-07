@@ -3,6 +3,7 @@ import {
   endAcademicPeriod,
   createAcademicPeriod,
   getAcademicPeriods,
+  activateEnrollmentPeriod,
 } from "../controllers/academinc_period.controller.js";
 import {
   verificarAutenticacion,
@@ -34,6 +35,13 @@ router.get(
     "gestion",
   ),
   getAcademicPeriods,
+);
+
+router.patch(
+  "/enrollment",
+  verificarAutenticacion,
+  permitirRoles("administrador"),
+  activateEnrollmentPeriod,
 );
 
 export default router;

@@ -26,7 +26,7 @@ export class School {
    */
   static async getAllSchools() {
     try {
-      return await prisma.school.findMany({
+      const schools = await prisma.school.findMany({
         include: {
           user_schools: {
             include: {
@@ -35,15 +35,23 @@ export class School {
                   id: true,
                   name: true,
                   last_name: true,
-                  email: true,
                   role: true,
                 },
               },
             },
           },
-          cdcee: true,
         },
       });
+
+      const formattedSchools = schools.map((school) => ({
+        SIG: school.SIG,
+        name: school.school_name,
+        type: school.type,
+        subdomain: school.subdomain,
+        is_active: school.is_active,
+      }));
+
+      return formattedSchools;
     } catch (error) {
       console.error("Error al obtener las escuelas:", error);
       throw error;
@@ -198,7 +206,13 @@ export class School {
         where: {
           SIG: school.SIG,
         },
-        data: { school },
+        data: {
+          SIG: school.SIG,
+          school_name: school.name,
+          type: school.type,
+          subdomain: school.subdomain,
+          is_active: school.is_active,
+        },
       });
       return disabledSchool;
     } catch (error) {
@@ -236,6 +250,10 @@ export class School {
     }
   }
 
+  /**
+   * obtiene las zonas educativas
+   * @returns
+   */
   static async getCdde() {
     return await prisma.cdcee.findMany({
       select: {
@@ -243,5 +261,12 @@ export class School {
         name: true,
       },
     });
+  }
+  /**
+   * cuanta todas las escuelas registradas
+   * @returns {number}
+   */
+  static async count() {
+    return prisma.school.count();
   }
 }

@@ -1,0 +1,269 @@
+<!doctype html>
+<html
+  lang="es"
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:v="urn:schemas-microsoft-com:vml"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <title>Código de verificación</title>
+    <!--[if mso]>
+      <noscript>
+        <xml>
+          <o:OfficeDocumentSettings>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+          </o:OfficeDocumentSettings>
+        </xml>
+      </noscript>
+    <![endif]-->
+    <style>
+      /* Estilos específicos para clientes que soportan Dark Mode */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #09090b !important;
+        }
+
+        .card {
+          background-color: #27272a !important;
+          border-color: #3f3f46 !important;
+        }
+
+        .title {
+          color: #ff8800 !important;
+        }
+
+        .text {
+          color: #d4d4d8 !important;
+        }
+
+        .otp-box {
+          background-color: #18181b !important;
+          border: 1px solid #3f3f46 !important;
+        }
+
+        .otp-text {
+          color: #f4f4f5 !important;
+        }
+
+        .footer {
+          color: #a1a1aa !important;
+        }
+        .titleDos {
+          color: #edab1f !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      background-color: #f4f4f5;
+      font-family:
+        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto,
+        Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    "
+  >
+    <!-- Texto de vista previa (Preheader) -->
+    <div
+      style="
+        display: none;
+        max-height: 0px;
+        overflow: hidden;
+        opacity: 0;
+        font-size: 1px;
+        line-height: 1px;
+        color: #fff;
+      "
+    >
+      Tu código de verificación para consultar calificaciones en SIGACE es
+      {{OTP}}.
+    </div>
+
+    <table
+      role="presentation"
+      align="center"
+      border="0"
+      cellpadding="0"
+      cellspacing="0"
+      width="100%"
+      style="max-width: 600px; margin: 0 auto; padding: 40px 20px"
+    >
+      <tr>
+        <td align="center">
+          <!-- Contenedor Principal (Tarjeta) -->
+          <table
+            role="presentation"
+            border="0"
+            cellpadding="0"
+            cellspacing="0"
+            width="100%"
+            class="card"
+            style="
+              background-color: #ffffff;
+              border: 1px solid #e2e8f0;
+              border-radius: 24px;
+              padding: 40px;
+              box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.05);
+            "
+          >
+            <!-- Logo / Encabezado -->
+            <tr>
+              <td align="center" style="padding-bottom: 32px">
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                  "
+                >
+                  <h1
+                    class="title"
+                    style="
+                      margin: 0;
+                      font-size: 28px;
+                      font-weight: 900;
+                      color: #ff8800;
+                      letter-spacing: -0.05em;
+                    "
+                  >
+                    SIGACE<span style="color: #06b6d4">.</span>
+                  </h1>
+                  <div
+                    style="
+                      border: solid 0.1rem;
+                      height: 2rem;
+                      border-color: #d4d4d8;
+                    "
+                  ></div>
+                  <h2 style="color: #27272a; font-weight: 900" class="titleDos">
+                    {{nameSchool}}
+                  </h2>
+                </div>
+                <p
+                  style="
+                    margin: 1px 0 0 0;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #9f9fa9;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                  "
+                >
+                  Control de Estudios
+                </p>
+              </td>
+            </tr>
+
+            <!-- Cuerpo del Mensaje -->
+            <tr>
+              <td
+                align="left"
+                class="text"
+                style="
+                  font-size: 15px;
+                  line-height: 24px;
+                  color: #475569;
+                  font-weight: 500;
+                "
+              >
+                <p
+                  style="
+                    margin: 0 0 16px 0;
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #1e293b;
+                  "
+                  class="text"
+                >
+                  Hola {{userName}},
+                </p>
+                <p style="margin: 0 0 32px 0">
+                  Recibimos tu solicitud para consultar tus calificaciones. Para
+                  verificar tu identidad, utiliza el siguiente código de un solo
+                  uso. No lo compartas con nadie.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Código OTP -->
+            <tr>
+              <td align="center" style="padding-bottom: 32px">
+                <div
+                  class="otp-box"
+                  style="
+                    display: inline-block;
+                    background-color: #f4f4f5;
+                    padding: 14px 32px;
+                    border-radius: 14px;
+                    text-align: center;
+                  "
+                >
+                  <span
+                    class="otp-text"
+                    style="
+                      font-size: 28px;
+                      font-weight: 900;
+                      color: #3f3f46;
+                      letter-spacing: 6px;
+                      font-family: Arial, sans-serif;
+                      text-decoration: none;
+                    "
+                    >{{OTP}}</span
+                  >
+                </div>
+              </td>
+            </tr>
+
+            <!-- Nota de Seguridad -->
+            <tr>
+              <td
+                align="left"
+                class="text"
+                style="
+                  font-size: 14px;
+                  line-height: 22px;
+                  color: #64748b;
+                  border-top: 1px dashed #e2e8f0;
+                  padding-top: 24px;
+                "
+              >
+                <p style="margin: 0">
+                  Si tú no realizaste esta solicitud, puedes ignorar este correo
+                  con total tranquilidad. Nunca te llamaremos solicitando
+                  códigos de un solo uso.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Despedida -->
+            <tr>
+              <td
+                align="left"
+                class="footer"
+                style="
+                  padding-top: 32px;
+                  font-size: 14px;
+                  line-height: 20px;
+                  color: #94a3b8;
+                "
+              >
+                <p style="margin: 0">Saludos,</p>
+                <p style="margin: 0; font-weight: 700; color: #f54900">
+                  El Equipo de SIGACE
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

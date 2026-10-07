@@ -17,6 +17,7 @@ import {
 const router = Router();
 
 router.get("/", verificarAutenticacion, permitirRoles("sudo"), getAllSchools);
+
 router.get(
   "/:SIG",
   verificarAutenticacion,
@@ -24,6 +25,7 @@ router.get(
   getSchoolBySIG,
 );
 router.post("/", verificarAutenticacion, permitirRoles("sudo"), createSchool);
+
 router.delete(
   "/:SIG",
   verificarAutenticacion,
@@ -38,6 +40,8 @@ router.get(
   permitirRoles("sudo"),
   getRoles,
 );
+
+router.put("/", verificarAutenticacion, permitirRoles("sudo"), updateSchool);
 
 router.get("/check/:subdomain", checkSchool);
 

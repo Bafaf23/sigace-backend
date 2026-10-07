@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma.js";
+import logger from "../utils/logger.js";
 
 export class Academic_periods {
   constructor(name, start_date, end_date, is_active, SIG) {
@@ -42,6 +43,13 @@ export class Academic_periods {
       return await prisma.academic_periods.findMany({
         where: {
           SIG: SIG,
+        },
+        include: {
+          school: {
+            select: {
+              is_enrollment_open: true,
+            },
+          },
         },
       });
     } catch (error) {
@@ -104,6 +112,52 @@ export class Academic_periods {
       return rows[0]?.id ?? null;
     } catch (error) {
       console.error("Error al obtener el período académico:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Actuiva el procso de inscripcion de los estudiantes al nuevo periodo academico
+   * @param {string} SIG - El código SIG de la institución
+   * @returns {Promise<number>} Devuelve la cantidad de estudiantes activados
+   */
+  static async activateEnrollmentProcess(SIG) {
+    try {
+      const row = await prisma.school.findUnique({
+        where: { SIG },
+        select: {
+          is_enrollment_open: true,
+        },
+      });
+
+      const isEnrollmentOpen = row?.is_enrollment_open;
+
+      if (!isEnrollmentOpen) {
+        logger.info(
+          "Proceso de inscripción activado para la institución: " + SIG,
+        );
+        await prisma.school.update({
+          where: { SIG },
+          data: { is_enrollment_open: true },
+        });
+        return { activated: true, message: "Proceso de inscripción activado." }; // Indica que se activó el proceso
+      }
+
+      if (isEnrollmentOpen) {
+        logger.info(
+          "Proceso de inscripción desactivado para la institución: " + SIG,
+        );
+        await prisma.school.update({
+          where: { SIG },
+          data: { is_enrollment_open: false },
+        });
+        return {
+          activated: false,
+          message: "Proceso de inscripción desactivado.",
+        }; // Indica que se desactivó el proceso
+      }
+    } catch (error) {
+      console.error("❌ Error en activateEnrollmentProcess:", error);
       throw error;
     }
   }

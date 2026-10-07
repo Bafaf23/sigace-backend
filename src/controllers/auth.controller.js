@@ -1,12 +1,12 @@
-import { Users } from "../models/Users.model.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
+import { School } from "../models/School.model.js";
+import { Students } from "../models/Students.model.js";
+import { Users } from "../models/Users.model.js";
+import { sendResetPasswordEmail } from "../services/resend.service.js";
+import logger from "../utils/logger.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import jsonwebtoken from "jsonwebtoken";
-import { sendResetPasswordEmail } from "../services/resend.service.js";
-import logger from "../utils/logger.js";
-import { School } from "../models/School.model.js";
-import { Students } from "../models/Students.model.js";
 
 const { sign } = jsonwebtoken;
 
@@ -309,7 +309,7 @@ export const resetPassword = async (req, res) => {
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-    const user = await Users.getUserToken(hashedToken);
+    const user = await Users.getToken(hashedToken);
 
     if (!user) {
       return res.status(400).json({

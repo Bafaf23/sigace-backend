@@ -1,8 +1,9 @@
 import { pool } from "../db.js";
 import { prisma } from "../lib/prisma.js";
-import bcrypt from "bcryptjs";
 import logger from "../utils/logger.js";
 import { tuitionNumber } from "../utils/tuitionNumber.js";
+import { Representative } from "./Representative.model.js";
+import bcrypt from "bcryptjs";
 
 /**
  * Constructor de la clase Users
@@ -32,20 +33,17 @@ export class Users {
   }
   /**
    * Obtiene el token vejente para el cambio de pass
-   * TODO: remplazar sql por prisma
    * @param {string} token
    * @returns {object}
    */
-  static async getUserToken(token) {
+  static async getToken({ token }) {
     try {
-      const sql = `SELECT id_user FROM auth_tokens
-       WHERE token = ? AND expires_at > NOW() 
-       LIMIT 1`;
-      const value = [token];
-
-      const [rows] = await pool.query(sql, value);
-
-      return rows.length > 0 ? rows[0] : null;
+      const tokenSave = await prisma.auth_token.findFirst({
+        where: {
+          token,
+        },
+      });
+      return tokenSave;
     } catch (error) {
       throw error;
     }
@@ -53,18 +51,19 @@ export class Users {
 
   /**
    ** Perserva el token de cambio de contrasena solicitado por el usuario
-   * TODO: remplazar el sql por prisma
    * @param {number} id_user - id del solicitante
    * @param {string} token
    * @param {Date} expires_at - fecha de expiracion del token
    */
-  static async saveToken(id_user, token, expires_at) {
+  static async saveToken({ id_user, token, expires_at }) {
     try {
-      const [result] = await pool.query(
-        "INSERT INTO auth_tokens (id_user, token, expires_at) VALUES (?, ?, ?)",
-        [id_user, token, expires_at],
-      );
-      return result.insertId;
+      return await prisma.auth_token.create({
+        data: {
+          id_user,
+          token,
+          expires_at,
+        },
+      });
     } catch (error) {
       console.error(
         "Error al guardar el token de cambio de contraseña:",
@@ -76,21 +75,16 @@ export class Users {
 
   /**
    * Obtiene todos los usuarios de la base de datos o un usuario por su email
-   * @param {string} email - El email del usuario a buscar
+   * @param {string} document - Identificacion del usuario
    * @returns {Array<object>} Los usuarios encontrados
-   * @returns {null} Null si no se encuentra el usuario
-   * @returns {boolean} False si ocurre un error al obtener los usuarios
    */
-  static async getUsers(email = null) {
+  static async getUsers({ limit, page, document }) {
+    const where = document ? { id_card: document } : {};
     try {
-      let whereClause = {};
-
-      if (email) {
-        whereClause.email = email;
-      }
-
       const rows = await prisma.users.findMany({
-        where: whereClause,
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
         include: {
           role: true,
           student_profile: {
@@ -209,7 +203,7 @@ export class Users {
       const newUser = await prisma.$transaction(async (tx) => {
         const createUser = await tx.users.create({
           data: {
-            id_card: user.document,
+            id_card: user.id_card,
             name: user.name,
             last_name: user.last_name,
             email: user.email,
@@ -218,6 +212,8 @@ export class Users {
             is_active: true,
             is_first_login: true,
             pass: hashedPassword,
+            created_at: new Date(),
+            updated_at: new Date(),
           },
         });
 
@@ -226,13 +222,40 @@ export class Users {
         const SIG = user.SIG;
 
         switch (roleUser) {
-          case 2:
+          case 2: {
             const tuition_number = await tuitionNumber(user.SIG);
-            await tx.student.create({
+            let representativeId;
+
+            const representativeExisit = await prisma.representative.findFirst({
+              where: {
+                document: user.representative.document,
+              },
+            });
+
+            if (!representativeExisit) {
+              const representative = await tx.representative.create({
+                data: {
+                  document: user.representative.document,
+                  name: user.representative.name,
+                  last_name: user.representative.last_name,
+                  phone: user.representative.phone,
+                  relationship: user.representative.relationship,
+                  repEmail: user.representative.repEmail,
+                  created_at: new Date(),
+                  updated_at: new Date(),
+                },
+              });
+
+              representativeId = await representative.id;
+            } else {
+              representativeId = representativeExisit.id;
+            }
+
+            const newStudent = await tx.student.create({
               data: {
                 id_user: idUser,
                 SIG,
-                representative_id: user.representative_id,
+                representative_id: representativeId,
                 tuition_number: tuition_number,
                 allergies: user.allergies,
                 medical_condition: user.medical_condition,
@@ -245,8 +268,20 @@ export class Users {
                 birth_date: user.birth_date ? new Date(user.birth_date) : null,
                 condition: "nuevo_ingreso",
               },
+              select: {
+                tuition_number: true,
+                condition: true,
+                user: {
+                  select: {
+                    name: true,
+                    last_name: true,
+                  },
+                },
+              },
             });
-            break;
+
+            return newStudent; // Retorna el estudiante creado para usarlo en la respuesta
+          }
           case 3:
             await tx.teacher.create({
               data: {
@@ -508,5 +543,12 @@ export class Users {
       },
     });
     return rows;
+  }
+  /**
+   * Cuenta a todos los usuairos registrados
+   * @returns {number}
+   */
+  static async count() {
+    return await prisma.users.count();
   }
 }

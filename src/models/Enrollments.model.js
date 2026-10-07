@@ -1,5 +1,6 @@
 import { pool } from "../db.js";
 import { prisma } from "../lib/prisma.js";
+import logger from "../utils/logger.js";
 
 export class Enrollments {
   constructor(id_student, id_period, id_section, status) {

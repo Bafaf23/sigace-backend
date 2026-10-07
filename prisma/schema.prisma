@@ -22,20 +22,21 @@ model cdcee {
 }
 
 model school {
-  SIG          String      @id
-  school_name  String
-  type         school_type
-  company_name String?
-  address      String
-  city         String
-  municipality String
-  state        String
-  phone        String
-  email        String
-  DEA_CODE     String
-  RIF          String?
-  is_active    Boolean     @default(true)
-  subdomain    String?     @unique
+  SIG                String      @id
+  school_name        String
+  type               school_type
+  company_name       String?
+  address            String
+  city               String
+  municipality       String
+  state              String
+  phone              String
+  email              String
+  DEA_CODE           String
+  RIF                String?
+  is_active          Boolean     @default(true)
+  subdomain          String?     @unique
+  is_enrollment_open Boolean     @default(false)
 
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
@@ -50,7 +51,8 @@ model school {
   administrators   administrator[]
   subjects         subject[]
   load_academics   load_academic[]
-  user_schools     user_schools[]  
+  user_schools     user_schools[]
+  services         school_service[]
 
   @@map("schools")
 }
@@ -116,9 +118,9 @@ enum enrollment_status {
 }
 
 model year {
-  id         Int      @id @default(autoincrement())
-  name       String   @db.VarChar(255)
-  SIG        String   @db.VarChar(10)
+  id         Int    @id @default(autoincrement())
+  name       String @db.VarChar(255)
+  SIG        String @db.VarChar(10)
   order_year Int?
 
   created_at DateTime @default(now())
@@ -132,23 +134,23 @@ model year {
 }
 
 model users {
-  id             Int      @id @default(autoincrement())
+  id             Int     @id @default(autoincrement())
   id_card        String
   name           String
   last_name      String
-  email          String   @unique
+  email          String  @unique
   phone          String
   pass           String
   role_id        Int
-  role           role     @relation(fields: [role_id], references: [id])
-  is_first_login Boolean  @default(true)
-  is_active      Boolean  @default(true)
+  role           role    @relation(fields: [role_id], references: [id])
+  is_first_login Boolean @default(true)
+  is_active      Boolean @default(true)
 
   teacher_profile       teacher?
   administrator_profile administrator?
   student_profile       student?
   auth_tokens           auth_token[]
-  user_schools user_schools[]
+  user_schools          user_schools[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -156,15 +158,15 @@ model users {
   @@map("users")
 }
 
-model user_schools{
-  id       Int    @id @default(autoincrement())
-  user_id  Int
-  SIG      String
+model user_schools {
+  id      Int    @id @default(autoincrement())
+  user_id Int
+  SIG     String
 
-  is_active   Boolean @default(true)
+  is_active Boolean @default(true)
 
-  user     users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  school   school    @relation(fields: [SIG], references: [SIG], onDelete: Cascade)
+  user   users  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  school school @relation(fields: [SIG], references: [SIG], onDelete: Cascade)
 }
 
 model role {
@@ -177,7 +179,7 @@ model role {
 
 model academic_periods {
   id         Int      @id @default(autoincrement())
-  name       String  
+  name       String
   start_date DateTime
   end_date   DateTime
   is_active  Boolean  @default(true)
@@ -241,15 +243,15 @@ model student {
   pants_size        String            @db.VarChar(50)
   shoe_size         String            @db.VarChar(50)
   gender            gender_enum       @default(M)
-  birth_date        DateTime?          @db.Date
+  birth_date        DateTime?         @db.Date
   condition         student_condition @default(nuevo_ingreso)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  user             users          @relation(fields: [id_user], references: [id], onDelete: Cascade)
-  school           school         @relation(fields: [SIG], references: [SIG], onDelete: Cascade)
-  representative   representative @relation(fields: [representative_id], references: [id], onDelete: Restrict)
+  user             users             @relation(fields: [id_user], references: [id], onDelete: Cascade)
+  school           school            @relation(fields: [SIG], references: [SIG], onDelete: Cascade)
+  representative   representative    @relation(fields: [representative_id], references: [id], onDelete: Restrict)
   enrollments      enrollment[]
   grades           grade[]
   pending_subjects pending_subject[]
@@ -418,4 +420,39 @@ model auth_token {
   user users @relation(fields: [id_user], references: [id], onDelete: Cascade)
 
   @@map("auth_tokens")
+}
+
+/**
+ * Modelo de servicios ofrecidos al cliente
+ */
+model services {
+  id          Int      @id @default(autoincrement())
+  name        String
+  price       Float
+  description String
+  updated_at  DateTime @default(now()) @updatedAt
+  created_at  DateTime @default(now())
+
+  schools school_service[]
+}
+
+enum estatus_service {
+  activo
+  suspendido
+  cancelado
+}
+
+model school_service {
+  id_service Int
+  SIG        String          @db.VarChar(10)
+  status     estatus_service @default(activo)
+  created_at DateTime        @default(now())
+  expires_at DateTime?
+  updated_at DateTime        @default(now()) @updatedAt
+
+  school school @relation(fields: [SIG], references: [SIG], onDelete: Cascade)
+
+  service services @relation(fields: [id_service], references: [id], onDelete: Cascade)
+
+  @@unique([SIG, id_service])
 }

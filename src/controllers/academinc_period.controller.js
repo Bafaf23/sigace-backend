@@ -115,7 +115,7 @@ export const endAcademicPeriod = async (req, res) => {
 
     const academicPeriod = await Academic_periods.endAcademicPeriod(SIG);
 
-    logger.debug(`✅ Período finalizado y estados de estudiantes archivados.`);
+    logger.debug(`Período finalizado y estados de estudiantes archivados.`);
 
     return res.status(200).json({
       success: true,
@@ -190,6 +190,51 @@ export const getAcademicPeriods = async (req, res) => {
       code: "GET_PERIODS_INTERNAL_ERROR",
       message: "Fallo de red al solicitar los ciclos del calendario escolar.",
       error: error.message,
+    });
+  }
+};
+
+/**
+ * Activa el proceso de inscripcion para el período académico actual
+ * @async
+ * @function activateEnrollmentPeriod
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la información del período académico creado.
+ */
+export const activateEnrollmentPeriod = async (req, res) => {
+  const SIG = req.user?.SIG;
+
+  if (!SIG) {
+    logger.error("Código SIG ausente en la sesión del usuario");
+    return res.status(400).json({
+      success: false,
+      code: "MISSING_SCHOOL_SIG",
+      message: "No se puede procesar: Código de institución SIG inválido.",
+    });
+  }
+
+  try {
+    logger.info(
+      `Iniciando el proceso de inscripcion del período de matrícula para la institución con SIG: ${SIG}`,
+    );
+    const enrollmentPeriod =
+      await Academic_periods.activateEnrollmentProcess(SIG);
+    logger.info(
+      `Período de inscripción activado para la institución con SIG: ${SIG}`,
+    );
+    return res.status(200).json({
+      success: enrollmentPeriod.activated,
+      code: "ENROLLMENT_ACTIVATED",
+      message: enrollmentPeriod.message,
+    });
+  } catch (error) {
+    logger.error("No se pudo activar el proces de matrícula", error);
+    return res.status(500).json({
+      success: false,
+      code: "ENROLLMENT_ACTIVATION_FAILED",
+      message:
+        "Error interno al intentar activar el período de matrícula para el período académico actual.",
     });
   }
 };

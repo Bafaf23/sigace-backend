@@ -1,6 +1,6 @@
 import { Users } from "../models/Users.model.js";
-import logger from "../utils/logger.js";
 import { welcomeEmail } from "../services/resend.service.js";
+import logger from "../utils/logger.js";
 
 function formatText(text) {
   if (typeof text !== "string" || !text.trim()) {
@@ -44,7 +44,7 @@ export const createUser = async (req, res) => {
     const formattedName = formatText(req.body.name);
 
     const user = await Users.create({
-      document: document,
+      id_card: document,
       name: formatText(req.body.name),
       last_name: formatText(req.body.last_name),
       email: req.body.email.trim(),
@@ -103,8 +103,14 @@ export const createUser = async (req, res) => {
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getUsers = async (req, res) => {
+  const limit = parseInt(req.query.limit) || 20;
+  const page = parseInt(req.query.page) || 1;
+  const document = req.query.search ? String(req.query.search) : null;
+
   try {
-    const users = await Users.getUsers();
+    console.log("Parametros de consulta:", { limit, page, document });
+    const users = await Users.getUsers({ limit, page, document });
+    const countUsers = await Users.count();
 
     if (!users || users.length === 0) {
       logger.warn(`No hay usuarios registrados.`);
@@ -112,7 +118,6 @@ export const getUsers = async (req, res) => {
         success: false,
         code: "USERS_NOT_FOUND",
         message: "No se registran cuentas de usuario creadas en el sistema.",
-        data: [],
       });
     }
 
@@ -123,13 +128,10 @@ export const getUsers = async (req, res) => {
       document: user.id_card,
       name: user.name,
       last_name: user.last_name,
-      email: user.email,
       role: user.role,
-      phone: user.phone,
-      school: {
-        name: user.school?.name ?? "Sin asignación",
-        SIG: user.school?.SIG ?? "Sin asignación",
-      },
+      school: user.school
+        ? { SIG: user.school.SIG, name: user.school.name }
+        : null,
     }));
 
     logger.debug("Usuarios cargados desde la base de datos", {
@@ -140,10 +142,23 @@ export const getUsers = async (req, res) => {
       console.table(userProser);
     }
 
+    const totalPage = Math.ceil(countUsers / limit);
+    const netxPage = page < totalPage ? page + 1 : null;
+    const prevPage = page > 1 ? page - 1 : null;
     return res.status(200).json({
       success: true,
       message: "Colección de usuarios cargada exitosamente.",
       data: userProser,
+      pagination: {
+        total: countUsers,
+        page,
+        limit,
+        totalPage,
+        netxPage,
+        prevPage,
+        hasNextPage: netxPage !== null,
+        hasPrevPage: prevPage !== null,
+      },
     });
   } catch (error) {
     console.error("❌ Error en getUsers:", error);
@@ -364,26 +379,7 @@ export const getProfile = async (req, res) => {
   }
 
   try {
-    const usersList = await Users.getUsers(email);
-
-    const dataProfile = usersList.reduce((user) => {
-      const schoolData =
-        user.role !== "sudo" && user.school
-          ? { SIG: user.school.SIG, name: user.school.name ?? "sin asignar" }
-          : {};
-
-      return {
-        user: {
-          id_card: user.document,
-          name: user.name,
-          last_name: user.last_name,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
-        },
-        school: schoolData,
-      };
-    });
+    const usersList = await Users.getUserByEmail(email);
 
     if (!usersList) {
       logger.error("No se localizo el perfil solicitado.");
@@ -397,24 +393,10 @@ export const getProfile = async (req, res) => {
 
     logger.debug("Perfil sincronizado correctamente", { email });
 
-    if (process.env.NODE_ENV !== "production") {
-      console.table(
-        usersList.map((user) => ({
-          id: user.id,
-          id_card: user.id_card,
-          name: user.name,
-          last_name: user.last_name,
-          email: user.email,
-          role: user.role,
-          SIG: user.school?.SIG ?? "sin asiganr",
-          school: user.school?.name ?? "sin asignar",
-        })),
-      );
-    }
     return res.status(200).json({
       success: true,
       message: "Ficha de perfil autorizada.",
-      data: dataProfile,
+      data: usersList,
     });
   } catch (error) {
     console.error("❌ Error en getProfile:", error);

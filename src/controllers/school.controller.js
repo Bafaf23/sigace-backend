@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { School } from "../models/School.model.js";
 import logger from "../utils/logger.js";
 
@@ -269,11 +268,16 @@ export const updateSchool = async (req, res) => {
   }
 
   try {
-    console.log("🔃 Iniciando metodo de actualizacion de datos...");
+    logger.info("Iniciando proceso de actualización de escuela...", {
+      SIG: school.SIG,
+    });
 
     const updatedSchool = await School.updateSchool(school);
 
     if (!updatedSchool) {
+      logger.warn(
+        `No se efectuaron cambios: El plantel con SIG "${school.SIG}" no existe o los datos ingresados coinciden exactamente con los actuales.`,
+      );
       return res.status(404).json({
         success: false,
         code: "UPDATE_TARGET_NOT_FOUND",
@@ -287,8 +291,9 @@ export const updateSchool = async (req, res) => {
       isArray: Array.isArray(updatedSchool),
     });
 
-    console.dir(updatedSchool, { depth: null, colors: true });
-
+    logger.info("Actualización de escuela completada con éxito", {
+      SIG: school.SIG,
+    });
     return res.status(200).json({
       success: true,
       message:
@@ -357,6 +362,7 @@ export async function checkSchool(req, res) {
       success: exiteSubdomain == exiteSubdomain,
       school_name: exiteSubdomain.school_name,
       SIG: exiteSubdomain.SIG,
+      is_enrollment_open: exiteSubdomain.is_enrollment_open,
     });
   } catch (e) {
     console.error("❌ Error en getRoles:", e);

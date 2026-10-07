@@ -146,6 +146,7 @@ exports.Prisma.SchoolScalarFieldEnum = {
   RIF: 'RIF',
   is_active: 'is_active',
   subdomain: 'subdomain',
+  is_enrollment_open: 'is_enrollment_open',
   created_at: 'created_at',
   updated_at: 'updated_at',
   cdceId: 'cdceId'
@@ -345,6 +346,24 @@ exports.Prisma.Auth_tokenScalarFieldEnum = {
   created_at: 'created_at'
 };
 
+exports.Prisma.ServicesScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  price: 'price',
+  description: 'description',
+  updated_at: 'updated_at',
+  created_at: 'created_at'
+};
+
+exports.Prisma.School_serviceScalarFieldEnum = {
+  id_service: 'id_service',
+  SIG: 'SIG',
+  status: 'status',
+  created_at: 'created_at',
+  expires_at: 'expires_at',
+  updated_at: 'updated_at'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -468,6 +487,15 @@ exports.Prisma.pending_subjectOrderByRelevanceFieldEnum = {
 exports.Prisma.auth_tokenOrderByRelevanceFieldEnum = {
   token: 'token'
 };
+
+exports.Prisma.servicesOrderByRelevanceFieldEnum = {
+  name: 'name',
+  description: 'description'
+};
+
+exports.Prisma.school_serviceOrderByRelevanceFieldEnum = {
+  SIG: 'SIG'
+};
 exports.school_type = exports.$Enums.school_type = {
   Privada: 'Privada',
   Publica: 'Publica'
@@ -499,6 +527,12 @@ exports.pending_subject_status = exports.$Enums.pending_subject_status = {
   Reprobado: 'Reprobado'
 };
 
+exports.estatus_service = exports.$Enums.estatus_service = {
+  activo: 'activo',
+  suspendido: 'suspendido',
+  cancelado: 'cancelado'
+};
+
 exports.Prisma.ModelName = {
   Session: 'Session',
   cdcee: 'cdcee',
@@ -521,7 +555,9 @@ exports.Prisma.ModelName = {
   evaluation_plan_detail: 'evaluation_plan_detail',
   grade: 'grade',
   pending_subject: 'pending_subject',
-  auth_token: 'auth_token'
+  auth_token: 'auth_token',
+  services: 'services',
+  school_service: 'school_service'
 };
 
 /**
