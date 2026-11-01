@@ -188,4 +188,17 @@ export class Subject {
       throw error;
     }
   }
+
+  /**
+   * Cuenta a todos los usuairos registrados
+   * @param {string} SIG 
+   * @returns {number}
+   */
+  static async count(SIG) {
+    return await prisma.subject.count({
+      where: {
+        SIG: SIG,
+      },
+    });
+  }
 }

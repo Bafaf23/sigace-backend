@@ -1,6 +1,7 @@
 import { pool } from "../db.js";
 import { prisma } from "../lib/prisma.js";
 import logger from "../utils/logger.js";
+
 export class Teachers {
   constructor(id, id_user, SIG, is_active) {
     this.id = id;
@@ -159,5 +160,18 @@ export class Teachers {
       );
       throw error;
     }
+  }
+
+  /**
+   * Cuenta a todos los usuairos registrados
+   * @param {string} SIG 
+   * @returns {number}
+   */
+  static async count(SIG) {
+    return await prisma.teacher.count({
+      where: {
+        SIG: SIG,
+      },
+    });
   }
 }
