@@ -1,4 +1,3 @@
-import { pool } from "../db.js";
 import { prisma } from "../lib/prisma.js";
 
 export class Sections {
@@ -253,5 +252,17 @@ export class Sections {
       );
       throw error;
     }
+  }
+  /**
+   * Cuenta a todos las secciones de un colegio
+   * @param {string} SIG
+   * @returns {number}
+   */
+  static async count(SIG) {
+    return await prisma.section.count({
+      where: {
+        SIG: SIG,
+      },
+    });
   }
 }

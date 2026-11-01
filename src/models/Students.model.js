@@ -651,4 +651,17 @@ export class Students {
 
     return lapseArray;
   }
+
+  /**
+   * Cuenta a todos los estudiantes registrados
+   * @param {string} SIG 
+   * @returns {number}
+   */
+  static async count(SIG) {
+    return await prisma.student.count({
+      where: {
+        SIG: SIG,
+      },
+    });
+  }
 }
