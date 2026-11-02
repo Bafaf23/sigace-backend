@@ -2,7 +2,6 @@ import { pool } from "../db.js";
 import { prisma } from "../lib/prisma.js";
 import logger from "../utils/logger.js";
 import { tuitionNumber } from "../utils/tuitionNumber.js";
-import { Representative } from "./Representative.model.js";
 import bcrypt from "bcryptjs";
 
 /**
@@ -327,6 +326,84 @@ export class Users {
   }
 
   /**
+   ** Obtiene a un usuario por su ID
+   * @param {number} id - ID del usuario
+   * @returns {object} El usuario encontrado
+   */
+  static async getUserById(id) {
+    try {
+      const row = await prisma.users.findUnique({
+        where: { id: Number(id), is_active: true },
+        include: {
+          user_schools: {
+            include: {
+              school: true,
+            },
+          },
+          student_profile: {
+            include: {
+              school: {
+                select: {
+                  SIG: true,
+                  school_name: true,
+                },
+              },
+            },
+          },
+          teacher_profile: {
+            include: {
+              school: {
+                select: {
+                  SIG: true,
+                  school_name: true,
+                },
+              },
+            },
+          },
+          administrator_profile: {
+            include: {
+              school: {
+                select: {
+                  SIG: true,
+                  school_name: true,
+                },
+              },
+            },
+          },
+          role: true,
+        },
+      });
+
+      const user = {
+        id:
+          row.student_profile?.id ||
+          row.teacher_profile?.id ||
+          row.administrator_profile?.id,
+        id_user: row.id,
+        id_card: row.id_card,
+        name: row.name,
+        last_name: row.last_name,
+        email: row.email,
+        phone: row.phone,
+        role_id: row.role_id,
+        role: row.role?.name,
+        is_active: row.is_active,
+        created_at: row.created_at,
+        school:
+          row.student_profile?.school ||
+          row.teacher_profile?.school ||
+          row.administrator_profile?.school ||
+          null,
+      };
+
+      return user;
+    } catch (error) {
+      console.error("Error al obtener usuario por ID:", error);
+      return null;
+    }
+  }
+
+  /**
    * Obtiene un usuario por su email (metodo para el login)
    * @param {string} email
    * @returns {object} El usuario encontrado
@@ -544,6 +621,7 @@ export class Users {
     });
     return rows;
   }
+
   /**
    * Cuenta a todos los usuairos registrados
    * @returns {number}

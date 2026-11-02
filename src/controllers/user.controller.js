@@ -366,20 +366,18 @@ export const getProfile = async (req, res) => {
     });
   }
 
-  const email = req.user?.email;
-
-  if (!email) {
-    logger.error("Email sin expesificar", { email });
+  if (!req.user.id) {
+    logger.error("ID de usuario no encontrado", { id: req.user.id });
     return res.status(400).json({
       success: false,
-      code: "MISSING_SESSION_EMAIL",
+      code: "MISSING_SESSION_ID",
       message:
         "No se localizó una dirección de correo vinculada al token actual.",
     });
   }
 
   try {
-    const usersList = await Users.getUserByEmail(email);
+    const usersList = await Users.getUserById(req.user.id);
 
     if (!usersList) {
       logger.error("No se localizo el perfil solicitado.");
@@ -391,11 +389,11 @@ export const getProfile = async (req, res) => {
       });
     }
 
-    logger.debug("Perfil sincronizado correctamente", { email });
+    logger.debug("Perfil sincronizado correctamente", { id: req.user.id });
 
     return res.status(200).json({
       success: true,
-      message: "Ficha de perfil autorizada.",
+      code: "PROFILE_RETRIEVED",
       data: usersList,
     });
   } catch (error) {
