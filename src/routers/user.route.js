@@ -1,4 +1,3 @@
-import express from "express";
 import {
   createUser,
   getUsers,
@@ -12,6 +11,7 @@ import {
   verificarAutenticacion,
   permitirRoles,
 } from "../middlewares/auth.middleware.js";
+import express from "express";
 
 const router = express.Router();
 
@@ -23,6 +23,9 @@ router.post(
   permitirRoles("sudo", "administrador", "director", "gestion"),
   createUser,
 );
+
+router.post("/inscripOnline", createUser);
+
 router.post(
   "/changePassword",
   verificarAutenticacion,

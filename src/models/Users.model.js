@@ -193,9 +193,9 @@ export class Users {
   /**
    * Crea un nuevo usuario en la base de datos y relaciona el usuario con la tabla correspondiente
    * @param {Users} user - Objeto de la clase Users
-   * @returns {object} El ID del usuario creado o False si ocurre un error
+   * @returns {object} el usuario creado
    */
-  static async create(user) {
+  /*  static async create(user) {
     try {
       const hashedPassword = await bcrypt.hash(user.password, 10);
 
@@ -223,23 +223,24 @@ export class Users {
         switch (roleUser) {
           case 2: {
             const tuition_number = await tuitionNumber(user.SIG);
+            const document = `${user.repdniType}${user.repdni}`;
             let representativeId;
 
             const representativeExisit = await prisma.representative.findFirst({
               where: {
-                document: user.representative.document,
+                document: document,
               },
             });
 
             if (!representativeExisit) {
               const representative = await tx.representative.create({
                 data: {
-                  document: user.representative.document,
-                  name: user.representative.name,
-                  last_name: user.representative.last_name,
-                  phone: user.representative.phone,
-                  relationship: user.representative.relationship,
-                  repEmail: user.representative.repEmail,
+                  document: document,
+                  name: user.repName,
+                  last_name: user.repLastName,
+                  phone: user.repPhone,
+                  relationship: user.relationship,
+                  repEmail: user.repEmail,
                   created_at: new Date(),
                   updated_at: new Date(),
                 },
@@ -257,14 +258,14 @@ export class Users {
                 representative_id: representativeId,
                 tuition_number: tuition_number,
                 allergies: user.allergies,
-                medical_condition: user.medical_condition,
+                medical_condition: user.medicalCondition,
                 weight: user.weight ? parseInt(user.weight, 10) : null,
                 height: user.height ? parseInt(user.height) : null,
-                shirt_size: user.shirt_size,
-                pants_size: user.pants_size,
-                shoe_size: user.shoe_size,
+                shirt_size: user.shirtSize,
+                pants_size: user.pantSize,
+                shoe_size: user.shoeSize,
                 gender: user.gender,
-                birth_date: user.birth_date ? new Date(user.birth_date) : null,
+                birth_date: user.birthDate ? new Date(user.birthDate) : null,
                 condition: "nuevo_ingreso",
               },
               select: {
@@ -279,7 +280,7 @@ export class Users {
               },
             });
 
-            return newStudent; // Retorna el estudiante creado para usarlo en la respuesta
+            return newStudent; 
           }
           case 3:
             await tx.teacher.create({
@@ -318,12 +319,13 @@ export class Users {
         }
         return createUser;
       });
+      
       return newUser;
     } catch (error) {
       console.error("Error al crear usuario (Transacción revertida):", error);
       throw error;
     }
-  }
+  } */
 
   /**
    ** Obtiene a un usuario por su ID
