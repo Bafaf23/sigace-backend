@@ -189,7 +189,7 @@ export class Students {
    * @param {object} param.representative - Datos o ID del representante legal
    * @param {object} param.user - Datos de la cuenta del usuario
    */
-  static async createStudent({
+  /*  static async createStudent({
     student = {},
     representative = {},
     user = {},
@@ -255,6 +255,7 @@ export class Students {
       throw error;
     }
   }
+ */
 
   /**
    * @description Actualiza un estudiante por su ID
@@ -654,7 +655,7 @@ export class Students {
 
   /**
    * Cuenta a todos los estudiantes registrados
-   * @param {string} SIG 
+   * @param {string} SIG
    * @returns {number}
    */
   static async count(SIG) {

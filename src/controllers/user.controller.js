@@ -54,17 +54,18 @@ export const createUser = async (req, res) => {
     }
 
     const formattedName = formatText(req.body.name);
+    const SIG = req.body.SIG ? req.body.SIG : req.user.SIG;
 
     const user = await Users.create({
+      ...req.body,
       id_card: document,
       name: formatText(req.body.name),
       last_name: formatText(req.body.lastName),
       email: req.body.email.trim(),
       phone: req.body.phone,
       role_id: req.body.role_id,
-      SIG: req.body.SIG || req.user.SIG,
+      SIG,
       password: passgeneric,
-      ...req.body,
     });
 
     if (!user) {
@@ -77,8 +78,6 @@ export const createUser = async (req, res) => {
       });
     }
 
-    const userFir = user.user.name;
-
     logger.info("Iniciaindo proceso de envio de correo de bienvenida.");
     await welcomeEmail(formattedName, req.body.email).catch((error) => {
       console.error(
@@ -87,7 +86,7 @@ export const createUser = async (req, res) => {
       );
     });
 
-    logger.info("Registro prosesado con exito.", { name: userFir });
+    logger.info("Registro prosesado con exito.");
 
     return res.status(201).json({
       success: true,
@@ -97,6 +96,14 @@ export const createUser = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error en createUser:", error);
+    if (error.code === "INVALID_SCHOOL_SIG") {
+      return res.status(400).json({
+        success: false,
+        code: error.code,
+        message: error.message,
+      });
+    }
+
     return res.status(500).json({
       success: false,
       code: "CREATE_USER_INTERNAL_ERROR",
