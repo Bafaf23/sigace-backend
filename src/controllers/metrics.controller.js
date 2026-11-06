@@ -27,14 +27,16 @@ export const sudoMetrics = async (req, res) => {
 export const admiMetrics = async (req, res) => {
   try {
     const SIG = req.user.SIG;
+    const periodId = Number(req.user.id_period);
     logger.info("calcualando metricas...");
     const [studentsRes, teachersRes, subjectsRes, sectionRes] =
       await Promise.all([
         Students.count(SIG),
-        Sections.count(SIG),
         Teachers.count(SIG),
         Subject.count(SIG),
+        Sections.count(SIG, periodId),
       ]);
+
     logger.info("Ok, metics admin");
     return res.status(200).json({
       students: studentsRes,

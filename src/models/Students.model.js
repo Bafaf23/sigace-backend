@@ -189,7 +189,7 @@ export class Students {
    * @param {object} param.representative - Datos o ID del representante legal
    * @param {object} param.user - Datos de la cuenta del usuario
    */
-  static async createStudent({
+  /*  static async createStudent({
     student = {},
     representative = {},
     user = {},
@@ -255,6 +255,7 @@ export class Students {
       throw error;
     }
   }
+ */
 
   /**
    * @description Actualiza un estudiante por su ID
@@ -327,12 +328,19 @@ export class Students {
    * @param {number} params.id - id del estudiante
    * @return {object|null} - info del estudiante o null si no existe
    */
-  static async byID({ id, tuitionNumber }) {
-    let whereClause = { id: Number(id) };
-
+  static async byID(params = {}) {
+    const { id, tuitionNumber } = params ?? {};
+    let whereClause;
     if (tuitionNumber) {
       whereClause = { tuition_number: tuitionNumber };
+    } else {
+      const studentId = Number(id);
+      if (!Number.isSafeInteger(studentId) || studentId <= 0) {
+        return null;
+      }
+      whereClause = { id: studentId };
     }
+
     try {
       return await prisma.student.findFirst({
         where: whereClause,
@@ -654,7 +662,7 @@ export class Students {
 
   /**
    * Cuenta a todos los estudiantes registrados
-   * @param {string} SIG 
+   * @param {string} SIG
    * @returns {number}
    */
   static async count(SIG) {

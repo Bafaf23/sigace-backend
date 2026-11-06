@@ -1,23 +1,23 @@
-import { Students } from "../models/Students.model.js";
-import { Representative } from "../models/Representative.model.js";
+import { Academic_periods } from "../models/Academin_period.model.js";
+import { Enrollments } from "../models/Enrollments.model.js";
 import { Grade } from "../models/Grade.model.js";
-import { boletaTemplate } from "../templates/boleta.template.js";
-import { enrollmentP } from "../templates/EnrollmetP.template.js";
-import { listSection } from "../templates/listSectio.template.js";
-import { Sections } from "../models/Section.model.js";
-import { Subject } from "../models/Subject.model.js";
 import { Lapse } from "../models/Lapse.model.js";
+import { LoadAcademic } from "../models/LoadAcademic.model.js";
+import { Representative } from "../models/Representative.model.js";
 import { School } from "../models/School.model.js";
+import { Sections } from "../models/Section.model.js";
+import { Students } from "../models/Students.model.js";
+import { Subject } from "../models/Subject.model.js";
+import { enrollmentP } from "../templates/EnrollmetP.template.js";
+import { boletaTemplate } from "../templates/boleta.template.js";
+import { listSection } from "../templates/listSectio.template.js";
 import { noteSheet } from "../templates/noteSheet.template.js";
 import { reporteFinalRendimientoEstudiantil } from "../templates/reporteFinalRendimientoEstudiantil.template.js";
-import puppeteer from "puppeteer";
+import logger from "../utils/logger.js";
+import { promises } from "dns";
 import fs from "fs";
 import path from "path";
-import logger from "../utils/logger.js";
-import { Academic_periods } from "../models/Academin_period.model.js";
-import { LoadAcademic } from "../models/LoadAcademic.model.js";
-import { promises } from "dns";
-import { Enrollments } from "../models/Enrollments.model.js";
+import puppeteer from "puppeteer";
 
 /**
  * CONFIGURACIÓN REUSABLE DE LANZAMIENTO PUPPETEER
@@ -171,7 +171,7 @@ export const reportCard = async (req, res) => {
         idPeriod: id_period,
       }),
       Sections.getStudent({ id_section: id_section, SIG: SIG }),
-      Students.byID(id_student),
+      Students.byID({ id: id_student }),
       School.getSchoolBySIG(SIG),
       Academic_periods.getAcademicPeriods(SIG),
     ]);
@@ -295,12 +295,12 @@ export const reportCard = async (req, res) => {
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const enrollmetP = async (req, res) => {
-  const { id_student } = req.params;
+  const { tuition_number } = req.params;
   const SIG = req.user?.SIG;
   const id_period = req.user?.id_period;
   let browser = null;
 
-  if (!SIG || !id_student) {
+  if (!SIG || !tuition_number) {
     return res.status(400).json({
       success: false,
       code: "INCOMPLETE_ENROLLMENT_REPORT_PARAMS",
@@ -310,9 +310,12 @@ export const enrollmetP = async (req, res) => {
   }
 
   try {
-    logger.info("Generando planilla de inscripcion...");
+    logger.info("Generando planilla de inscripcion para...", {
+      tuition_number: tuition_number,
+    });
+
     const [student, school] = await Promise.all([
-      Students.byID(id_student),
+      Students.byID({ tuitionNumber: tuition_number }),
       School.getSchoolBySIG(SIG),
     ]);
 

@@ -195,11 +195,28 @@ export class Users {
    * @param {Users} user - Objeto de la clase Users
    * @returns {object} el usuario creado
    */
-  /*  static async create(user) {
+  static async create(user) {
     try {
       const hashedPassword = await bcrypt.hash(user.password, 10);
 
       const newUser = await prisma.$transaction(async (tx) => {
+        const roleUser = Number(user.role_id);
+        const SIG = user.SIG;
+
+        if ([2, 3, 4, 5, 6, 7].includes(roleUser)) {
+          const school = SIG
+            ? await tx.school.findUnique({ where: { SIG } })
+            : null;
+
+          if (!school) {
+            const error = new Error(
+              "El código SIG no corresponde a una escuela.",
+            );
+            error.code = "INVALID_SCHOOL_SIG";
+            throw error;
+          }
+        }
+
         const createUser = await tx.users.create({
           data: {
             id_card: user.id_card,
@@ -217,8 +234,6 @@ export class Users {
         });
 
         const idUser = createUser.id;
-        const roleUser = Number(user.role_id);
-        const SIG = user.SIG;
 
         switch (roleUser) {
           case 2: {
@@ -280,13 +295,13 @@ export class Users {
               },
             });
 
-            return newStudent; 
+            return newStudent;
           }
           case 3:
             await tx.teacher.create({
               data: {
                 id_user: idUser,
-                SIG,
+                SIG: SIG,
                 is_active: true,
               },
             });
@@ -319,13 +334,13 @@ export class Users {
         }
         return createUser;
       });
-      
+
       return newUser;
     } catch (error) {
       console.error("Error al crear usuario (Transacción revertida):", error);
       throw error;
     }
-  } */
+  }
 
   /**
    ** Obtiene a un usuario por su ID

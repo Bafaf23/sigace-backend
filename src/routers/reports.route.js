@@ -1,4 +1,3 @@
-import { Router } from "express";
 import {
   sectionList,
   reportCard,
@@ -10,6 +9,7 @@ import {
   verificarAutenticacion,
   permitirRoles,
 } from "../middlewares/auth.middleware.js";
+import { Router } from "express";
 
 const router = Router();
 
@@ -28,7 +28,7 @@ router.get(
 );
 
 router.get(
-  "/:id_student/enrollment",
+  "/:tuition_number/enrollment",
   verificarAutenticacion,
   permitirRoles("administrador", "gestion"),
   enrollmetP,
