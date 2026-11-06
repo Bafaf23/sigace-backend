@@ -1,6 +1,5 @@
 import {
   getStudents,
-  createStudent,
   updateStudent,
   getStudentNotEnrolled,
   getStudentByID,
@@ -24,12 +23,6 @@ router.get(
   verificarAutenticacion,
   permitirRoles("administrador", "director", "gestion"),
   getStudents,
-);
-router.post(
-  "/",
-  verificarAutenticacion,
-  permitirRoles("administrador", "gestion"),
-  createStudent,
 );
 
 router.put(
