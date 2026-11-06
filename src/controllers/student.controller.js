@@ -486,12 +486,21 @@ export const getStudentByID = async (req, res) => {
 
   if (!id) {
     logger.error(`El documento es necesario para realizar la consulta`);
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       code: "MISSING_STUDENT_ID",
       message: "Es requerido especificar el código ID único del estudiante.",
     });
   }
+
+  if (!Number.isSafeInteger(Number(id)) || Number(id) <= 0) {
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_STUDENT_ID",
+      message: "El código ID del estudiante no es válido.",
+    });
+  }
+
   try {
     const student = await Students.byID({ id });
 
