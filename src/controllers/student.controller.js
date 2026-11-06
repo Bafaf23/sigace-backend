@@ -45,8 +45,6 @@ const normalizeToDate = (rawDate) => {
   return isNaN(fallbackDate.getTime()) ? null : fallbackDate;
 };
 
-const safeTrim = (val) => (typeof val === "string" ? val.trim() : "");
-
 /**
  * Obtiene a todos los estudiantes de una escuela por su codigo SIG
  *
@@ -160,7 +158,7 @@ export const getStudents = async (req, res) => {
  * @param {import("express").Response} res - Objeto de respuesta de Express.
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
-export const createStudent = async (req, res) => {
+/* export const createStudent = async (req, res) => {
   try {
     const {
       documentType = "",
@@ -179,7 +177,7 @@ export const createStudent = async (req, res) => {
       ...medicalAndSizes
     } = req.body;
 
-    const SIG = req.body.SIG || req.user?.SIG;
+    const SIG = req.user?.SIG;
 
     if (
       !document ||
@@ -217,8 +215,6 @@ export const createStudent = async (req, res) => {
     const repDoc = `${repdniType}${repdni}`.trim();
 
     const passgeneric = `${document.substring(0, 4)}@2026`;
-
-    console.log(studentDoc);
 
     const birthDate = normalizeToDate(req.body.birthDate);
     if (!birthDate) {
@@ -307,7 +303,7 @@ export const createStudent = async (req, res) => {
       error: error.message,
     });
   }
-};
+}; */
 
 /**
  * Actualiza la informacion exixtente en la BD de un estudiante con su respectiva informormacion editable del usuario

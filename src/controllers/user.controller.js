@@ -37,21 +37,34 @@ export const createUser = async (req, res) => {
   }
 
   try {
-    const document = (req.body.typeDocuement + req.body.document).trim();
+    const document = (req.body.documentType + req.body.document).trim();
     const rawDocument = req.body.document ? String(req.body.document) : "";
     const passgeneric = rawDocument.substring(0, 4) + "@2026";
+
+    const now = new Date();
+
+    if (new Date(req.body.birthDate) >= now) {
+      logger.error("La ficha ingresada no es correcta", {
+        birthDate: req.body.birthDate,
+      });
+      return res.status(400).json({
+        success: false,
+        message: "La fecha de nacimiento no es valida",
+      });
+    }
 
     const formattedName = formatText(req.body.name);
 
     const user = await Users.create({
       id_card: document,
       name: formatText(req.body.name),
-      last_name: formatText(req.body.last_name),
+      last_name: formatText(req.body.lastName),
       email: req.body.email.trim(),
       phone: req.body.phone,
       role_id: req.body.role_id,
-      SIG: req.user.SIG || req.body.SIG,
+      SIG: req.body.SIG || req.user.SIG,
       password: passgeneric,
+      ...req.body,
     });
 
     if (!user) {
@@ -64,7 +77,7 @@ export const createUser = async (req, res) => {
       });
     }
 
-    const userFir = user.name;
+    const userFir = user.user.name;
 
     logger.info("Iniciaindo proceso de envio de correo de bienvenida.");
     await welcomeEmail(formattedName, req.body.email).catch((error) => {
@@ -80,6 +93,7 @@ export const createUser = async (req, res) => {
       success: true,
       code: "USER_CREATED",
       message: "Cuenta de usuario creada correctamente.",
+      data: user,
     });
   } catch (error) {
     console.error("❌ Error en createUser:", error);
