@@ -256,12 +256,14 @@ export class Sections {
   /**
    * Cuenta a todos las secciones de un colegio
    * @param {string} SIG
+   * @param {number} periodId
    * @returns {number}
    */
-  static async count(SIG) {
+  static async count(SIG, periodId) {
     return await prisma.section.count({
       where: {
         SIG: SIG,
+        id_period: periodId,
       },
     });
   }
