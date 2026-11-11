@@ -1,7 +1,7 @@
 import {
   createEnrollment,
   getApprovedStudents,
-  processStartStates,
+  academicClosure,
   updatePreInscrip,
   periodStudent,
 } from "../controllers/enrollments.controller.js";
@@ -30,7 +30,7 @@ router.post(
   "/",
   verificarAutenticacion,
   permitirRoles("administrador"),
-  processStartStates,
+  academicClosure,
 );
 
 router.post(

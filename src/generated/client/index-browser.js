@@ -324,7 +324,7 @@ exports.Prisma.Evaluation_plan_detailScalarFieldEnum = {
 exports.Prisma.GradeScalarFieldEnum = {
   id: 'id',
   id_evaluation: 'id_evaluation',
-  id_student: 'id_student',
+  tuition_number: 'tuition_number',
   grade: 'grade',
   created_at: 'created_at',
   updated_at: 'updated_at'
@@ -478,6 +478,10 @@ exports.Prisma.evaluation_plan_detailOrderByRelevanceFieldEnum = {
   activity: 'activity',
   technical: 'technical',
   instrument: 'instrument'
+};
+
+exports.Prisma.gradeOrderByRelevanceFieldEnum = {
+  tuition_number: 'tuition_number'
 };
 
 exports.Prisma.pending_subjectOrderByRelevanceFieldEnum = {

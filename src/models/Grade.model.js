@@ -1,5 +1,6 @@
 import { pool } from "../db.js";
 import { prisma } from "../lib/prisma.js";
+import { Enrollments } from "./Enrollments.model.js";
 
 export class Grade {
   constructor(id, idEvaluation, idStudent, grade) {
@@ -12,17 +13,17 @@ export class Grade {
   /**
    * Carga una nota en la base de datos
    * @param {object} gred
-   * @param {number} gred.idEvaluation  - Id de la evaluacion
-   * @param {number} gred.idStudent - id del estudiante
+   * @param {number} gred.id_evaluation  - Id de la evaluacion
+   * @param {number} gred.tuition_number - id del estudiante
    * @param {number} gred.grade - la calificacion
    * @returns {Promise<boolean>}
    */
-  static async create({ id_evaluation, id_student, grade }) {
+  static async create({ id_evaluation, tuition_number, grade }) {
     try {
       return await prisma.grade.create({
         data: {
           id_evaluation: Number(id_evaluation),
-          id_student: Number(id_student),
+          tuition_number: tuition_number,
           grade: grade,
         },
       });
@@ -32,7 +33,7 @@ export class Grade {
   }
 
   /**
-   * Obtiene la nota definitiva final por materia (promedio de los 3 lapsos) por alumno.
+   * Obtiene la nota definitiva por materia (promedio de los 3 lapsos) por alumno.
    *
    * @param {Array} id_load_academics - ID de la carga académica (asignación docente-materia-sección).
    * @returns {Promise<Object>} Objeto con las definitivas finales por estudiante y materia.

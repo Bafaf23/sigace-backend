@@ -376,18 +376,18 @@ model evaluation_plan_detail {
 }
 
 model grade {
-  id            Int     @id @default(autoincrement())
-  id_evaluation Int
-  id_student    Int
-  grade         Decimal @db.Decimal(4, 2)
+  id             Int     @id @default(autoincrement())
+  id_evaluation  Int
+  tuition_number String
+  grade          Decimal @db.Decimal(4, 2)
 
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
 
   evaluation evaluation_plan_detail @relation(fields: [id_evaluation], references: [id], onDelete: Restrict)
-  student    student                @relation(fields: [id_student], references: [id], onDelete: Restrict)
+  student    student                @relation(fields: [tuition_number], references: [tuition_number], onDelete: Restrict)
 
-  @@unique([id_student, id_evaluation], name: "unique_student_evaluation")
+  @@unique([tuition_number, id_evaluation], name: "unique_student_evaluation")
   @@map("grades")
 }
 

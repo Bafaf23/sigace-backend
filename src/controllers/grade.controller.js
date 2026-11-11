@@ -11,10 +11,10 @@ import logger from "../utils/logger.js";
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const createGrade = async (req, res) => {
-  const { id_evaluation, id_student, grade } = req.body ?? {};
+  const { id_evaluation, tuition_number, grade } = req.body ?? {};
 
-
-  if (!id_evaluation || !id_student || grade == null) {
+  if (!id_evaluation || !tuition_number || grade == null) {
+    logger.error("Sin informacion para cargar la nota");
     return res.status(400).json({
       success: false,
       code: "INCOMPLETE_GRADE_DATA",
@@ -51,7 +51,7 @@ export const createGrade = async (req, res) => {
     logger.info(`Cargando la calificacion en el sistema...`);
     const newGrade = await Grade.create({
       id_evaluation,
-      id_student,
+      tuition_number,
       grade: notaNumerica,
     });
 

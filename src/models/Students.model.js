@@ -510,14 +510,14 @@ export class Students {
    ** Obtiene las notas de un estudiante por perido academico, armando un objeto de datos por momento academico, asignatura
    * evaluacion, calificacion
    * @param {Object} param0
-   * @param {number} param0.idStudent
+   * @param {number} param0.tuitionNumber
    * @param {string} param0.SIG
    * @param {number} param0.idPeriod
    */
-  static async grade({ SIG, idStudent, idPeriod }) {
+  static async grade({ SIG, tuitionNumber, idPeriod }) {
     const rows = await prisma.grade.findMany({
       where: {
-        id_student: Number(idStudent),
+        tuition_number: tuitionNumber,
         evaluation: {
           evaluation_plan: {
             lapse: {
