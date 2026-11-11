@@ -76,142 +76,74 @@ export class Enrollments {
    */
   static async getApprovedForPromotion(id_period) {
     try {
-      const sql = `SELECT 
-          e.id AS enrollment_id,
-          e.id_student,
-          u.name, 
-          u.last_name,   
-          u.document,
-          ap.name AS period,
-          sec.name AS current_section,
-          ye.name AS year_name, 
-          e.status,
-          s.tuition_number
-      FROM enrollments e
-      INNER JOIN students s ON e.id_student = s.id
-      INNER JOIN users u ON s.id_user = u.id
-      INNER JOIN sections sec ON e.id_section = sec.id
-      INNER JOIN years ye ON sec.id_year = ye.id
-      INNER JOIN academic_periods ap ON ap.id = e.id_period
-      WHERE e.id_period = ? 
-      AND e.status IN ('Aprobado', 'Materia Pendiente')
-      ORDER BY sec.name ASC, u.last_name ASC`;
+      const students = await prisma.enrollment.findMany({
+        where: {
+          id_period: Number(id_period),
+          status: {
+            in: ["aprobado", "materia_pendiente"],
+          },
+        },
+        include: {
+          student: {
+            select: {
+              tuition_number: true,
+              id_user: true,
+              enrollments: {
+                select: {
+                  id_year: true,
+                  year: true,
+                },
+              },
+              user: {
+                select: {
+                  name: true,
+                  last_name: true,
+                  id_card: true,
+                },
+              },
+            },
+          },
+        },
+      });
 
-      const [rows] = await pool.query(sql, [id_period]);
-      return rows;
+      return students.map((student) => ({
+        name: student.student.user.name,
+        last_name: student.student.user.last_name,
+        id_card: student.student.user.id_card,
+        tuition_number: student.student.tuition_number,
+        status: student.status,
+        year: student.student.enrollments,
+      }));
     } catch (error) {
       console.log(error);
     }
   }
 
   /**
-   **Procesa el estado final de los students y actualiza su estado de 'Activo' a
-   **'Aprobado', 'Materia Pendiente' o 'Reprobado' según su rendimiento acumulado.
-   * @param {number} id_period
-   * @returns {Promise<boolean>} Devuelve true si se procesó y actualizó al menos un estudiante
+   * *Cambia el estatus de los estudiantes en su inscripcion de "activo":
+   ** "aprobado": si cumple con el minimo aprobatorio para avanzar el siguiente año superior.
+   ** "reprobado": si no cumple con el minimo para ser promovido.
+   ** "materia pendiente": si tiene un maximo de tres materias reprobadas.
+   * @param {object} params
+   * @param {number} params.idStudent - ID del estudiante
+   * @param {number} params.idPeriod - ID del período
+   * @param {string} params.status - Nuevo estado
+   * @returns {Promise<boolean>} Indica si la matrícula quedó con el estado solicitado
    */
-  static async processFinalStates(id_period) {
+  static async changeStatusEnrollment({ idStudent, idPeriod, status }) {
     try {
-      await pool.query("START TRANSACTION");
-
-      const sql = `SELECT 
-    e.id_student,
-    -- Contamos las materias donde la nota final calculada (o 0 si no tiene nada) sea <= 10
-    COUNT(DISTINCT CASE WHEN IFNULL(rendimiento_real.nota_final_materia, 0) <= 10 THEN la_total.id_subject END) AS materias_reprobadas
-FROM enrollments e
--- 1. Traemos la carga académica obligatoria de la sección
-INNER JOIN load_academic la_total ON la_total.id_section = e.id_section AND la_total.id_period = e.id_period
--- 2. Calculamos la nota final real asegurando la división por la cantidad de lapsos
-LEFT JOIN (
-    SELECT 
-        lapso_calc.id_student,
-        la.id_subject,
-        -- 🔥 CORRECCIÓN: Sumamos las notas de los lapsos existentes y dividimos estrictamente entre 
-        -- el total de lapsos que tiene el período, así los lapsos vacíos castigan el promedio.
-        SUM(lapso_calc.nota_lapso) / (SELECT COUNT(*) FROM lapses WHERE id_period = la.id_period) AS nota_final_materia
-    FROM load_academic la
-    INNER JOIN evaluation_plans ep ON ep.id_load_academic = la.id
-    INNER JOIN (
-        -- Nota ponderada de cada lapso por estudiante
-        SELECT 
-            epd.id_evaluation_plan,
-            g.id_student,
-            CASE 
-                WHEN SUM(epd.porcentage) > 0 THEN 
-                    ROUND((SUM((g.grade * epd.porcentage) / 100) / SUM(epd.porcentage)) * 100)
-                ELSE 0 
-            END AS nota_lapso
-        FROM evaluation_plan_details epd
-        INNER JOIN grades g ON g.id_evaluation = epd.id
-        GROUP BY epd.id_evaluation_plan, g.id_student
-    ) AS lapso_calc ON lapso_calc.id_evaluation_plan = ep.id
-    WHERE la.id_period = ?
-    GROUP BY lapso_calc.id_student, la.id_subject
-) AS rendimiento_real ON rendimiento_real.id_student = e.id_student AND rendimiento_real.id_subject = la_total.id_subject
-
-WHERE e.id_period = ? AND e.status = 'Activo'
-GROUP BY e.id_student`;
-
-      const [result] = await pool.query(sql, [id_period, id_period]);
-
-      let totalActualizados = 0;
-
-      for (const student of result) {
-        let nuevoEstatus = "Aprobado";
-        const reprobadas = student.materias_reprobadas;
-
-        if (reprobadas >= 1 && reprobadas <= 2) {
-          nuevoEstatus = "Materia Pendiente";
-          const [materiasReprobadasDetalle] = await pool.query(
-            `   SELECT la_total.id_subject 
-  FROM load_academic la_total
-  INNER JOIN enrollments e ON e.id_period = la_total.id_period
-  LEFT JOIN (
-      -- Agrupamos las notas obteniendo el promedio o nota acumulada final de la materia por estudiante
-      SELECT 
-          g.id_student, 
-          la_sub.id_subject, 
-          -- Sumamos las notas multiplicadas por su porcentaje del plan si guardas cortes acumulativos,
-          -- o simplemente usamos AVG/MAX según calcules la nota final en tu sistema (ej: AVG(g.grade))
-          AVG(g.grade) AS nota_final_materia
-      FROM grades g
-      INNER JOIN evaluation_plan_details epd ON g.id_evaluation = epd.id
-      INNER JOIN evaluation_plans ep ON epd.id_evaluation_plan = ep.id
-      INNER JOIN load_academic la_sub ON ep.id_load_academic = la_sub.id
-      GROUP BY g.id_student, la_sub.id_subject
-  ) rendimiento_real ON la_total.id_subject = rendimiento_real.id_subject 
-                     AND e.id_student = rendimiento_real.id_student
-  WHERE la_total.id_period = ? 
-    AND e.id_student = ? 
-    AND IFNULL(rendimiento_real.nota_final_materia, 0) <= 10`,
-            [id_period, student.id_student],
-          );
-          for (const materia of materiasReprobadasDetalle) {
-            await pool.query(
-              `INSERT INTO pending_subjects (id_student, id_subject, id_period_origin, status) 
-               VALUES (?, ?, ?, 'Pendiente')`,
-              [student.id_student, materia.id_subject, id_period],
-            );
-          }
-        } else if (reprobadas >= 3) {
-          nuevoEstatus = "Reprobado";
-        }
-
-        const [updateResult] = await pool.query(
-          `UPDATE enrollments 
-         SET status = ? 
-         WHERE id_student = ? AND id_period = ? AND status = 'Activo'`,
-          [nuevoEstatus, student.id_student, id_period],
-        );
-
-        if (updateResult && updateResult.affectedRows > 0) {
-          totalActualizados++;
-        }
-      }
-
-      await pool.query("COMMIT");
-
-      return totalActualizados > 0;
+      const enrollment = await prisma.enrollment.update({
+        where: {
+          unique_student_period: {
+            id_student: Number(idStudent),
+            id_period: Number(idPeriod),
+          },
+        },
+        data: {
+          status,
+        },
+      });
+      return enrollment.status === status;
     } catch (error) {
       console.error(
         "Error al procesar cierre de año y materias pendientes:",
@@ -221,11 +153,126 @@ GROUP BY e.id_student`;
     }
   }
 
+  static async calculationOfPromotedStudents(idPeriod) {
+    const enrollments = await prisma.enrollment.findMany({
+      where: {
+        id_period: idPeriod,
+        status: "activo",
+      },
+      select: {
+        id_section: true,
+        id_student: true,
+        student: {
+          select: {
+            tuition_number: true,
+            user: {
+              select: {
+                name: true,
+                last_name: true,
+              },
+            },
+            grades: {
+              where: {
+                evaluation: {
+                  evaluation_plan: {
+                    load_academic: {
+                      id_period: idPeriod,
+                    },
+                  },
+                },
+              },
+              select: {
+                grade: true,
+                evaluation: {
+                  select: {
+                    porcentage: true,
+                    evaluation_plan: {
+                      select: {
+                        id_lapse: true,
+                        load_academic: {
+                          select: {
+                            id_subject: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const result = enrollments.reduce((students, enrollment) => {
+      const studentId = enrollment.id_student;
+      students[studentId] ??= {};
+
+      for (const grade of enrollment.student.grades) {
+        const evaluationPlan = grade.evaluation.evaluation_plan;
+        const subjectId = evaluationPlan.load_academic.id_subject;
+        const lapseId = evaluationPlan.id_lapse;
+
+        students[studentId][subjectId] ??= {};
+        students[studentId][subjectId][lapseId] ??= 0;
+        students[studentId][subjectId][lapseId] +=
+          (Number(grade.grade ?? 0) *
+            Number(grade.evaluation.porcentage ?? 0)) /
+          100;
+      }
+
+      return students;
+    }, {});
+
+    const finalGrades = Object.fromEntries(
+      Object.entries(result).map(([studentId, subjects]) => [
+        studentId,
+        Object.fromEntries(
+          Object.entries(subjects).map(([subjectId, lapses]) => {
+            const lapseGrades = Object.values(lapses).map(Math.round);
+            const average =
+              lapseGrades.reduce((sum, grade) => sum + grade, 0) /
+              lapseGrades.length;
+
+            return [subjectId, Math.round(average)];
+          }),
+        ),
+      ]),
+    );
+
+    for (const enrollment of enrollments) {
+      const definitiveGrades = Object.values(
+        finalGrades[enrollment.id_student] ?? {},
+      );
+
+      if (definitiveGrades.length === 0) continue;
+
+      const failedSubjects = definitiveGrades.filter(
+        (grade) => grade <= 10,
+      ).length;
+      const status =
+        failedSubjects === 0
+          ? "aprobado"
+          : failedSubjects <= 2
+            ? "materia_pendiente"
+            : "reprobado";
+
+      await Enrollments.changeStatusEnrollment({
+        idStudent: enrollment.id_student,
+        idPeriod,
+        status,
+      });
+    }
+
+    return finalGrades;
+  }
+
   /**
    * Finaliza el período actual. Calcula el año siguiente de cada student,
    * limpia su sección y lo deja listo (Pre-inscrito) para el futuro período.
    */
-  static async processStartStates(id_period_actual) {
+  static async processStartStates(idPerido) {
     try {
       const queryBuscarMateriasReprobadas = `
         SELECT la_total.id_subject 

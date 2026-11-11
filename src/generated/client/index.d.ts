@@ -23708,21 +23708,19 @@ export namespace Prisma {
   export type GradeAvgAggregateOutputType = {
     id: number | null
     id_evaluation: number | null
-    id_student: number | null
     grade: Decimal | null
   }
 
   export type GradeSumAggregateOutputType = {
     id: number | null
     id_evaluation: number | null
-    id_student: number | null
     grade: Decimal | null
   }
 
   export type GradeMinAggregateOutputType = {
     id: number | null
     id_evaluation: number | null
-    id_student: number | null
+    tuition_number: string | null
     grade: Decimal | null
     created_at: Date | null
     updated_at: Date | null
@@ -23731,7 +23729,7 @@ export namespace Prisma {
   export type GradeMaxAggregateOutputType = {
     id: number | null
     id_evaluation: number | null
-    id_student: number | null
+    tuition_number: string | null
     grade: Decimal | null
     created_at: Date | null
     updated_at: Date | null
@@ -23740,7 +23738,7 @@ export namespace Prisma {
   export type GradeCountAggregateOutputType = {
     id: number
     id_evaluation: number
-    id_student: number
+    tuition_number: number
     grade: number
     created_at: number
     updated_at: number
@@ -23751,21 +23749,19 @@ export namespace Prisma {
   export type GradeAvgAggregateInputType = {
     id?: true
     id_evaluation?: true
-    id_student?: true
     grade?: true
   }
 
   export type GradeSumAggregateInputType = {
     id?: true
     id_evaluation?: true
-    id_student?: true
     grade?: true
   }
 
   export type GradeMinAggregateInputType = {
     id?: true
     id_evaluation?: true
-    id_student?: true
+    tuition_number?: true
     grade?: true
     created_at?: true
     updated_at?: true
@@ -23774,7 +23770,7 @@ export namespace Prisma {
   export type GradeMaxAggregateInputType = {
     id?: true
     id_evaluation?: true
-    id_student?: true
+    tuition_number?: true
     grade?: true
     created_at?: true
     updated_at?: true
@@ -23783,7 +23779,7 @@ export namespace Prisma {
   export type GradeCountAggregateInputType = {
     id?: true
     id_evaluation?: true
-    id_student?: true
+    tuition_number?: true
     grade?: true
     created_at?: true
     updated_at?: true
@@ -23879,7 +23875,7 @@ export namespace Prisma {
   export type GradeGroupByOutputType = {
     id: number
     id_evaluation: number
-    id_student: number
+    tuition_number: string
     grade: Decimal
     created_at: Date
     updated_at: Date
@@ -23907,7 +23903,7 @@ export namespace Prisma {
   export type gradeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     id_evaluation?: boolean
-    id_student?: boolean
+    tuition_number?: boolean
     grade?: boolean
     created_at?: boolean
     updated_at?: boolean
@@ -23920,13 +23916,13 @@ export namespace Prisma {
   export type gradeSelectScalar = {
     id?: boolean
     id_evaluation?: boolean
-    id_student?: boolean
+    tuition_number?: boolean
     grade?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
 
-  export type gradeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "id_evaluation" | "id_student" | "grade" | "created_at" | "updated_at", ExtArgs["result"]["grade"]>
+  export type gradeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "id_evaluation" | "tuition_number" | "grade" | "created_at" | "updated_at", ExtArgs["result"]["grade"]>
   export type gradeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     evaluation?: boolean | evaluation_plan_detailDefaultArgs<ExtArgs>
     student?: boolean | studentDefaultArgs<ExtArgs>
@@ -23941,7 +23937,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: number
       id_evaluation: number
-      id_student: number
+      tuition_number: string
       grade: Prisma.Decimal
       created_at: Date
       updated_at: Date
@@ -24318,7 +24314,7 @@ export namespace Prisma {
   interface gradeFieldRefs {
     readonly id: FieldRef<"grade", 'Int'>
     readonly id_evaluation: FieldRef<"grade", 'Int'>
-    readonly id_student: FieldRef<"grade", 'Int'>
+    readonly tuition_number: FieldRef<"grade", 'String'>
     readonly grade: FieldRef<"grade", 'Decimal'>
     readonly created_at: FieldRef<"grade", 'DateTime'>
     readonly updated_at: FieldRef<"grade", 'DateTime'>
@@ -28911,7 +28907,7 @@ export namespace Prisma {
   export const GradeScalarFieldEnum: {
     id: 'id',
     id_evaluation: 'id_evaluation',
-    id_student: 'id_student',
+    tuition_number: 'tuition_number',
     grade: 'grade',
     created_at: 'created_at',
     updated_at: 'updated_at'
@@ -29137,6 +29133,13 @@ export namespace Prisma {
   };
 
   export type evaluation_plan_detailOrderByRelevanceFieldEnum = (typeof evaluation_plan_detailOrderByRelevanceFieldEnum)[keyof typeof evaluation_plan_detailOrderByRelevanceFieldEnum]
+
+
+  export const gradeOrderByRelevanceFieldEnum: {
+    tuition_number: 'tuition_number'
+  };
+
+  export type gradeOrderByRelevanceFieldEnum = (typeof gradeOrderByRelevanceFieldEnum)[keyof typeof gradeOrderByRelevanceFieldEnum]
 
 
   export const pending_subjectOrderByRelevanceFieldEnum: {
@@ -30761,7 +30764,7 @@ export namespace Prisma {
     NOT?: gradeWhereInput | gradeWhereInput[]
     id?: IntFilter<"grade"> | number
     id_evaluation?: IntFilter<"grade"> | number
-    id_student?: IntFilter<"grade"> | number
+    tuition_number?: StringFilter<"grade"> | string
     grade?: DecimalFilter<"grade"> | Decimal | DecimalJsLike | number | string
     created_at?: DateTimeFilter<"grade"> | Date | string
     updated_at?: DateTimeFilter<"grade"> | Date | string
@@ -30772,12 +30775,13 @@ export namespace Prisma {
   export type gradeOrderByWithRelationInput = {
     id?: SortOrder
     id_evaluation?: SortOrder
-    id_student?: SortOrder
+    tuition_number?: SortOrder
     grade?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     evaluation?: evaluation_plan_detailOrderByWithRelationInput
     student?: studentOrderByWithRelationInput
+    _relevance?: gradeOrderByRelevanceInput
   }
 
   export type gradeWhereUniqueInput = Prisma.AtLeast<{
@@ -30787,7 +30791,7 @@ export namespace Prisma {
     OR?: gradeWhereInput[]
     NOT?: gradeWhereInput | gradeWhereInput[]
     id_evaluation?: IntFilter<"grade"> | number
-    id_student?: IntFilter<"grade"> | number
+    tuition_number?: StringFilter<"grade"> | string
     grade?: DecimalFilter<"grade"> | Decimal | DecimalJsLike | number | string
     created_at?: DateTimeFilter<"grade"> | Date | string
     updated_at?: DateTimeFilter<"grade"> | Date | string
@@ -30798,7 +30802,7 @@ export namespace Prisma {
   export type gradeOrderByWithAggregationInput = {
     id?: SortOrder
     id_evaluation?: SortOrder
-    id_student?: SortOrder
+    tuition_number?: SortOrder
     grade?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -30815,7 +30819,7 @@ export namespace Prisma {
     NOT?: gradeScalarWhereWithAggregatesInput | gradeScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"grade"> | number
     id_evaluation?: IntWithAggregatesFilter<"grade"> | number
-    id_student?: IntWithAggregatesFilter<"grade"> | number
+    tuition_number?: StringWithAggregatesFilter<"grade"> | string
     grade?: DecimalWithAggregatesFilter<"grade"> | Decimal | DecimalJsLike | number | string
     created_at?: DateTimeWithAggregatesFilter<"grade"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"grade"> | Date | string
@@ -32564,7 +32568,7 @@ export namespace Prisma {
   export type gradeUncheckedCreateInput = {
     id?: number
     id_evaluation: number
-    id_student: number
+    tuition_number: string
     grade: Decimal | DecimalJsLike | number | string
     created_at?: Date | string
     updated_at?: Date | string
@@ -32581,7 +32585,7 @@ export namespace Prisma {
   export type gradeUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     id_evaluation?: IntFieldUpdateOperationsInput | number
-    id_student?: IntFieldUpdateOperationsInput | number
+    tuition_number?: StringFieldUpdateOperationsInput | string
     grade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -32590,7 +32594,7 @@ export namespace Prisma {
   export type gradeCreateManyInput = {
     id?: number
     id_evaluation: number
-    id_student: number
+    tuition_number: string
     grade: Decimal | DecimalJsLike | number | string
     created_at?: Date | string
     updated_at?: Date | string
@@ -32605,7 +32609,7 @@ export namespace Prisma {
   export type gradeUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     id_evaluation?: IntFieldUpdateOperationsInput | number
-    id_student?: IntFieldUpdateOperationsInput | number
+    tuition_number?: StringFieldUpdateOperationsInput | string
     grade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -34309,15 +34313,21 @@ export namespace Prisma {
     isNot?: evaluation_plan_detailWhereInput
   }
 
+  export type gradeOrderByRelevanceInput = {
+    fields: gradeOrderByRelevanceFieldEnum | gradeOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
   export type gradeUnique_student_evaluationCompoundUniqueInput = {
-    id_student: number
+    tuition_number: string
     id_evaluation: number
   }
 
   export type gradeCountOrderByAggregateInput = {
     id?: SortOrder
     id_evaluation?: SortOrder
-    id_student?: SortOrder
+    tuition_number?: SortOrder
     grade?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -34326,14 +34336,13 @@ export namespace Prisma {
   export type gradeAvgOrderByAggregateInput = {
     id?: SortOrder
     id_evaluation?: SortOrder
-    id_student?: SortOrder
     grade?: SortOrder
   }
 
   export type gradeMaxOrderByAggregateInput = {
     id?: SortOrder
     id_evaluation?: SortOrder
-    id_student?: SortOrder
+    tuition_number?: SortOrder
     grade?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -34342,7 +34351,7 @@ export namespace Prisma {
   export type gradeMinOrderByAggregateInput = {
     id?: SortOrder
     id_evaluation?: SortOrder
-    id_student?: SortOrder
+    tuition_number?: SortOrder
     grade?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -34351,7 +34360,6 @@ export namespace Prisma {
   export type gradeSumOrderByAggregateInput = {
     id?: SortOrder
     id_evaluation?: SortOrder
-    id_student?: SortOrder
     grade?: SortOrder
   }
 
@@ -40496,7 +40504,7 @@ export namespace Prisma {
     NOT?: gradeScalarWhereInput | gradeScalarWhereInput[]
     id?: IntFilter<"grade"> | number
     id_evaluation?: IntFilter<"grade"> | number
-    id_student?: IntFilter<"grade"> | number
+    tuition_number?: StringFilter<"grade"> | string
     grade?: DecimalFilter<"grade"> | Decimal | DecimalJsLike | number | string
     created_at?: DateTimeFilter<"grade"> | Date | string
     updated_at?: DateTimeFilter<"grade"> | Date | string
@@ -41902,7 +41910,7 @@ export namespace Prisma {
 
   export type gradeUncheckedCreateWithoutEvaluationInput = {
     id?: number
-    id_student: number
+    tuition_number: string
     grade: Decimal | DecimalJsLike | number | string
     created_at?: Date | string
     updated_at?: Date | string
@@ -44071,7 +44079,7 @@ export namespace Prisma {
 
   export type gradeCreateManyEvaluationInput = {
     id?: number
-    id_student: number
+    tuition_number: string
     grade: Decimal | DecimalJsLike | number | string
     created_at?: Date | string
     updated_at?: Date | string
@@ -44086,7 +44094,7 @@ export namespace Prisma {
 
   export type gradeUncheckedUpdateWithoutEvaluationInput = {
     id?: IntFieldUpdateOperationsInput | number
-    id_student?: IntFieldUpdateOperationsInput | number
+    tuition_number?: StringFieldUpdateOperationsInput | string
     grade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -44094,7 +44102,7 @@ export namespace Prisma {
 
   export type gradeUncheckedUpdateManyWithoutEvaluationInput = {
     id?: IntFieldUpdateOperationsInput | number
-    id_student?: IntFieldUpdateOperationsInput | number
+    tuition_number?: StringFieldUpdateOperationsInput | string
     grade?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string

@@ -1,5 +1,5 @@
-import { Enrollments } from "../models/Enrollments.model.js";
 import { Academic_periods } from "../models/Academin_period.model.js";
+import { Enrollments } from "../models/Enrollments.model.js";
 import logger from "../utils/logger.js";
 
 /**
@@ -67,9 +67,13 @@ export const createEnrollment = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 2. OBTENER estudiantes APROBADOS LISTOS PARA PROMOCIÓN
- * ==========================================================================
+ * Obtiene a todos los estiantes listo para ser promovidos
+ *
+ * @async
+ * @function createEnrollment
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
 export const getApprovedStudents = async (req, res) => {
   try {
@@ -122,17 +126,19 @@ export const getApprovedStudents = async (req, res) => {
 };
 
 /**
- * ==========================================================================
- * 3. PROCESAR CIERRE ACADÉMICO Y PROMOCIÓN MASIVA
- * ==========================================================================
- * Recibe el período actual, calcula el rendimiento final de los estudiantes,
- * registra materias pendientes y los deja pre-inscritos (id_next_year)
- * con estatus 'Culminado' en el año viejo.
+ * *Realiza el calculo de las actividades para determinar que estudiante cumple con el minimo aprobatorio para ser promovido al año superior si existe uno.
+ * *Tambien si el estudiante tiene materia pendiente las registra.
+ *
+ * @async
+ * @function createEnrollment
+ * @param {import("express").Request} req - Objeto de solicitud de Express.
+ * @param {import("express").Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
-export const processStartStates = async (req, res) => {
-  const id_period_actual = req.user.id_period || req.params;
+export const academicClosure = async (req, res) => {
+  const idPeriod = req.user.id_period;
 
-  if (!id_period_actual) {
+  if (!idPeriod) {
     return res.status(400).json({
       success: false,
       message:
@@ -141,7 +147,7 @@ export const processStartStates = async (req, res) => {
   }
 
   try {
-    const proccessed = await Enrollments.processStartStates(id_period_actual);
+    const proccessed = await Enrollments.processStartStates(idPeriod);
 
     if (proccessed === false) {
       return res.status(200).json({

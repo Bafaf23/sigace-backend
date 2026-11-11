@@ -1,5 +1,6 @@
 import { Academic_periods } from "../models/Academin_period.model.js";
 import { Enrollments } from "../models/Enrollments.model.js";
+import { Grade } from "../models/Grade.model.js";
 import logger from "../utils/logger.js";
 
 /**
@@ -33,7 +34,7 @@ export const createAcademicPeriod = async (req, res) => {
     }
 
     const periods = await Academic_periods.getAcademicPeriods(SIG);
-    const periodActive = periods.find((item) => item.is_active === 1);
+    const periodActive = periods.find((item) => item.is_active === true);
 
     if (periodActive) {
       logger.error("Ya existe un periodo activo en esta escuela");
@@ -73,7 +74,7 @@ export const createAcademicPeriod = async (req, res) => {
 };
 
 /**
- * Finaliza un periodo academico
+ * Cerra el año academico activo, realizando el calculo de las calificaciones, para el actualizar el estatus de enrollment
  *
  * @async
  * @function endAcademicPeriod
@@ -81,7 +82,7 @@ export const createAcademicPeriod = async (req, res) => {
  * @param {import("express").Response} res - Objeto de respuesta de Express.
  * @returns {Promise<import("express").Response>} Respuesta HTTP en formato JSON con la lista de escuelas.
  */
-export const endAcademicPeriod = async (req, res) => {
+export const academicClosure = async (req, res) => {
   try {
     const SIG = req.user?.SIG;
 
@@ -97,7 +98,7 @@ export const endAcademicPeriod = async (req, res) => {
     const currentPeriod = await Academic_periods.getAcademicPeriods(SIG);
 
     const currentPeriodActive = currentPeriod.find(
-      (item) => item.is_active === 1,
+      (item) => item.is_active === true,
     );
 
     if (!currentPeriodActive || !currentPeriodActive.id) {
@@ -109,11 +110,11 @@ export const endAcademicPeriod = async (req, res) => {
           "Operación cancelada: No se detectó ningún período académico activo susceptible a cierre.",
       });
     }
+    await Enrollments.calculationOfPromotedStudents(currentPeriodActive.id);
 
-    // Consolida los estados de aprobación/reprobación antes de romper el ciclo
-    Enrollments.processFinalStates(currentPeriodActive.id);
-
-    const academicPeriod = await Academic_periods.endAcademicPeriod(SIG);
+    const academicPeriod = await Academic_periods.endAcademicPeriod(
+      currentPeriodActive.id,
+    );
 
     logger.debug(`Período finalizado y estados de estudiantes archivados.`);
 

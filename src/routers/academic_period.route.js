@@ -1,6 +1,5 @@
-import { Router } from "express";
 import {
-  endAcademicPeriod,
+  academicClosure,
   createAcademicPeriod,
   getAcademicPeriods,
   activateEnrollmentPeriod,
@@ -9,6 +8,7 @@ import {
   verificarAutenticacion,
   permitirRoles,
 } from "../middlewares/auth.middleware.js";
+import { Router } from "express";
 
 const router = Router();
 
@@ -16,7 +16,7 @@ router.put(
   "/end",
   verificarAutenticacion,
   permitirRoles("administrador"),
-  endAcademicPeriod,
+  academicClosure,
 );
 router.post(
   "/",

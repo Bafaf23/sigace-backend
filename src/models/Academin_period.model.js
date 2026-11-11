@@ -60,14 +60,14 @@ export class Academic_periods {
 
   /**
    * finaliza un periodo académico
-   * @param {string} SIG
+   * @param {number} idPeriod
    * @returns {object}
    */
-  static async endAcademicPeriod(SIG) {
+  static async endAcademicPeriod(idPeriod) {
     try {
       return await prisma.academic_periods.update({
         where: {
-          SIG: SIG,
+          id: Number(idPeriod),
         },
         data: {
           is_active: false,
@@ -161,4 +161,7 @@ export class Academic_periods {
       throw error;
     }
   }
+
+
+  
 }

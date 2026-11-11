@@ -900,11 +900,16 @@ export const getGrade = async (req, res) => {
   }
 
   try {
+    logger.info("Buscando el numero de matricula...");
+    const student = await Students.byID({ id: Number(id_student) });
+    const tuitionNumber = student.tuitionNumber;
+    logger.info("numero de matricula localizado");
+
     logger.info("Cargando las notas, por favor espere...");
 
     const grades = await Students.grade({
       SIG: SIG,
-      idStudent: Number(id_student),
+      tuitionNumber,
       idPeriod: idPeriod,
     });
 
